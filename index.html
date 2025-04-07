@@ -21,18 +21,22 @@
       height: 100%;
       border: none;
     }
+    #nextBtn {
+      position: fixed;
+      bottom: 10px;
+      right: 10px;
+      font-size: 0.9rem;
+      padding: 4px 8px;
+    }
   </style>
 </head>
 <body>
   <div id="hi">Hi</div>
+  <button id="nextBtn">N ⏩</button>
 
   <script>
     document.getElementById('hi').onclick = () => {
-      const iframe = document.createElement('iframe');
-      iframe.src = 'https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1';
-      iframe.allow = 'autoplay';
-      document.body.innerHTML = '';
-      document.body.appendChild(iframe);
+      document.body.innerHTML = '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1&mute=1" allow="autoplay"></iframe>';
     };
   </script>
 </body>
