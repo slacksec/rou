@@ -8,18 +8,50 @@
       margin: 0;
       height: 100%;
       background: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
     }
     #playBtn {
-      position: fixed;
-      top: 10px;
-      left: 10px;
       font-size: 2rem;
       padding: 12px 24px;
-      z-index: 1;
+      margin-bottom: 20px;
+    }
+    iframe {
+      width: 80vw;
+      height: 45vw;
+      max-width: 960px;
+      max-height: 540px;
+      border: none;
+      display: none;
     }
   </style>
 </head>
 <body>
   <button id="playBtn">▶ Rick Astley Video Tape</button>
+  <iframe id="player" allow="autoplay"></iframe>
+
+  <script>
+    const playlist = [
+      "dQw4w9WgXcQ",
+      "yPYZpwSpKmA",
+      "AC3Ejf7vPEY",
+      "cc91EfoBh8A",
+      "C2xel6q0yao",
+      "BeyEGebJ1l4",
+      "eYuUAGXN0KM",
+      "DqZS89jFCFg",
+      "yBwD4iYcWC4",
+      "5o7WEv5Q5ZE"
+    ];
+
+    document.getElementById('playBtn').onclick = () => {
+      const randomVideo = playlist[Math.floor(Math.random() * playlist.length)];
+      const iframe = document.getElementById('player');
+      iframe.src = `https://www.youtube.com/embed/${randomVideo}?autoplay=1&mute=1`;
+      iframe.style.display = 'block';
+    };
+  </script>
 </body>
 </html>
