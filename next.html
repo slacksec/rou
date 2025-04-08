@@ -8,15 +8,20 @@
       margin: 0;
       height: 100%;
       background: white;
+    }
+    #playBtn {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      font-size: 2rem;
+      padding: 12px 24px;
+      z-index: 10;
+    }
+    #playerContainer {
       display: flex;
       justify-content: center;
       align-items: center;
-      flex-direction: column;
-    }
-    #playBtn {
-      font-size: 2rem;
-      padding: 12px 24px;
-      margin-bottom: 20px;
+      height: 100%;
     }
     iframe {
       width: 80vw;
@@ -30,7 +35,9 @@
 </head>
 <body>
   <button id="playBtn">▶ Rick Astley Video Tape</button>
-  <iframe id="player" allow="autoplay"></iframe>
+  <div id="playerContainer">
+    <iframe id="player" allow="autoplay"></iframe>
+  </div>
 
   <script>
     const playlist = [
