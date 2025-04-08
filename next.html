@@ -56,7 +56,7 @@
     document.getElementById('playBtn').onclick = () => {
       const randomVideo = playlist[Math.floor(Math.random() * playlist.length)];
       const iframe = document.getElementById('player');
-      iframe.src = `https://www.youtube.com/embed/${randomVideo}?autoplay=1&mute=1`;
+      iframe.src = `https://www.youtube.com/embed/${randomVideo}?autoplay=1`;
       iframe.style.display = 'block';
     };
   </script>
