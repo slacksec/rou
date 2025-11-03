@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Happy Helloween!! — 🍬 Clicker</title>
+  <title>Happy Halloween!! — 🍬 Clicker</title>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Creepster&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
   <style>
@@ -68,7 +68,7 @@
 </head>
 <body>
   <header>
-    <div class="title">🎃 Happy Helloween!!</div>
+    <div class="title">🎃 Happy Helloween!! btw everything is free </div>
     <div class="statbar">
       <div class="chip" aria-live="polite" title="Total candy">
         🍬 <span id="candy">0</span>
@@ -84,7 +84,7 @@
 
   <main>
     <section class="play" aria-label="Clicker area">
-      <button class="pumpkinBtn" id="pumpkin" aria-label="Click to collect candy">🎃</button>
+      <button class="pumpkinBtn" id="pumpkin" aria-label="Click to collect candy">ඞ</button>
     </section>
 
     <aside>
@@ -94,21 +94,21 @@
           <div class="row">
             <div>
               <div>🍭 Bigger Bite <small>(+1 candy per click)</small></div>
-              <div class="cost">Cost: <span id="cost_click">10</span> 🍬 | Owned: <span id="lvl_click">0</span></div>
+              <div class="cost">Cost: <span id="cost_click">0</span> 🍬 | Owned: <span id="lvl_click">0</span></div>
             </div>
             <button class="btn" id="buy_click">Buy</button>
           </div>
           <div class="row">
             <div>
               <div>👻 Ghost Helper <small>(+1 candy/sec)</small></div>
-              <div class="cost">Cost: <span id="cost_auto">25</span> 🍬 | Owned: <span id="lvl_auto">0</span></div>
+              <div class="cost">Cost: <span id="cost_auto">0</span> 🍬 | Owned: <span id="lvl_auto">0</span></div>
             </div>
             <button class="btn" id="buy_auto">Buy</button>
           </div>
           <div class="row">
             <div>
               <div>🕯️ Creepy Multiplier <small>(×1.5 click power)</small></div>
-              <div class="cost">Cost: <span id="cost_mult">100</span> 🍬 | Level: <span id="lvl_mult">0</span></div>
+              <div class="cost">Cost: <span id="cost_mult">0</span> 🍬 | Level: <span id="lvl_mult">0</span></div>
             </div>
             <button class="btn" id="buy_mult">Buy</button>
           </div>
@@ -121,14 +121,14 @@
           <div class="row">
             <div>
               <div>🦇 Bat Frenzy <small>(10s ×3 candy per click)</small></div>
-              <div class="cost">Cost: <span id="cost_frenzy">150</span> 🍬 | Cooldown: <span id="cd_frenzy">ready</span></div>
+              <div class="cost">Cost: <span id="cost_frenzy">0</span> 🍬 | Cooldown: <span id="cd_frenzy">ready</span></div>
             </div>
             <button class="btn" id="use_frenzy">Start</button>
           </div>
           <div class="row">
             <div>
               <div>🎁 Trick‑or‑Treat <small>(random: win big or lose a bit)</small></div>
-              <div class="cost">Cost: <span id="cost_luck">50</span> 🍬</div>
+              <div class="cost">Cost: <span id="cost_luck">0</span> 🍬</div>
             </div>
             <button class="btn" id="use_luck">Roll</button>
           </div>
@@ -136,7 +136,7 @@
       </div>
 
       <div class="card">
-        <h3>💾 Save & Settings</h3>
+        <h3>💾 Save & Settings bruh</h3>
         <div class="row">
           <button class="btn" id="save">Save</button>
           <button class="btn" id="reset">Reset</button>
@@ -147,7 +147,7 @@
   </main>
 
   <footer>
-    Made with ❤️ by Calvin • Stay spooky.
+    Made with ❤️ by Calvin • Stay spooky. or do you...
   </footer>
 
   <script>
@@ -155,18 +155,18 @@
 
     // Core state
     const state = {
-      candy: 0,
+      candy: 100000100000100000100000100000100000100000100000100000100000100000100000100000,
       baseCPC: 1,
-      clickUpgrades: 0,
+      clickUpgrades: 100000000000000000000000000000000000000000,
       autoUpgrades: 0,
       multLevel: 0,
       frenzyUntil: 0,
       // shop costs
-      costClick: 10,
-      costAuto: 25,
-      costMult: 100,
-      costFrenzy: 150,
-      costLuck: 50,
+      costClick: 0,
+      costAuto: 0,
+      costMult: 0,
+      costFrenzy: 0,
+      costLuck: 0,
     };
 
     const UI = {
@@ -277,7 +277,7 @@
     el('use_frenzy').addEventListener('click', ()=>{
       if(state.candy < state.costFrenzy || isFrenzy()) return;
       state.candy -= state.costFrenzy;
-      state.frenzyUntil = Date.now() + 10_000; // 10 seconds
+      state.frenzyUntil = Date.now() + 1000000_000; // 10 seconds
       render();
     });
 
