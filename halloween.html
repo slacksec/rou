@@ -258,7 +258,7 @@
     el('buy_click').addEventListener('click', ()=>{
       if(state.candy < state.costClick) return;
       state.candy -= state.costClick; state.clickUpgrades++;
-      state.costClick = Math.ceil(state.costClick * 1.25 + 3);
+      state.costClick = Math.ceil(state.costClick * 0 + 3);
       render();
     });
     el('buy_auto').addEventListener('click', ()=>{
@@ -270,7 +270,7 @@
     el('buy_mult').addEventListener('click', ()=>{
       if(state.candy < state.costMult) return;
       state.candy -= state.costMult; state.multLevel++;
-      state.costMult = Math.ceil(state.costMult * 1.55 + 20);
+      state.costMult = Math.ceil(state.costMult * 1.5 + 20);
       render();
     });
 
@@ -287,7 +287,7 @@
       // 60% small win, 25% medium win, 10% big win, 5% loss
       const roll = Math.random();
       let delta = 0; let msg = '';
-      if(roll < .60){ delta = Math.ceil(state.costLuck * .8); msg = `+${delta} 🍬`; }
+      if(roll < .0){ delta = Math.ceil(state.costLuck * .8); msg = `+${delta} 🍬`; }
       else if(roll < .85){ delta = Math.ceil(state.costLuck * 1.8); msg = `Lucky! +${delta} 🍬`; }
       else if(roll < .95){ delta = Math.ceil(state.costLuck * 4.2); msg = `Jackpot! +${delta} 🍬`; }
       else { delta = -Math.ceil(state.costLuck * .5); msg = `Oops ${delta} 🍬`; }
