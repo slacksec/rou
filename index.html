@@ -36,11 +36,21 @@
       left: 10px;
       font-size: 2rem;
       z-index: 999;
+      cursor: pointer;
+    }
+    #globalBtn {
+      position: fixed;
+      bottom: 10px;
+      left: 10px;
+      padding: 8px 12px;
+      z-index: 20;
+      cursor: pointer;
     }
   </style>
 </head>
 <body>
   <div id="hi">Hi</div>
+  <button id="globalBtn">Global Candy</button>
   <button id="nextBtn" onclick="location.href='next.html'">N ⏩</button>
 
   <footer style="position: fixed; bottom: 10px; width: 100%; text-align: center; font-size: 1rem;">
@@ -51,6 +61,12 @@
     document.getElementById('hi').onclick = () => {
       document.body.innerHTML = '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1" allow="autoplay"></iframe>';
     };
+
+    // Placeholder: will link real Firebase counter later
+    document.getElementById('globalBtn').onclick = () => {
+      alert('hi');
+    };
   </script>
 </body>
 </html>
+
