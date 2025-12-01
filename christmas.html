@@ -145,12 +145,23 @@
       border-right: 80px solid transparent;
       border-bottom: 90px solid #0b8a3e;
       filter: drop-shadow(0 0 10px rgba(0, 0, 0, 0.7));
-      z-index: 1;
+      z-index: 1; /* behind lights & star */
     }
 
-    .tree-layer:nth-child(1) { top: 20px; }
-    .tree-layer:nth-child(2) { top: 70px; border-bottom-color: #0fa34c; }
-    .tree-layer:nth-child(3) { top: 120px; border-bottom-color: #16ca5e; }
+    .layer-top {
+      top: 28px;
+      border-bottom-color: #0b8a3e;
+    }
+
+    .layer-mid {
+      top: 78px;
+      border-bottom-color: #0fa34c;
+    }
+
+    .layer-bottom {
+      top: 128px;
+      border-bottom-color: #16ca5e;
+    }
 
     .tree-trunk {
       position: absolute;
@@ -166,12 +177,13 @@
 
     .tree-star {
       position: absolute;
-      top: 0;
+      top: 10px;
       left: 50%;
-      transform: translate(-50%, -30%);
-      font-size: 2rem;
+      transform: translateX(-50%);
+      font-size: 2.1rem;
       filter: drop-shadow(0 0 8px rgba(255, 255, 160, 1));
-      z-index: 3; /* star above triangles */
+      z-index: 3; /* star on top of everything */
+      pointer-events: none;
     }
 
     .tree-lights span {
@@ -181,14 +193,14 @@
       border-radius: 50%;
       background: #ffd166;
       box-shadow: 0 0 8px rgba(255, 220, 160, 0.9);
-      z-index: 2; /* lights above branches, below star */
+      z-index: 2; /* above branches, below star */
     }
 
-    .tree-lights span:nth-child(1) { top: 85px; left: 50px; }
-    .tree-lights span:nth-child(2) { top: 105px; left: 95px; }
-    .tree-lights span:nth-child(3) { top: 135px; left: 65px; }
-    .tree-lights span:nth-child(4) { top: 150px; left: 115px; }
-    .tree-lights span:nth-child(5) { top: 180px; left: 45px; }
+    .tree-lights span:nth-child(1) { top: 90px; left: 50px; }
+    .tree-lights span:nth-child(2) { top: 110px; left: 95px; }
+    .tree-lights span:nth-child(3) { top: 140px; left: 65px; }
+    .tree-lights span:nth-child(4) { top: 155px; left: 115px; }
+    .tree-lights span:nth-child(5) { top: 185px; left: 45px; }
 
     .lights-on .tree-lights span {
       animation: twinkle 1.2s infinite alternate;
@@ -280,7 +292,7 @@
       justify-content: center;
       text-align: center;
       overflow: hidden;
-      transition: opacity 0.4s ease;
+      transition: opacity 0.35s ease, transform 0.35s ease;
     }
 
     .present-box::before {
@@ -325,6 +337,7 @@
 
     .present.opened .present-box {
       opacity: 0;
+      transform: scale(0.85);
       pointer-events: none;
     }
 
@@ -530,14 +543,18 @@
       </div>
       <div class="tree-wrapper" id="tree-section">
         <div id="tree" class="tree lights-on" title="Click to toggle lights">
-          <div class="tree-star">⭐</div>
-          <div class="tree-layer"></div>
-          <div class="tree-layer"></div>
-          <div class="tree-layer"></div>
+          <!-- triangles first (behind) -->
+          <div class="tree-layer layer-top"></div>
+          <div class="tree-layer layer-mid"></div>
+          <div class="tree-layer layer-bottom"></div>
+          <!-- trunk -->
           <div class="tree-trunk"></div>
+          <!-- lights -->
           <div class="tree-lights">
             <span></span><span></span><span></span><span></span><span></span>
           </div>
+          <!-- star on top -->
+          <div class="tree-star">⭐</div>
         </div>
         <div id="treeLabel" class="tree-label">Lights: ON (click to toggle)</div>
       </div>
