@@ -1156,6 +1156,40 @@
       if (player.x < 0) player.x = 0;
       if (player.x + player.w > canvas.width) player.x = canvas.width - player.w;
 
+      // --- NEW: Player collision with boss (no more body-cheese) ---
+      if (boss.alive && boss.hp > 0) {
+        const playerRect = { x: player.x, y: player.y, w: player.w, h: player.h };
+        const bossRect = { x: boss.x, y: boss.y, w: boss.w, h: boss.h };
+
+        if (rectsOverlap(playerRect, bossRect)) {
+          // Decide from which side you hit the boss
+          const playerCenter = player.x + player.w / 2;
+          const bossCenter = boss.x + boss.w / 2;
+
+          if (playerCenter < bossCenter) {
+            // Hit from the left -> push left
+            player.x = boss.x - player.w;
+          } else {
+            // Hit from the right -> push right
+            player.x = boss.x + boss.w;
+          }
+
+          player.vx = 0;
+
+          const contactDamage = 3;
+          if (player.hp > 0) {
+            player.hp = Math.max(0, player.hp - contactDamage);
+            if (player.hp === 0) {
+              bossGameText.textContent = "You tried to body-check the Boss and got flattened.";
+            } else {
+              bossGameText.textContent =
+                "You bump into the Boss and get shoved back. Don’t melee-hug the crown.";
+            }
+          }
+        }
+      }
+      // -------------------------------------------------------------
+
       // Anti-cheese: going behind the boss opens a deadly hole
       if (!hole.active && player.x > boss.x + boss.w) {
         hole.active = true;
