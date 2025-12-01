@@ -104,6 +104,766 @@
     }
 
     /* Hero / greeting */
-    .hero
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+      gap: 16px;
+      align-items: center;
+    }
 
+    .hero-text h1 {
+      font-size: clamp(2rem, 3vw + 1rem, 2.8rem);
+      margin-bottom: 8px;
+    }
 
+    .hero-text p {
+      font-size: 0.98rem;
+      line-height: 1.6;
+      opacity: 0.9;
+    }
+
+    .tagline {
+      font-size: 0.9rem;
+      opacity: 0.8;
+      margin-top: 6px;
+    }
+
+    /* CSS Tree */
+    .tree-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .tree {
+      position: relative;
+      width: 170px;
+      height: 260px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: transform 0.3s ease;
+    }
+
+    .tree:hover {
+      transform: translateY(-4px) scale(1.02);
+    }
+
+    .tree-layer {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      border-left: 80px solid transparent;
+      border-right: 80px solid transparent;
+      border-bottom: 90px solid #0b8a3e;
+      filter: drop-shadow(0 0 10px rgba(0,0,0,0.7));
+    }
+
+    .tree-layer:nth-child(1) {
+      top: 20px;
+    }
+
+    .tree-layer:nth-child(2) {
+      top: 70px;
+      border-bottom-color: #0fa34c;
+    }
+
+    .tree-layer:nth-child(3) {
+      top: 120px;
+      border-bottom-color: #16ca5e;
+    }
+
+    .tree-trunk {
+      position: absolute;
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 38px;
+      height: 40px;
+      background: #5c3b1e;
+      border-radius: 4px;
+    }
+
+    .tree-star {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translate(-50%, -30%);
+      font-size: 2rem;
+      filter: drop-shadow(0 0 8px rgba(255,255,150,0.9));
+    }
+
+    .tree-lights span {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #ffd166;
+      box-shadow: 0 0 8px rgba(255,220,160,0.9);
+      opacity: 0.9;
+    }
+
+    .tree-lights span:nth-child(1) { top: 85px; left: 50px; }
+    .tree-lights span:nth-child(2) { top: 105px; left: 95px; }
+    .tree-lights span:nth-child(3) { top: 135px; left: 65px; }
+    .tree-lights span:nth-child(4) { top: 150px; left: 115px; }
+    .tree-lights span:nth-child(5) { top: 180px; left: 45px; }
+
+    .lights-on .tree-lights span {
+      animation: twinkle 1.2s infinite alternate;
+    }
+
+    @keyframes twinkle {
+      from {
+        opacity: 0.5;
+        transform: scale(0.8);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1.2);
+      }
+    }
+
+    .tree-label {
+      font-size: 0.85rem;
+      opacity: 0.8;
+    }
+
+    /* Countdown */
+    .countdown-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .countdown-item {
+      flex: 1;
+      min-width: 90px;
+      text-align: center;
+      padding: 8px 6px;
+      border-radius: 10px;
+      background: rgba(5, 31, 66, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .countdown-number {
+      font-size: 1.4rem;
+      font-weight: 700;
+    }
+
+    .countdown-label {
+      font-size: 0.75rem;
+      opacity: 0.8;
+    }
+
+    /* Music player */
+    .music-player {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin-top: 8px;
+    }
+
+    .music-btn {
+      padding: 6px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.5);
+      background: rgba(0,0,0,0.4);
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+
+    .music-btn:hover {
+      background: rgba(255,255,255,0.08);
+    }
+
+    .music-status {
+      font-size: 0.85rem;
+      opacity: 0.85;
+    }
+
+    /* Presents */
+    .presents-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 14px;
+      margin-top: 10px;
+    }
+
+    .present {
+      position: relative;
+      height: 120px;
+      border-radius: 16px;
+      background: linear-gradient(145deg, #d7263d, #ff4f4f);
+      cursor: pointer;
+      overflow: hidden;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      box-shadow: 0 0 12px rgba(0,0,0,0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 6px;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .present:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 0 16px rgba(0,0,0,0.9);
+    }
+
+    .present::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(#ffe066, #ffe066);
+      width: 18px;
+      margin: 0 auto;
+      mix-blend-mode: screen;
+    }
+
+    .present::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      height: 18px;
+      margin: auto 0;
+      background: linear-gradient(#ffe066, #ffe066);
+      mix-blend-mode: screen;
+    }
+
+    .present-label {
+      position: relative;
+      z-index: 1;
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+
+    .present-message {
+      margin-top: 10px;
+      font-size: 0.85rem;
+      min-height: 1.2em;
+      opacity: 0.9;
+    }
+
+    /* Santa sleigh */
+    .santa {
+      position: fixed;
+      top: 12%;
+      left: -200px;
+      font-size: 2rem;
+      z-index: 5;
+      animation: fly 22s linear infinite;
+      pointer-events: none;
+    }
+
+    @keyframes fly {
+      0% { transform: translateX(0); opacity: 0; }
+      10% { opacity: 1; }
+      50% { opacity: 1; }
+      90% { opacity: 1; }
+      100% { transform: translateX(130vw); opacity: 0; }
+    }
+
+    /* Snow */
+    .snowflake {
+      position: fixed;
+      top: -10px;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: white;
+      opacity: 0.8;
+      pointer-events: none;
+      z-index: 1;
+      animation: fall var(--duration) linear forwards;
+    }
+
+    @keyframes fall {
+      to {
+        transform: translateY(105vh);
+        opacity: 0.2;
+      }
+    }
+
+    .controls-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .pill-btn {
+      padding: 5px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.4);
+      background: rgba(0,0,0,0.4);
+      cursor: pointer;
+      font-size: 0.8rem;
+    }
+
+    .pill-btn:hover {
+      background: rgba(255,255,255,0.08);
+    }
+
+    /* Guestbook */
+    .guestbook-form {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .guestbook-form input,
+    .guestbook-form textarea {
+      width: 100%;
+      padding: 7px 9px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.3);
+      background: rgba(3, 10, 32, 0.9);
+      color: #fff;
+      font-size: 0.9rem;
+      resize: vertical;
+    }
+
+    .guestbook-form button {
+      justify-self: flex-start;
+      padding: 6px 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.6);
+      background: rgba(30, 132, 73, 0.85);
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+
+    .guestbook-form button:hover {
+      filter: brightness(1.05);
+    }
+
+    .guestbook-list {
+      margin-top: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      font-size: 0.86rem;
+    }
+
+    .guestbook-item {
+      padding: 6px 8px;
+      border-radius: 10px;
+      background: rgba(10, 40, 70, 0.9);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .guestbook-item strong {
+      color: #ffe48b;
+    }
+
+    /* Photo frame */
+    .photo-frame {
+      border-radius: 16px;
+      border: 2px dashed rgba(255,255,255,0.4);
+      min-height: 140px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.9rem;
+      opacity: 0.9;
+      text-align: center;
+      padding: 8px;
+    }
+
+    /* Magic sparkles */
+    .sparkle {
+      position: fixed;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #fff 0, #ffe48b 40%, transparent 70%);
+      pointer-events: none;
+      z-index: 4;
+      animation: sparkle-pop 0.7s ease-out forwards;
+    }
+
+    @keyframes sparkle-pop {
+      from { transform: scale(0.2); opacity: 1; }
+      to { transform: scale(1.4); opacity: 0; }
+    }
+
+    footer {
+      text-align: center;
+      font-size: 0.8rem;
+      opacity: 0.7;
+      padding: 10px 0 18px;
+    }
+
+    @media (max-width: 700px) {
+      .hero {
+        grid-template-columns: minmax(0, 1fr);
+      }
+      .tree {
+        margin: 0 auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Santa fly-by -->
+  <div class="santa">🎅🦌🦌🦌</div>
+
+  <!-- Audio (replace src with your own local MP3 if you want) -->
+  <audio id="bgMusic" loop>
+    <!-- Put a real file like /music/jingle-bells.mp3 on your server and update src -->
+    <source src="" type="audio/mpeg">
+  </audio>
+
+  <header>
+    <div class="nav">
+      <div class="nav-left">
+        <span>🎄 Calvin’s Christmas World</span>
+      </div>
+      <div class="nav-links">
+        <a href="#countdown">Countdown</a>
+        <a href="#tree-section">Tree</a>
+        <a href="#presents">Presents</a>
+        <a href="#guestbook">Guestbook</a>
+        <a href="#photo">Photo</a>
+      </div>
+      <button class="back-btn" onclick="location.href='index.html'">⬅ Back</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- Hero -->
+    <section class="hero">
+      <div class="hero-text">
+        <h1>✨ Merry Christmas & Happy Holidays ✨</h1>
+        <p>
+          Welcome to the <strong>secret Christmas page</strong>.  
+          Click things. Break nothing. Enjoy everything. Some bits glow, some fly,
+          some talk back. All of it is here just for fun.
+        </p>
+        <p class="tagline">
+          Tip: Tap the tree, open the presents, sign the guestbook, and see how long until Christmas.
+        </p>
+      </div>
+      <div class="tree-wrapper" id="tree-section">
+        <div id="tree" class="tree lights-on" title="Click to toggle lights">
+          <div class="tree-star">⭐</div>
+          <div class="tree-layer"></div>
+          <div class="tree-layer"></div>
+          <div class="tree-layer"></div>
+          <div class="tree-trunk"></div>
+          <div class="tree-lights">
+            <span></span><span></span><span></span><span></span><span></span>
+          </div>
+        </div>
+        <div class="tree-label" id="treeLabel">Lights: ON (click to toggle)</div>
+      </div>
+    </section>
+
+    <!-- Countdown + Controls -->
+    <section id="countdown">
+      <h2>⏰ Countdown to Christmas</h2>
+      <p style="font-size: 0.9rem; opacity: 0.85;">
+        Counting down to midnight on 25 December (your local time).
+      </p>
+      <div class="countdown-grid" id="countdownGrid">
+        <div class="countdown-item">
+          <div class="countdown-number" id="days">--</div>
+          <div class="countdown-label">Days</div>
+        </div>
+        <div class="countdown-item">
+          <div class="countdown-number" id="hours">--</div>
+          <div class="countdown-label">Hours</div>
+        </div>
+        <div class="countdown-item">
+          <div class="countdown-number" id="minutes">--</div>
+          <div class="countdown-label">Minutes</div>
+        </div>
+        <div class="countdown-item">
+          <div class="countdown-number" id="seconds">--</div>
+          <div class="countdown-label">Seconds</div>
+        </div>
+      </div>
+
+      <div class="controls-row">
+        <button class="pill-btn" id="snowToggle">❄ Snow: ON</button>
+        <button class="pill-btn" id="sparkleToggle">✨ Sparkles: ON</button>
+      </div>
+
+      <div class="music-player">
+        <button class="music-btn" id="musicBtn">▶ Play Music</button>
+        <div class="music-status" id="musicStatus">
+          No track set (add an MP3 to the <code>&lt;audio&gt;</code> src to enable).
+        </div>
+      </div>
+    </section>
+
+    <!-- Presents -->
+    <section id="presents">
+      <h2>🎁 Open the Presents</h2>
+      <p style="font-size: 0.9rem; opacity: 0.86;">
+        Click a present to reveal a random Christmas message or challenge.
+      </p>
+      <div class="presents-grid">
+        <div class="present" data-slot="1">
+          <div class="present-label">Present #1</div>
+        </div>
+        <div class="present" data-slot="2">
+          <div class="present-label">Present #2</div>
+        </div>
+        <div class="present" data-slot="3">
+          <div class="present-label">Present #3</div>
+        </div>
+        <div class="present" data-slot="4">
+          <div class="present-label">Present #4</div>
+        </div>
+      </div>
+      <div class="present-message" id="presentMessage"></div>
+    </section>
+
+    <!-- Photo frame -->
+    <section id="photo">
+      <h2>📸 Christmas Photo Frame</h2>
+      <div class="photo-frame">
+        <div>
+          <p><strong>Put your favourite family / friends Christmas photo here.</strong></p>
+          <p style="margin-top: 6px; font-size: 0.85rem;">
+            Option 1: Replace this box with an actual <code>&lt;img src="your-photo.jpg"&gt;</code> tag.  
+            Option 2: Leave it like this and pretend it’s an NFT.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Guestbook -->
+    <section id="guestbook">
+      <h2>📝 Christmas Guestbook</h2>
+      <p style="font-size: 0.9rem; opacity: 0.86;">
+        Leave a message for “future you” or anyone visiting this page.
+      </p>
+      <form class="guestbook-form" id="guestbookForm">
+        <input type="text" id="guestName" placeholder="Your name (or secret codename)" required>
+        <textarea id="guestMessage" rows="3" placeholder="Your Christmas message" required></textarea>
+        <button type="submit">Add to Guestbook</button>
+      </form>
+      <div class="guestbook-list" id="guestbookList"></div>
+    </section>
+  </main>
+
+  <footer>
+    Made with ❤️ by Calvin · © 2025 · Version: Christmas Overkill
+  </footer>
+
+  <script>
+    // -------------------------------
+    // Tree lights toggle
+    // -------------------------------
+    const tree = document.getElementById('tree');
+    const treeLabel = document.getElementById('treeLabel');
+
+    tree.addEventListener('click', () => {
+      tree.classList.toggle('lights-on');
+      const on = tree.classList.contains('lights-on');
+      treeLabel.textContent = 'Lights: ' + (on ? 'ON (click to toggle)' : 'OFF (click to toggle)');
+    });
+
+    // -------------------------------
+    // Countdown to Christmas
+    // -------------------------------
+    const daysEl = document.getElementById('days');
+    const hoursEl = document.getElementById('hours');
+    const minutesEl = document.getElementById('minutes');
+    const secondsEl = document.getElementById('seconds');
+
+    function getNextChristmas() {
+      const now = new Date();
+      const year = now.getMonth() === 11 && now.getDate() > 25
+        ? now.getFullYear() + 1
+        : now.getFullYear();
+      return new Date(year, 11, 25, 0, 0, 0, 0);
+    }
+
+    const christmasDate = getNextChristmas();
+
+    function updateCountdown() {
+      const now = new Date();
+      const diff = christmasDate - now;
+
+      if (diff <= 0) {
+        daysEl.textContent = '0';
+        hoursEl.textContent = '0';
+        minutesEl.textContent = '0';
+        secondsEl.textContent = '0';
+        return;
+      }
+
+      const seconds = Math.floor(diff / 1000);
+      const days = Math.floor(seconds / (60 * 60 * 24));
+      const hours = Math.floor((seconds % (60 * 60 * 24)) / (60 * 60));
+      const minutes = Math.floor((seconds % (60 * 60)) / 60);
+      const secs = seconds % 60;
+
+      daysEl.textContent = days;
+      hoursEl.textContent = hours;
+      minutesEl.textContent = minutes;
+      secondsEl.textContent = secs;
+    }
+
+    updateCountdown();
+    setInterval(updateCountdown, 1000);
+
+    // -------------------------------
+    // Snow
+    // -------------------------------
+    let snowEnabled = true;
+    const snowToggle = document.getElementById('snowToggle');
+
+    function createSnowflake() {
+      if (!snowEnabled) return;
+      const snowflake = document.createElement('div');
+      snowflake.className = 'snowflake';
+      const size = 4 + Math.random() * 6;
+      snowflake.style.width = size + 'px';
+      snowflake.style.height = size + 'px';
+      snowflake.style.left = Math.random() * window.innerWidth + 'px';
+      snowflake.style.setProperty('--duration', (5 + Math.random() * 6) + 's');
+      document.body.appendChild(snowflake);
+      setTimeout(() => snowflake.remove(), 12000);
+    }
+
+    snowToggle.addEventListener('click', () => {
+      snowEnabled = !snowEnabled;
+      snowToggle.textContent = snowEnabled ? '❄ Snow: ON' : '❄ Snow: OFF';
+      if (snowEnabled) {
+        for (let i = 0; i < 30; i++) createSnowflake();
+      }
+    });
+
+    // Start snow
+    for (let i = 0; i < 40; i++) createSnowflake();
+    setInterval(createSnowflake, 400);
+
+    // -------------------------------
+    // Music controls
+    // -------------------------------
+    const music = document.getElementById('bgMusic');
+    const musicBtn = document.getElementById('musicBtn');
+    const musicStatus = document.getElementById('musicStatus');
+
+    function hasTrack() {
+      return music.querySelector('source').getAttribute('src');
+    }
+
+    function updateMusicStatus() {
+      if (!hasTrack()) {
+        musicStatus.textContent = 'No track set (add an MP3 to the <audio> src to enable).';
+        return;
+      }
+      if (!music.paused) {
+        musicStatus.textContent = 'Playing Christmas music 🎵';
+      } else {
+        musicStatus.textContent = 'Paused (press play to resume).';
+      }
+    }
+
+    musicBtn.addEventListener('click', () => {
+      if (!hasTrack()) {
+        alert('Add an MP3 file to the <audio> tag src in the HTML to enable music.');
+        return;
+      }
+      if (music.paused) {
+        music.play().catch(() => {
+          alert('Your browser blocked autoplay. Try clicking again.');
+        });
+        musicBtn.textContent = '⏸ Pause Music';
+      } else {
+        music.pause();
+        musicBtn.textContent = '▶ Play Music';
+      }
+      updateMusicStatus();
+    });
+
+    music.addEventListener('play', updateMusicStatus);
+    music.addEventListener('pause', updateMusicStatus);
+    updateMusicStatus();
+
+    // -------------------------------
+    // Presents
+    // -------------------------------
+    const presents = document.querySelectorAll('.present');
+    const presentMessage = document.getElementById('presentMessage');
+
+    const messages = [
+      'Challenge: Say “Merry Christmas” in 3 different languages.',
+      'Gratitude quest: Name 3 things you’re grateful for this year.',
+      'Mini mission: Give someone a genuine compliment today.',
+      'Fun: Do a silly Christmas dance for 10 seconds.',
+      'Plan: Pick one fun thing you’ll do with your family this week.',
+      'Secret: Hide a nice note somewhere in the house for someone to find.',
+      'Chill: Take 3 deep breaths and enjoy the moment.',
+      'Game: First person to say “snowman” has to make hot chocolate for everyone.'
+    ];
+
+    function randomFrom(arr) {
+      return arr[Math.floor(Math.random() * arr.length)];
+    }
+
+    presents.forEach((present) => {
+      present.addEventListener('click', () => {
+        const msg = randomFrom(messages);
+        presentMessage.textContent = msg;
+      });
+    });
+
+    // -------------------------------
+    // Guestbook (in-memory)
+    // -------------------------------
+    const guestbookForm = document.getElementById('guestbookForm');
+    const guestbookList = document.getElementById('guestbookList');
+
+    guestbookForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const name = document.getElementById('guestName').value.trim();
+      const message = document.getElementById('guestMessage').value.trim();
+      if (!name || !message) return;
+
+      const item = document.createElement('div');
+      item.className = 'guestbook-item';
+      const time = new Date().toLocaleString();
+      item.innerHTML = '<strong>' + name + '</strong> <span style="opacity:0.7;font-size:0.75rem;">(' + time + ')</span><br>' +
+                       message;
+      guestbookList.prepend(item);
+
+      guestbookForm.reset();
+    });
+
+    // -------------------------------
+    // Magic sparkles on mouse move
+    // -------------------------------
+    let sparklesEnabled = true;
+    const sparkleToggle = document.getElementById('sparkleToggle');
+
+    sparkleToggle.addEventListener('click', () => {
+      sparklesEnabled = !sparklesEnabled;
+      sparkleToggle.textContent = sparklesEnabled ? '✨ Sparkles: ON' : '✨ Sparkles: OFF';
+    });
+
+    document.addEventListener('pointermove', (e) => {
+      if (!sparklesEnabled) return;
+      if (Math.random() > 0.35) return; // limit
+      const s = document.createElement('div');
+      s.className = 'sparkle';
+      s.style.left = e.clientX + 'px';
+      s.style.top = e.clientY + 'px';
+      document.body.appendChild(s);
+      setTimeout(() => s.remove(), 700);
+    });
+  </script>
+</body>
+</html>
