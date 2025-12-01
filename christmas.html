@@ -145,6 +145,7 @@
       border-right: 80px solid transparent;
       border-bottom: 90px solid #0b8a3e;
       filter: drop-shadow(0 0 10px rgba(0, 0, 0, 0.7));
+      z-index: 1;
     }
 
     .tree-layer:nth-child(1) { top: 20px; }
@@ -160,6 +161,7 @@
       height: 40px;
       background: #5c3b1e;
       border-radius: 4px;
+      z-index: 1;
     }
 
     .tree-star {
@@ -169,6 +171,7 @@
       transform: translate(-50%, -30%);
       font-size: 2rem;
       filter: drop-shadow(0 0 8px rgba(255, 255, 160, 1));
+      z-index: 3; /* star above triangles */
     }
 
     .tree-lights span {
@@ -178,6 +181,7 @@
       border-radius: 50%;
       background: #ffd166;
       box-shadow: 0 0 8px rgba(255, 220, 160, 0.9);
+      z-index: 2; /* lights above branches, below star */
     }
 
     .tree-lights span:nth-child(1) { top: 85px; left: 50px; }
@@ -261,17 +265,25 @@
       position: relative;
       height: 120px;
       border-radius: 16px;
+      overflow: hidden;
+      cursor: pointer;
+    }
+
+    .present-box {
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
       background: linear-gradient(145deg, #d7263d, #ff4f4f);
       border: 2px solid rgba(255, 255, 255, 0.3);
       display: flex;
       align-items: center;
       justify-content: center;
       text-align: center;
-      cursor: pointer;
       overflow: hidden;
+      transition: opacity 0.4s ease;
     }
 
-    .present::before {
+    .present-box::before {
       content: "";
       position: absolute;
       inset: 0;
@@ -281,7 +293,7 @@
       mix-blend-mode: screen;
     }
 
-    .present::after {
+    .present-box::after {
       content: "";
       position: absolute;
       inset: 0;
@@ -296,6 +308,28 @@
       z-index: 1;
       font-weight: 600;
       font-size: 0.9rem;
+    }
+
+    .present-text {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px;
+      text-align: center;
+      font-size: 0.85rem;
+      opacity: 0;
+      transition: opacity 0.4s ease;
+    }
+
+    .present.opened .present-box {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .present.opened .present-text {
+      opacity: 1;
     }
 
     .present-message {
@@ -550,16 +584,28 @@
 
       <div class="presents-grid">
         <div class="present" data-slot="1">
-          <div class="present-label">Present #1</div>
+          <div class="present-box">
+            <div class="present-label">Present #1</div>
+          </div>
+          <div class="present-text"></div>
         </div>
         <div class="present" data-slot="2">
-          <div class="present-label">Present #2</div>
+          <div class="present-box">
+            <div class="present-label">Present #2</div>
+          </div>
+          <div class="present-text"></div>
         </div>
         <div class="present" data-slot="3">
-          <div class="present-label">Present #3</div>
+          <div class="present-box">
+            <div class="present-label">Present #3</div>
+          </div>
+          <div class="present-text"></div>
         </div>
         <div class="present" data-slot="4">
-          <div class="present-label">Present #4</div>
+          <div class="present-box">
+            <div class="present-label">Present #4</div>
+          </div>
+          <div class="present-text"></div>
         </div>
       </div>
 
@@ -745,9 +791,14 @@
       return arr[Math.floor(Math.random() * arr.length)];
     }
 
-    presents.forEach((present) => {
+    presents.forEach((present, index) => {
       present.addEventListener("click", () => {
-        presentMessage.textContent = randomFrom(presentMessages);
+        const msg = randomFrom(presentMessages);
+        const textDiv = present.querySelector(".present-text");
+        if (textDiv) textDiv.textContent = msg;
+        present.classList.add("opened");
+        presentMessage.textContent =
+          "You opened Present #" + (index + 1) + ": " + msg;
       });
     });
 
