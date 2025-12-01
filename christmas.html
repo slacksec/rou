@@ -491,7 +491,7 @@
           Snow falls, lights blink, Santa talks, and there’s a crown Boss waiting for elf bonks.
         </p>
         <p class="hero-tip">
-          Tip: Sword = solid (3 dmg), Bow = ranged, Mace = weak on ground (1 dmg) but STRONG if you jump-hit (7 dmg).
+          Tip: Sword = solid (3 dmg, one hit), Bow = ranged, Mace = weak on ground (1 dmg) but STRONG if you jump-hit (7 dmg).
         </p>
       </div>
       <div class="tree-wrapper" id="tree-section">
@@ -835,6 +835,7 @@
       maxHp: 120,
       swordTimer: 0,
       swordCooldown: 0,
+      swordDidHit: false,
       bowCooldown: 0,
       maceTimer: 0,
       maceCooldown: 0,
@@ -850,6 +851,12 @@
       maxHp: 400,
       attackCooldown: 120,
       alive: true
+    };
+
+    const hole = {
+      active: false,
+      x: 0,
+      w: 45
     };
 
     const arrows = [];
@@ -898,6 +905,13 @@
       player.vx = 0;
       player.vy = 0;
       player.hp = player.maxHp;
+      player.swordTimer = 0;
+      player.swordCooldown = 0;
+      player.swordDidHit = false;
+      player.bowCooldown = 0;
+      player.maceTimer = 0;
+      player.maceCooldown = 0;
+      player.maceDidHit = false;
       boss.x = canvas.width - 120;
       boss.y = groundY - boss.h;
       boss.hp = boss.maxHp;
@@ -907,9 +921,9 @@
       snowballs.length = 0;
       icicles.length = 0;
       waves.length = 0;
-      player.maceDidHit = false;
+      hole.active = false;
       bossGameText.textContent =
-        "Fight started! Move: A/D or ←/→, Jump: W/↑, Sword: J, Bow: K, Mace: L (jump = crit).";
+        "Fight started! Move: A/D or ←/→, Jump: W/↑, Sword: J, Bow: K, Mace: L (jump = crit). Don’t try sneaky spots behind the boss...";
     }
 
     bossPlayBtn.addEventListener("click", () => {
@@ -1028,10 +1042,11 @@
         player.onGround = false;
       }
 
-      // Sword attack
+      // Sword attack (3 dmg, once per swing)
       if ((keys["j"] || keys[" "]) && player.swordCooldown <= 0) {
         player.swordTimer = 180;
         player.swordCooldown = 320;
+        player.swordDidHit = false;
       }
 
       // Bow attack
@@ -1072,6 +1087,25 @@
       // World bounds
       if (player.x < 0) player.x = 0;
       if (player.x + player.w > canvas.width) player.x = canvas.width - player.w;
+
+      // Anti-cheese: going behind the boss opens a deadly hole
+      if (!hole.active && player.x > boss.x + boss.w) {
+        hole.active = true;
+        hole.x = boss.x + boss.w + 4;
+        bossGameText.textContent =
+          "You slip behind the boss. Secret message: the floor behind him was never safe...";
+      }
+
+      if (hole.active && player.hp > 0) {
+        const onHoleX =
+          player.x + player.w > hole.x && player.x < hole.x + hole.w;
+        if (onHoleX && player.onGround) {
+          player.hp = 0;
+          bossGameText.textContent =
+            "You fall into the hidden void. Santa whispers: “No hiding behind bosses.”";
+          return;
+        }
+      }
 
       // Boss AI
       if (boss.alive) {
@@ -1163,8 +1197,8 @@
         }
       }
 
-      // Sword hit (3 dmg)
-      if (player.swordTimer > 0 && boss.alive && boss.hp > 0) {
+      // Sword hit (3 dmg, once per swing)
+      if (player.swordTimer > 0 && !player.swordDidHit && boss.alive && boss.hp > 0) {
         const reach = 20;
         const swordRect = {
           x: player.facing === 1 ? player.x + player.w : player.x - reach,
@@ -1175,6 +1209,7 @@
         if (rectsOverlap(swordRect, boss)) {
           boss.hp -= 3;
           boss.hp = Math.max(0, boss.hp);
+          player.swordDidHit = true;
           if (boss.hp === 0) {
             boss.alive = false;
             bossGameText.textContent = randomFrom(winLines);
@@ -1220,8 +1255,17 @@
       ctx.fillStyle = grd;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+      // Ground
       ctx.fillStyle = "#0c1f3a";
       ctx.fillRect(0, groundY, canvas.width, canvas.height - groundY);
+
+      // Hole behind boss (cuts into ground)
+      if (hole.active) {
+        ctx.fillStyle = "#020617";
+        ctx.fillRect(hole.x, groundY, hole.w, canvas.height - groundY);
+        ctx.fillStyle = "#facc15";
+        ctx.fillRect(hole.x, groundY, hole.w, 2);
+      }
 
       if (!gameActive) {
         // Idle / menu screen
