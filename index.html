@@ -30,18 +30,22 @@
       z-index: 10;
       cursor: pointer;
     }
-    #pumpkin {
+    /* 🎄 Christmas tree button top-left */
+    #tree {
       position: fixed;
       top: 10px;
       left: 10px;
-      font-size: 2rem;
+      font-size: 2.5rem;
       z-index: 999;
       cursor: pointer;
+      user-select: none;
     }
   </style>
 </head>
 <body>
+  <div id="tree">🎄</div>
   <div id="hi">Hi</div>
+
   <button id="nextBtn" onclick="location.href='next.html'">N ⏩</button>
 
   <footer style="position: fixed; bottom: 10px; width: 100%; text-align: center; font-size: 1rem;">
@@ -49,10 +53,19 @@
   </footer>
 
   <script>
+    // Rickroll on "Hi"
     document.getElementById('hi').onclick = () => {
-      document.body.innerHTML = '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1" allow="autoplay"></iframe>';
+      document.body.innerHTML =
+        '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1" allow="autoplay"></iframe>';
+    };
+
+    // 🎄 Go to christmas.html on click
+    document.getElementById('tree').onclick = () => {
+      location.href = 'christmas.html';
     };
   </script>
 </body>
+</html>
+
 </html>
 
