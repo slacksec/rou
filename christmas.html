@@ -488,12 +488,11 @@
         <h1 class="hero-title">✨ Merry Christmas & Happy Holidays ✨</h1>
         <p class="hero-text">
           Welcome to the secret Christmas page. Click things. See what happens.
-          Snow falls, lights blink, Santa talks, and there’s a Christmas Boss who
-          actually fights back now.
+          Snow falls, lights blink, Santa talks, and there’s a big crown-wearing Boss
+          waiting to taste your elf weapons.
         </p>
         <p class="hero-tip">
-          Tip: Toggle the tree lights, turn on snow and sparkles, then scroll to the boss
-          battle and test your elf skills. Boss is tougher now, so don’t spam J and hope.
+          Tip: Sword = safe damage, bow = ranged, mace = low damage but JUMP with it for crits.
         </p>
       </div>
       <div class="tree-wrapper" id="tree-section">
@@ -573,7 +572,7 @@
       <h2>🎅 Santa & 👑 Christmas Boss Battle</h2>
       <p style="font-size:0.9rem; opacity:0.86; margin-bottom:10px;">
         Talk to Santa for Christmas jokes.  
-        Then play as a tiny elf and fight a huge HP Christmas Boss with sword & ice bow.
+        Then play as a tiny elf and fight a huge-HP crown Boss with sword, bow, and mace.
       </p>
 
       <div class="character-row">
@@ -599,16 +598,16 @@
           <div class="character-face">🧝‍♂️👑</div>
           <div class="character-name">Christmas Boss Battle</div>
           <div class="character-desc">
-            You are a small elf with a candy cane sword and an ice bow.
-            The Boss has way more HP now. Good luck.
+            You are a small elf with a candy cane sword, ice bow, and a heavy mace.
+            Boss has a huge crown and no face. Terrifying.
           </div>
           <div class="boss-info">
-            Controls: A / D or ← / → to move, W or ↑ to jump, J = sword (weaker), K = ice arrow.
+            Controls: A / D or ← / → to move, W or ↑ to jump, J = sword (weak), K = ice arrow, L = mace (jump for crit).
             Double-click the game to reset after someone dies.
           </div>
           <canvas id="bossGame" width="480" height="260"></canvas>
           <div class="boss-game-text" id="bossGameText">
-            Move closer and start swinging (J) or shooting (K). Watch out for snowballs, icicles, and ground waves.
+            Move, jump, sword, bow, mace. Try jumping + L for big bonks.
           </div>
         </div>
       </div>
@@ -828,7 +827,9 @@
       maxHp: 120,
       swordTimer: 0,
       swordCooldown: 0,
-      bowCooldown: 0
+      bowCooldown: 0,
+      maceTimer: 0,
+      maceCooldown: 0
     };
 
     const boss = {
@@ -852,9 +853,16 @@
     const hitBossLines = [
       "You slash with your candy cane. The Boss: “That’s *too* sweet!”",
       "Ice arrow hits! Boss complains: “I said ‘no ice’!”",
-      "Critical festive hit! The Boss drops a gingerbread man in shock.",
+      "Festive hit! The Boss drops a gingerbread man in shock.",
       "Your combo is so sparkly the Boss needs sunglasses.",
       "Boss: “Stop. These vibes are… annoyingly wholesome.”"
+    ];
+
+    const maceCritLines = [
+      "Perfect jump bonk! The crown actually rattles.",
+      "Mace crit! Boss: “That was NOT in the Christmas manual.”",
+      "You slam the crown with a full jump swing. Massive jingle-damage.",
+      "The ground shakes. Somewhere, a Christmas tree applauds."
     ];
 
     const bossHitYouLines = [
@@ -891,7 +899,7 @@
       icicles.length = 0;
       waves.length = 0;
       bossGameText.textContent =
-        "Round 2: The Boss is back with even more HP. Same controls. More pain.";
+        "Round 2: The Boss is back with even more HP. J = sword, K = bow, L = mace (jump for crit).";
     }
 
     function spawnArrow() {
@@ -1004,7 +1012,7 @@
         player.onGround = false;
       }
 
-      // Sword attack (weaker)
+      // Sword attack (weak)
       if ((keys["j"] || keys[" "]) && player.swordCooldown <= 0) {
         player.swordTimer = 180; // ms
         player.swordCooldown = 320; // ms
@@ -1018,9 +1026,17 @@
         }
       }
 
+      // Mace attack (L)
+      if (keys["l"] && player.maceCooldown <= 0) {
+        player.maceTimer = 220;
+        player.maceCooldown = 550;
+      }
+
       if (player.swordTimer > 0) player.swordTimer -= dt;
       if (player.swordCooldown > 0) player.swordCooldown -= dt;
       if (player.bowCooldown > 0) player.bowCooldown -= dt;
+      if (player.maceTimer > 0) player.maceTimer -= dt;
+      if (player.maceCooldown > 0) player.maceCooldown -= dt;
 
       // Apply movement
       player.x += player.vx;
@@ -1055,7 +1071,7 @@
           continue;
         }
         if (boss.alive && boss.hp > 0 && rectsOverlap(a, boss)) {
-          boss.hp -= 6; // weaker than before
+          boss.hp -= 6; // bow damage
           boss.hp = Math.max(0, boss.hp);
           arrows.splice(i, 1);
           if (boss.hp === 0) {
@@ -1128,7 +1144,7 @@
         }
       }
 
-      // Sword hit check (weaker damage)
+      // Sword hit check (weaker sword)
       if (player.swordTimer > 0 && boss.alive && boss.hp > 0) {
         const reach = 20;
         const swordRect = {
@@ -1138,13 +1154,38 @@
           h: player.h - 12
         };
         if (rectsOverlap(swordRect, boss)) {
-          boss.hp -= 3; // weaker sword damage
+          boss.hp -= 3; // sword damage
           boss.hp = Math.max(0, boss.hp);
           if (boss.hp === 0) {
             boss.alive = false;
             bossGameText.textContent = randomFrom(winLines);
           } else {
             bossGameText.textContent = randomFrom(hitBossLines);
+          }
+        }
+      }
+
+      // Mace hit check
+      if (player.maceTimer > 0 && boss.alive && boss.hp > 0) {
+        const reach = 22;
+        const maceRect = {
+          x: player.facing === 1 ? player.x + player.w : player.x - reach,
+          y: player.y + 4,
+          w: reach,
+          h: player.h - 8
+        };
+        if (rectsOverlap(maceRect, boss)) {
+          const isCrit = !player.onGround; // in air = crit
+          const dmg = isCrit ? 5 : 2;      // crit > sword, normal < sword
+          boss.hp -= dmg;
+          boss.hp = Math.max(0, boss.hp);
+          if (boss.hp === 0) {
+            boss.alive = false;
+            bossGameText.textContent = randomFrom(winLines);
+          } else {
+            bossGameText.textContent = isCrit
+              ? randomFrom(maceCritLines)
+              : randomFrom(hitBossLines);
           }
         }
       }
@@ -1220,40 +1261,53 @@
         ctx.restore();
       }
 
+      // Mace swing
+      if (player.maceTimer > 0) {
+        ctx.save();
+        const baseX = player.facing === 1 ? player.x + player.w : player.x;
+        const baseY = player.y + player.h / 2;
+        ctx.translate(baseX, baseY);
+        const angle = player.facing === 1 ? -0.3 : Math.PI + 0.3;
+        ctx.rotate(angle);
+        // Handle
+        ctx.strokeStyle = "#e5e7eb";
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(18, 0);
+        ctx.stroke();
+        // Head
+        ctx.fillStyle = "#facc15";
+        ctx.beginPath();
+        ctx.arc(22, 0, 5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+
       // Arrows (ice bolts)
       ctx.fillStyle = "#bae6fd";
       arrows.forEach((a) => {
         ctx.fillRect(a.x, a.y, a.w, a.h);
       });
 
-      // Boss
+      // Boss (no face, big crown)
       if (boss.hp > 0) {
-        // Body
         const bossGrd = ctx.createLinearGradient(boss.x, boss.y, boss.x, boss.y + boss.h);
         bossGrd.addColorStop(0, "#ef4444");
         bossGrd.addColorStop(1, "#b91c1c");
         ctx.fillStyle = bossGrd;
         ctx.fillRect(boss.x, boss.y, boss.w, boss.h);
-        // Crown
+        // Crown only
         ctx.fillStyle = "#fde047";
-        ctx.fillRect(boss.x + 5, boss.y - 12, boss.w - 10, 10);
-        // Eyes
-        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(boss.x + 5, boss.y - 14, boss.w - 10, 12);
         ctx.beginPath();
-        ctx.arc(boss.x + 18, boss.y + 18, 4, 0, Math.PI * 2);
-        ctx.arc(boss.x + boss.w - 18, boss.y + 18, 4, 0, Math.PI * 2);
+        ctx.moveTo(boss.x + 5, boss.y - 14);
+        ctx.lineTo(boss.x + 15, boss.y - 26);
+        ctx.lineTo(boss.x + 30, boss.y - 14);
+        ctx.lineTo(boss.x + 45, boss.y - 26);
+        ctx.lineTo(boss.x + boss.w - 5, boss.y - 14);
+        ctx.closePath();
         ctx.fill();
-        ctx.fillStyle = "#000000";
-        ctx.beginPath();
-        ctx.arc(boss.x + 18, boss.y + 18, 2, 0, Math.PI * 2);
-        ctx.arc(boss.x + boss.w - 18, boss.y + 18, 2, 0, Math.PI * 2);
-        ctx.fill();
-        // Grumpy mouth
-        ctx.strokeStyle = "#000000";
-        ctx.beginPath();
-        ctx.moveTo(boss.x + 15, boss.y + 32);
-        ctx.lineTo(boss.x + boss.w - 15, boss.y + 32);
-        ctx.stroke();
       } else {
         // Boss fainted
         ctx.fillStyle = "#9ca3af";
@@ -1306,7 +1360,7 @@
     });
 
     bossGameText.textContent =
-      "Move with A / D (or ← / →), jump with W / ↑, sword = J (weak), ice bow = K. Boss has huge HP, so play smart. Double-click to reset.";
+      "Move with A / D (or ← / →), jump with W / ↑, J = sword, K = bow, L = mace (jump for crit). Boss has huge HP. Double-click to reset.";
 
     requestAnimationFrame(gameLoop);
   </script>
