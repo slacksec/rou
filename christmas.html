@@ -491,7 +491,7 @@
           Snow falls, lights blink, Santa talks, and there’s a crown Boss waiting for elf bonks.
         </p>
         <p class="hero-tip">
-          Tip: Sword = solid (3 dmg, one hit), Bow = ranged, Mace = weak on ground (1 dmg) but STRONG if you jump-hit (7 dmg).
+          Tip: Sword = solid (4 dmg, one hit), Bow = ranged (3 dmg), Mace = weak on ground (1 dmg) but STRONG if you jump-hit (7 dmg).
         </p>
       </div>
       <div class="tree-wrapper" id="tree-section">
@@ -606,7 +606,7 @@
           </div>
           <div class="boss-info">
             Controls (when playing): A / D or ← / → to move, W or ↑ to jump,
-            J = sword (3 dmg), K = ice arrow, L = mace (1 dmg, 7 dmg if you hit while in the air).
+            J = sword (4 dmg), K = ice arrow (3 dmg), L = mace (1 dmg, 7 dmg if you hit while in the air).
             Double-click the game to reset while playing.
           </div>
           <canvas id="bossGame" width="480" height="260"></canvas>
@@ -923,7 +923,7 @@
       waves.length = 0;
       hole.active = false;
       bossGameText.textContent =
-        "Fight started! Move: A/D or ←/→, Jump: W/↑, Sword: J, Bow: K, Mace: L (jump = crit). Don’t try sneaky spots behind the boss...";
+        "Fight started! Move: A/D or ←/→, Jump: W/↑, Sword: J (4 dmg), Bow: K (3 dmg), Mace: L (jump = big crit). Don’t try sneaky spots behind the boss...";
     }
 
     bossPlayBtn.addEventListener("click", () => {
@@ -1042,14 +1042,14 @@
         player.onGround = false;
       }
 
-      // Sword attack (3 dmg, once per swing)
+      // Sword attack (4 dmg, once per swing)
       if ((keys["j"] || keys[" "]) && player.swordCooldown <= 0) {
         player.swordTimer = 180;
         player.swordCooldown = 320;
         player.swordDidHit = false;
       }
 
-      // Bow attack
+      // Bow attack (3 dmg per arrow)
       if (keys["k"]) {
         if (!player.bowCooldown || player.bowCooldown <= 0) {
           spawnArrow();
@@ -1115,7 +1115,7 @@
         }
       }
 
-      // Arrows
+      // Arrows (3 dmg now)
       for (let i = arrows.length - 1; i >= 0; i--) {
         const a = arrows[i];
         a.x += a.vx;
@@ -1124,7 +1124,7 @@
           continue;
         }
         if (boss.alive && boss.hp > 0 && rectsOverlap(a, boss)) {
-          boss.hp -= 6;
+          boss.hp -= 3;
           boss.hp = Math.max(0, boss.hp);
           arrows.splice(i, 1);
           if (boss.hp === 0) {
@@ -1197,7 +1197,7 @@
         }
       }
 
-      // Sword hit (3 dmg, once per swing)
+      // Sword hit (4 dmg, once per swing)
       if (player.swordTimer > 0 && !player.swordDidHit && boss.alive && boss.hp > 0) {
         const reach = 20;
         const swordRect = {
@@ -1207,7 +1207,7 @@
           h: player.h - 12
         };
         if (rectsOverlap(swordRect, boss)) {
-          boss.hp -= 3;
+          boss.hp -= 4;
           boss.hp = Math.max(0, boss.hp);
           player.swordDidHit = true;
           if (boss.hp === 0) {
@@ -1432,4 +1432,3 @@
   </script>
 </body>
 </html>
-
