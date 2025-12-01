@@ -148,7 +148,7 @@
     }
 
     .tree-layer:nth-child(1) { top: 20px; }
-    .tree-layer:nth-child(2) { top: 70px; border-bottom-color: #0fa34c; }
+    . .tree-layer:nth-child(2) { top: 70px; border-bottom-color: #0fa34c; }
     .tree-layer:nth-child(3) { top: 120px; border-bottom-color: #16ca5e; }
 
     .tree-trunk {
@@ -249,36 +249,6 @@
       background: rgba(255, 255, 255, 0.08);
     }
 
-    /* Music */
-    .music-player {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      align-items: center;
-      margin-top: 10px;
-      font-size: 0.9rem;
-    }
-
-    .music-btn,
-    #trackSelect {
-      padding: 6px 12px;
-      border-radius: 999px;
-      border: 1px solid rgba(255, 255, 255, 0.4);
-      background: rgba(0, 0, 0, 0.45);
-      color: #ffffff;
-      font-size: 0.85rem;
-      cursor: pointer;
-    }
-
-    .music-btn:hover,
-    #trackSelect:hover {
-      background: rgba(255, 255, 255, 0.08);
-    }
-
-    .music-status {
-      opacity: 0.9;
-    }
-
     /* Presents */
     .presents-grid {
       display: grid;
@@ -333,6 +303,88 @@
       font-size: 0.88rem;
       min-height: 1.2em;
       opacity: 0.9;
+    }
+
+    /* Santa & Boss sections */
+    .character-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      align-items: flex-start;
+    }
+
+    .character-card {
+      flex: 1;
+      min-width: 230px;
+      background: rgba(5, 31, 66, 0.9);
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 10px 12px;
+    }
+
+    .character-face {
+      font-size: 2.4rem;
+      margin-bottom: 6px;
+    }
+
+    .character-name {
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .character-desc {
+      font-size: 0.85rem;
+      opacity: 0.85;
+      margin-bottom: 8px;
+    }
+
+    .character-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+
+    .char-btn {
+      padding: 5px 10px;
+      font-size: 0.82rem;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      background: rgba(0, 0, 0, 0.45);
+      color: #ffffff;
+      cursor: pointer;
+    }
+
+    .char-btn:hover {
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .character-output {
+      font-size: 0.86rem;
+      min-height: 2.4em;
+      line-height: 1.4;
+    }
+
+    .boss-status {
+      font-size: 0.8rem;
+      opacity: 0.85;
+      margin-bottom: 4px;
+    }
+
+    .boss-bar {
+      width: 100%;
+      height: 10px;
+      border-radius: 999px;
+      background: rgba(0, 0, 0, 0.6);
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+
+    .boss-bar-inner {
+      height: 100%;
+      width: 100%;
+      background: linear-gradient(90deg, #ff4f4f, #ffd166);
+      transition: width 0.3s ease;
     }
 
     /* Santa sleigh */
@@ -412,13 +464,8 @@
 </head>
 <body>
 
-  <!-- Santa fly-by -->
+  <!-- Flying Santa decoration -->
   <div class="santa">🎅🦌🦌🦌</div>
-
-  <!-- Background music -->
-  <audio id="bgMusic" loop>
-    <source id="musicSource" src="music/thick-of-it.mp3" type="audio/mpeg">
-  </audio>
 
   <header>
     <div class="nav">
@@ -427,6 +474,7 @@
         <a href="#countdown">Countdown</a>
         <a href="#tree-section">Tree</a>
         <a href="#presents">Presents</a>
+        <a href="#santa-boss">Santa & Boss</a>
       </div>
       <button class="back-btn" onclick="location.href='index.html'">⬅ Back</button>
     </div>
@@ -439,10 +487,11 @@
         <h1 class="hero-title">✨ Merry Christmas & Happy Holidays ✨</h1>
         <p class="hero-text">
           Welcome to the secret Christmas page. Click things. See what happens.
-          Some parts glow, some fall from the sky, some play music.
+          Snow falls, lights blink, Santa talks, and there’s even a Christmas Boss
+          who thinks he’s tougher than your holiday spirit.
         </p>
         <p class="hero-tip">
-          Tip: Toggle the tree lights, turn on music, and open all the presents.
+          Tip: Toggle the tree lights, turn on snow and sparkles, then go fight the Christmas Boss with terrible jokes.
         </p>
       </div>
       <div class="tree-wrapper" id="tree-section">
@@ -460,7 +509,7 @@
       </div>
     </section>
 
-    <!-- Countdown + controls + music -->
+    <!-- Countdown + controls -->
     <section id="countdown">
       <h2>⏰ Countdown to Christmas</h2>
       <p style="font-size:0.9rem; opacity:0.85;">
@@ -490,20 +539,6 @@
         <button class="pill-btn" id="snowToggle">❄ Snow: ON</button>
         <button class="pill-btn" id="sparkleToggle">✨ Sparkles: ON</button>
       </div>
-
-      <div class="music-player">
-        <button class="music-btn" id="musicBtn">▶ Play</button>
-
-        <select id="trackSelect">
-          <option value="thick">Thick of It</option>
-          <option value="nggyu">Never Gonna Give You Up</option>
-          <option value="jingle">Jingle Bells</option>
-        </select>
-
-        <div class="music-status" id="musicStatus">
-          Selected: Thick of It (press Play)
-        </div>
-      </div>
     </section>
 
     <!-- Presents -->
@@ -529,6 +564,58 @@
       </div>
 
       <div class="present-message" id="presentMessage"></div>
+    </section>
+
+    <!-- Santa & Christmas Boss -->
+    <section id="santa-boss">
+      <h2>🎅 Santa & 👑 The Christmas Boss</h2>
+      <p style="font-size:0.9rem; opacity:0.86; margin-bottom:10px;">
+        Talk to Santa for wholesome Christmas jokes.  
+        Then challenge the Christmas Boss and defeat him using pure festive cringe.
+      </p>
+
+      <div class="character-row">
+        <!-- Santa -->
+        <div class="character-card">
+          <div class="character-face">🎅</div>
+          <div class="character-name">Santa Claus</div>
+          <div class="character-desc">
+            Very jolly. Powered by cookies, hot chocolate, and terrible puns.
+          </div>
+          <div class="character-buttons">
+            <button class="char-btn" id="santaJokeBtn">Tell me a joke</button>
+            <button class="char-btn" id="santaPunBtn">Give me a Christmas pun</button>
+            <button class="char-btn" id="santaTipBtn">Give me a kind message</button>
+          </div>
+          <div class="character-output" id="santaOutput">
+            Ho ho ho! Click a button and I’ll say something festive.
+          </div>
+        </div>
+
+        <!-- Boss -->
+        <div class="character-card">
+          <div class="character-face">😈</div>
+          <div class="character-name">The Christmas Boss</div>
+          <div class="character-desc">
+            Thinks Christmas is “too sparkly”. Your mission: overwhelm him with joy and bad jokes.
+          </div>
+          <div class="boss-status">
+            Boss Grumpiness: <span id="bossHpText">100</span>%
+          </div>
+          <div class="boss-bar">
+            <div class="boss-bar-inner" id="bossHpBar"></div>
+          </div>
+          <div class="character-buttons">
+            <button class="char-btn" id="bossJokeBtn">Throw a Christmas joke</button>
+            <button class="char-btn" id="bossRoastBtn">Festive roast</button>
+            <button class="char-btn" id="bossKindBtn">Hit with kindness</button>
+            <button class="char-btn" id="bossResetBtn">Reset Boss</button>
+          </div>
+          <div class="character-output" id="bossOutput">
+            “You think you can defeat me with Christmas spirit? Pathetic.” — The Boss (for now)
+          </div>
+        </div>
+      </div>
     </section>
   </main>
 
@@ -638,63 +725,6 @@
       setTimeout(() => s.remove(), 700);
     });
 
-    // Music controls
-    const music = document.getElementById("bgMusic");
-    const musicBtn = document.getElementById("musicBtn");
-    const musicStatus = document.getElementById("musicStatus");
-    const musicSource = document.getElementById("musicSource");
-    const trackSelect = document.getElementById("trackSelect");
-
-    const tracks = {
-      thick: "music/thick-of-it.mp3",
-      nggyu: "music/never-gonna-give-you-up.mp3",
-      jingle: "music/jingle-bells.mp3"
-    };
-
-    function updateTrack() {
-      const key = trackSelect.value;
-      musicSource.src = tracks[key];
-      music.load();
-
-      const trackName = trackSelect.options[trackSelect.selectedIndex].text;
-      if (!music.paused) {
-        music.play().catch(() => {});
-        musicStatus.textContent = "Playing: " + trackName;
-      } else {
-        musicStatus.textContent = "Selected: " + trackName + " (press Play)";
-      }
-    }
-
-    trackSelect.addEventListener("change", updateTrack);
-
-    musicBtn.addEventListener("click", () => {
-      if (music.paused) {
-        music.play().catch(() => {
-          alert("Your browser blocked autoplay. Try clicking Play again.");
-        });
-        musicBtn.textContent = "⏸ Pause";
-      } else {
-        music.pause();
-        musicBtn.textContent = "▶ Play";
-      }
-
-      const trackName = trackSelect.options[trackSelect.selectedIndex].text;
-      musicStatus.textContent = music.paused
-        ? "Paused."
-        : "Playing: " + trackName;
-    });
-
-    music.addEventListener("play", () => {
-      const trackName = trackSelect.options[trackSelect.selectedIndex].text;
-      musicStatus.textContent = "Playing: " + trackName;
-      musicBtn.textContent = "⏸ Pause";
-    });
-
-    music.addEventListener("pause", () => {
-      musicStatus.textContent = "Paused.";
-      musicBtn.textContent = "▶ Play";
-    });
-
     // Presents
     const presents = document.querySelectorAll(".present");
     const presentMessage = document.getElementById("presentMessage");
@@ -705,22 +735,147 @@
       "✨ Mission: Do a silly Christmas dance for 10 seconds.",
       "😊 Task: Give someone a genuine compliment today.",
       "☕ Quest: Make hot chocolate for someone in your family.",
-      "🎅 Fun: Do your best Santa laugh (HO HO HO!)",
+      "🎅 Fun: Do your best Santa laugh: HO HO HO!",
       "❄ Chill: Take 3 deep breaths and relax for a moment.",
-      "🎶 Game: Hum your favourite Christmas song for 15 seconds."
+      "🎶 Game: Hum your favourite Christmas song for 15 seconds.",
+      "🍪 Sneaky: Hide a cookie for future-you (but remember where).",
+      "🌟 Calm: Look around and find 3 things that make you feel cozy."
     ];
 
-    function randomMessage() {
-      const index = Math.floor(Math.random() * presentMessages.length);
-      return presentMessages[index];
+    function randomFrom(arr) {
+      return arr[Math.floor(Math.random() * arr.length)];
     }
 
     presents.forEach((present) => {
       present.addEventListener("click", () => {
-        presentMessage.textContent = randomMessage();
+        presentMessage.textContent = randomFrom(presentMessages);
       });
     });
+
+    // Santa interactions
+    const santaOutput = document.getElementById("santaOutput");
+    const santaJokeBtn = document.getElementById("santaJokeBtn");
+    const santaPunBtn = document.getElementById("santaPunBtn");
+    const santaTipBtn = document.getElementById("santaTipBtn");
+
+    const santaJokes = [
+      "Why did Santa go to music school? So he could improve his wrapping skills!",
+      "What do elves learn in school? The elf-abet.",
+      "Why was the snowman looking through the carrots? He was picking his nose.",
+      "What do you call a cat on the beach at Christmas? Sandy Claws.",
+      "Why did Santa’s helper see the doctor? Because he had low ‘elf’ esteem.",
+      "What do you get if you cross a snowman and a dog? Frostbite.",
+      "Why is it so cold at Christmas? Because it’s Decembrrrrr.",
+      "What do you call a snowman with a six-pack? An abdominal snowman."
+    ];
+
+    const santaPuns = [
+      "This Christmas, I’m on the ‘nice-ish’ list. It’s… a gray area.",
+      "I told my tree we’d always be friends. It said, ‘I’m rooting for you.’",
+      "I’m very ‘present’ this year. Mostly because I bought none in advance.",
+      "Don’t mind my Christmas jokes. They’re snow laughing matter.",
+      "I’m feeling extra Claus-trophobic with all this Christmas spirit.",
+      "We’re having a tree-mendous time, aren’t we?",
+      "You snow the drill: eat, nap, repeat.",
+      "Yule be sorry if you skip dessert."
+    ];
+
+    const santaTips = [
+      "Santa says: The best gift you can give is your time and attention.",
+      "Remember: It’s okay if everything isn’t perfect. Cozy > perfect.",
+      "Take one small moment today just to breathe and enjoy where you are.",
+      "Tell someone you appreciate them. It takes 5 seconds and lasts all day.",
+      "You don’t need a perfect tree, just real laughter around it.",
+      "Drink some water between the hot chocolate. Future-you will thank you.",
+      "Try to remember one good thing about this year. That’s your real present."
+    ];
+
+    santaJokeBtn.addEventListener("click", () => {
+      santaOutput.textContent = randomFrom(santaJokes);
+    });
+
+    santaPunBtn.addEventListener("click", () => {
+      santaOutput.textContent = randomFrom(santaPuns);
+    });
+
+    santaTipBtn.addEventListener("click", () => {
+      santaOutput.textContent = randomFrom(santaTips);
+    });
+
+    // Christmas Boss interactions
+    let bossHp = 100;
+    const bossHpText = document.getElementById("bossHpText");
+    const bossHpBar = document.getElementById("bossHpBar");
+    const bossOutput = document.getElementById("bossOutput");
+    const bossJokeBtn = document.getElementById("bossJokeBtn");
+    const bossRoastBtn = document.getElementById("bossRoastBtn");
+    const bossKindBtn = document.getElementById("bossKindBtn");
+    const bossResetBtn = document.getElementById("bossResetBtn");
+
+    function updateBossUi() {
+      bossHp = Math.max(0, Math.min(100, bossHp));
+      bossHpText.textContent = bossHp;
+      bossHpBar.style.width = bossHp + "%";
+      if (bossHp === 0) {
+        bossOutput.textContent =
+          "“Fine. You win. Your Christmas spirit is too strong… tell Santa I’m taking the day off.” 🎄👑";
+      }
+    }
+
+    const bossJokeLines = [
+      "You launch a candy-cane joke. The Boss winces: “That pun was illegal in 7 countries.”",
+      "You tell a snowman joke so bad the Boss loses his cool. Literally. -15% grumpiness.",
+      "The Boss sighs: “If you make one more sleigh pun, I’m out.” You make three.",
+      "Your joke lands like a fruitcake: heavy, confusing, but somehow effective."
+    ];
+
+    const bossRoastLines = [
+      "“You’re just a Halloween villain who got lost in December,” you say. The Boss is shook.",
+      "You tell him his outfit screams ‘budget Grinch’. Critical hit.",
+      "You call him ‘chief of the anti-fun department’. His paperwork doubles. He hates it.",
+      "You suggest adding fairy lights to his evil lair. He pretends to hate it. Secretly loves it."
+    ];
+
+    const bossKindLines = [
+      "You tell the Boss: “You’re allowed to enjoy Christmas too, you know.” He looks away.",
+      "You offer him a cookie. He takes it ‘ironically’ but finishes it ‘non-ironically’.",
+      "You say: “You don’t have to be the villain all the time.” His grumpiness melts a little.",
+      "You invite him to join Christmas dinner. He mutters something about ‘checking his calendar’."
+    ];
+
+    function bossHit(amount, linesArray) {
+      if (bossHp === 0) {
+        bossOutput.textContent = "The Boss is already defeated. Hit ‘Reset Boss’ to start over.";
+        return;
+      }
+      bossHp -= amount;
+      bossOutput.textContent = randomFrom(linesArray);
+      updateBossUi();
+    }
+
+    bossJokeBtn.addEventListener("click", () => {
+      const dmg = 10 + Math.floor(Math.random() * 11); // 10–20
+      bossHit(dmg, bossJokeLines);
+    });
+
+    bossRoastBtn.addEventListener("click", () => {
+      const dmg = 15 + Math.floor(Math.random() * 11); // 15–25
+      bossHit(dmg, bossRoastLines);
+    });
+
+    bossKindBtn.addEventListener("click", () => {
+      const dmg = 8 + Math.floor(Math.random() * 8); // 8–15
+      bossHit(dmg, bossKindLines);
+    });
+
+    bossResetBtn.addEventListener("click", () => {
+      bossHp = 100;
+      updateBossUi();
+      bossOutput.textContent =
+        "“I’m back to full grumpiness. Your jokes won’t work this time… probably.” — The Christmas Boss";
+    });
+
+    updateBossUi();
   </script>
 </body>
 </html>
-
