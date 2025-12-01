@@ -488,11 +488,10 @@
         <h1 class="hero-title">✨ Merry Christmas & Happy Holidays ✨</h1>
         <p class="hero-text">
           Welcome to the secret Christmas page. Click things. See what happens.
-          Snow falls, lights blink, Santa talks, and there’s a big crown-wearing Boss
-          waiting to taste your elf weapons.
+          Snow falls, lights blink, Santa talks, and there’s a crown Boss waiting for elf bonks.
         </p>
         <p class="hero-tip">
-          Tip: Sword = decent, Bow = ranged, Mace = weak on ground but STRONG if you jump-hit.
+          Tip: Sword = solid (3 dmg), Bow = ranged, Mace = weak on ground (1 dmg) but STRONG if you jump-hit (7 dmg).
         </p>
       </div>
       <div class="tree-wrapper" id="tree-section">
@@ -572,7 +571,7 @@
       <h2>🎅 Santa & 👑 Christmas Boss Battle</h2>
       <p style="font-size:0.9rem; opacity:0.86; margin-bottom:10px;">
         Talk to Santa for Christmas jokes.  
-        Then play as a tiny elf and fight a huge-HP crown Boss with sword, bow, and mace.
+        Then, IF you want, press Play to fight the crown Boss. If you don’t, it just sits there chill.
       </p>
 
       <div class="character-row">
@@ -601,13 +600,18 @@
             You are a small elf with a candy cane sword, ice bow, and a heavy mace.
             Boss has a huge crown and no face. Terrifying.
           </div>
+          <div style="margin-bottom:6px; display:flex; flex-wrap:wrap; gap:6px;">
+            <button class="char-btn" id="bossPlayBtn">▶ Play Boss Battle</button>
+            <button class="char-btn" id="bossStopBtn">⏹ Stop</button>
+          </div>
           <div class="boss-info">
-            Controls: A / D or ← / → to move, W or ↑ to jump, J = sword, K = ice arrow, L = mace (jump for crit).
-            Double-click the game to reset after someone dies.
+            Controls (when playing): A / D or ← / → to move, W or ↑ to jump,
+            J = sword (3 dmg), K = ice arrow, L = mace (1 dmg, 7 dmg if you hit while in the air).
+            Double-click the game to reset while playing.
           </div>
           <canvas id="bossGame" width="480" height="260"></canvas>
           <div class="boss-game-text" id="bossGameText">
-            Move, jump, sword, bow, mace. Try jumping + L for big bonks.
+            Boss battle idle. Press “Play Boss Battle” if you want to fight.
           </div>
         </div>
       </div>
@@ -801,6 +805,10 @@
     const canvas = document.getElementById("bossGame");
     const ctx = canvas.getContext("2d");
     const bossGameText = document.getElementById("bossGameText");
+    const bossPlayBtn = document.getElementById("bossPlayBtn");
+    const bossStopBtn = document.getElementById("bossStopBtn");
+
+    let gameActive = false;
 
     const keys = {};
     document.addEventListener("keydown", (e) => {
@@ -901,8 +909,19 @@
       waves.length = 0;
       player.maceDidHit = false;
       bossGameText.textContent =
-        "Round 2: The Boss is back. J = sword, K = bow, L = mace (jump for crit).";
+        "Fight started! Move: A/D or ←/→, Jump: W/↑, Sword: J, Bow: K, Mace: L (jump = crit).";
     }
+
+    bossPlayBtn.addEventListener("click", () => {
+      gameActive = true;
+      resetGame();
+    });
+
+    bossStopBtn.addEventListener("click", () => {
+      gameActive = false;
+      bossGameText.textContent =
+        "Boss battle stopped. Press “Play Boss Battle” again if you want another round.";
+    });
 
     function spawnArrow() {
       const speed = 4;
@@ -989,6 +1008,7 @@
     }
 
     function update(dt) {
+      if (!gameActive) return;
       if (player.hp <= 0 || boss.hp <= 0) return;
 
       // Movement input
@@ -1026,7 +1046,7 @@
       if (keys["l"] && player.maceCooldown <= 0) {
         player.maceTimer = 200;
         player.maceCooldown = 550;
-        player.maceDidHit = false; // only one hit per swing
+        player.maceDidHit = false; // only once per swing
       }
 
       if (player.swordTimer > 0) player.swordTimer -= dt;
@@ -1164,18 +1184,18 @@
         }
       }
 
-      // Mace hit (1 dmg normal, 5 dmg crit, only once per swing)
+      // Mace hit (1 dmg normal, 7 dmg crit, only once per swing)
       if (player.maceTimer > 0 && !player.maceDidHit && boss.alive && boss.hp > 0) {
-        const reach = 22;
+        const reach = 24;
         const maceRect = {
           x: player.facing === 1 ? player.x + player.w : player.x - reach,
-          y: player.y + 4,
+          y: player.y - 4,
           w: reach,
-          h: player.h - 8
+          h: player.h + 8   // bigger hitbox so crits are easier to land
         };
         if (rectsOverlap(maceRect, boss)) {
-          const isCrit = !player.onGround;
-          const dmg = isCrit ? 5 : 1;
+          const isCrit = !player.onGround && Math.abs(player.vy) > 0.4;
+          const dmg = isCrit ? 7 : 1;
           boss.hp -= dmg;
           boss.hp = Math.max(0, boss.hp);
           player.maceDidHit = true;
@@ -1203,6 +1223,22 @@
       ctx.fillStyle = "#0c1f3a";
       ctx.fillRect(0, groundY, canvas.width, canvas.height - groundY);
 
+      if (!gameActive) {
+        // Idle / menu screen
+        ctx.fillStyle = "rgba(15,23,42,0.9)";
+        ctx.fillRect(40, 40, canvas.width - 80, canvas.height - 80);
+        ctx.strokeStyle = "rgba(148,163,184,0.9)";
+        ctx.strokeRect(40, 40, canvas.width - 80, canvas.height - 80);
+        ctx.fillStyle = "#e5e7eb";
+        ctx.font = "14px system-ui";
+        ctx.fillText("Christmas Boss Battle", 80, 80);
+        ctx.font = "11px system-ui";
+        ctx.fillText("Press the “Play Boss Battle” button to start fighting.", 80, 100);
+        ctx.fillText("Or ignore it and just enjoy the snow & jokes. Up to you.", 80, 116);
+        return;
+      }
+
+      // HP bars
       const pRatio = player.hp / player.maxHp;
       const bRatio = boss.hp / boss.maxHp;
 
@@ -1342,14 +1378,13 @@
     }
 
     canvas.addEventListener("dblclick", () => {
-      resetGame();
+      if (gameActive) resetGame();
     });
 
     bossGameText.textContent =
-      "Move with A / D (or ← / →), jump with W / ↑, J = sword (3 dmg), K = bow, L = mace (1 dmg, 5 dmg if jump). Double-click to reset.";
+      "Boss battle idle. Press “Play Boss Battle” if you want to fight. Or don’t. It’s Christmas.";
 
     requestAnimationFrame(gameLoop);
   </script>
 </body>
 </html>
-
