@@ -6,66 +6,721 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
     body {
       min-height: 100vh;
       background: radial-gradient(circle at top, #2a395a 0%, #050814 55%, #02030a 100%);
-      color: white;
-      font-family: system-ui, sans-serif;
+      color: #ffffff;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       overflow-x: hidden;
     }
 
     header {
       position: sticky;
       top: 0;
-      background: rgba(0,0,0,0.5);
+      z-index: 50;
+      background: rgba(0, 0, 0, 0.6);
       backdrop-filter: blur(6px);
-      padding: 10px 16px;
-      z-index: 100;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     }
 
     .nav {
       max-width: 1100px;
-      margin: auto;
+      margin: 0 auto;
+      padding: 10px 16px;
       display: flex;
-      justify-content: space-between;
       align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .nav-left {
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      font-size: 0.85rem;
     }
 
     .nav-links a {
       color: #ffe48b;
-      margin-left: 10px;
-      font-size: 0.9rem;
       text-decoration: none;
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid transparent;
+    }
+
+    .nav-links a:hover {
+      border-color: rgba(255, 255, 255, 0.3);
+      background: rgba(255, 255, 255, 0.08);
     }
 
     .back-btn {
       padding: 6px 12px;
-      border-radius: 12px;
-      background: rgba(255,255,255,0.1);
-      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      background: rgba(0, 0, 0, 0.4);
+      color: #ffffff;
+      font-size: 0.85rem;
       cursor: pointer;
-      color: white;
     }
 
-    main { max-width: 1100px; margin: auto; padding: 20px; }
+    .back-btn:hover {
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 20px 16px 40px;
+    }
 
     section {
-      background: rgba(0,0,0,0.35);
-      padding: 16px;
+      background: rgba(0, 0, 0, 0.38);
       border-radius: 16px;
-      margin-bottom: 20px;
+      padding: 16px;
+      margin-bottom: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
     }
 
-    /* TREE */
-    .tree-wrapper { text-align: center; }
-    .tree { position: relative; width: 170px; height: 260px; margin: auto; cursor: pointer; }
+    section h2 {
+      margin-bottom: 8px;
+      font-size: 1.3rem;
+    }
+
+    /* Hero + tree */
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+      gap: 16px;
+      align-items: center;
+    }
+
+    .hero-title {
+      font-size: clamp(2rem, 2vw + 1.4rem, 2.6rem);
+      margin-bottom: 6px;
+      text-align: left;
+    }
+
+    .hero-text {
+      font-size: 0.95rem;
+      opacity: 0.9;
+      line-height: 1.5;
+    }
+
+    .hero-tip {
+      margin-top: 6px;
+      font-size: 0.9rem;
+      opacity: 0.8;
+    }
+
+    .tree-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .tree {
+      position: relative;
+      width: 170px;
+      height: 260px;
+      cursor: pointer;
+    }
+
     .tree-layer {
-      position: absolute; left: 50%; transform: translateX(-50%);
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
       border-left: 80px solid transparent;
       border-right: 80px solid transparent;
       border-bottom: 90px solid #0b8a3e;
+      filter: drop-shadow(0 0 10px rgba(0, 0, 0, 0.7));
     }
+
     .tree-layer:nth-child(1) { top: 20px; }
-    .tree-layer:nth-child(2) { top: 70p
+    .tree-layer:nth-child(2) { top: 70px; border-bottom-color: #0fa34c; }
+    .tree-layer:nth-child(3) { top: 120px; border-bottom-color: #16ca5e; }
+
+    .tree-trunk {
+      position: absolute;
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 38px;
+      height: 40px;
+      background: #5c3b1e;
+      border-radius: 4px;
+    }
+
+    .tree-star {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translate(-50%, -30%);
+      font-size: 2rem;
+      filter: drop-shadow(0 0 8px rgba(255, 255, 160, 1));
+    }
+
+    .tree-lights span {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #ffd166;
+      box-shadow: 0 0 8px rgba(255, 220, 160, 0.9);
+    }
+
+    .tree-lights span:nth-child(1) { top: 85px; left: 50px; }
+    .tree-lights span:nth-child(2) { top: 105px; left: 95px; }
+    .tree-lights span:nth-child(3) { top: 135px; left: 65px; }
+    .tree-lights span:nth-child(4) { top: 150px; left: 115px; }
+    .tree-lights span:nth-child(5) { top: 180px; left: 45px; }
+
+    .lights-on .tree-lights span {
+      animation: twinkle 1.2s infinite alternate;
+    }
+
+    @keyframes twinkle {
+      from { opacity: 0.5; transform: scale(0.8); }
+      to { opacity: 1; transform: scale(1.2); }
+    }
+
+    .tree-label {
+      font-size: 0.85rem;
+      opacity: 0.82;
+    }
+
+    /* Countdown */
+    .countdown-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .countdown-item {
+      flex: 1;
+      min-width: 90px;
+      text-align: center;
+      padding: 8px;
+      border-radius: 12px;
+      background: rgba(5, 31, 66, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .countdown-number {
+      font-size: 1.5rem;
+      font-weight: 700;
+    }
+
+    .countdown-label {
+      font-size: 0.78rem;
+      opacity: 0.8;
+    }
+
+    .controls-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .pill-btn {
+      padding: 6px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      background: rgba(0, 0, 0, 0.45);
+      color: #ffffff;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+
+    .pill-btn:hover {
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    /* Music */
+    .music-player {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin-top: 10px;
+      font-size: 0.9rem;
+    }
+
+    .music-btn,
+    #trackSelect {
+      padding: 6px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      background: rgba(0, 0, 0, 0.45);
+      color: #ffffff;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+
+    .music-btn:hover,
+    #trackSelect:hover {
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .music-status {
+      opacity: 0.9;
+    }
+
+    /* Presents */
+    .presents-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 14px;
+      margin-top: 10px;
+    }
+
+    .present {
+      position: relative;
+      height: 120px;
+      border-radius: 16px;
+      background: linear-gradient(145deg, #d7263d, #ff4f4f);
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      cursor: pointer;
+      overflow: hidden;
+    }
+
+    .present::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      width: 18px;
+      margin: 0 auto;
+      background: #ffe066;
+      mix-blend-mode: screen;
+    }
+
+    .present::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      height: 18px;
+      margin: auto 0;
+      background: #ffe066;
+      mix-blend-mode: screen;
+    }
+
+    .present-label {
+      position: relative;
+      z-index: 1;
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
+    .present-message {
+      margin-top: 10px;
+      font-size: 0.88rem;
+      min-height: 1.2em;
+      opacity: 0.9;
+    }
+
+    /* Santa sleigh */
+    .santa {
+      position: fixed;
+      top: 12%;
+      left: -200px;
+      font-size: 2rem;
+      z-index: 10;
+      pointer-events: none;
+      animation: fly 22s linear infinite;
+    }
+
+    @keyframes fly {
+      0% { transform: translateX(0); opacity: 0; }
+      10% { opacity: 1; }
+      90% { opacity: 1; }
+      100% { transform: translateX(130vw); opacity: 0; }
+    }
+
+    /* Snow */
+    .snowflake {
+      position: fixed;
+      top: -10px;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: white;
+      opacity: 0.8;
+      pointer-events: none;
+      z-index: 1;
+      animation: fall var(--duration) linear forwards;
+    }
+
+    @keyframes fall {
+      to {
+        transform: translateY(105vh);
+        opacity: 0.2;
+      }
+    }
+
+    /* Sparkles */
+    .sparkle {
+      position: fixed;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #ffffff 0, #ffe48b 40%, transparent 70%);
+      pointer-events: none;
+      z-index: 5;
+      animation: sparkle-pop 0.7s ease-out forwards;
+    }
+
+    @keyframes sparkle-pop {
+      from { opacity: 1; transform: scale(0.2); }
+      to { opacity: 0; transform: scale(1.4); }
+    }
+
+    footer {
+      text-align: center;
+      font-size: 0.8rem;
+      opacity: 0.7;
+      padding-bottom: 20px;
+    }
+
+    @media (max-width: 700px) {
+      .hero {
+        grid-template-columns: minmax(0, 1fr);
+      }
+      .hero-title,
+      .hero-text,
+      .hero-tip {
+        text-align: left;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Santa fly-by -->
+  <div class="santa">🎅🦌🦌🦌</div>
+
+  <!-- Background music -->
+  <audio id="bgMusic" loop>
+    <source id="musicSource" src="music/thick-of-it.mp3" type="audio/mpeg">
+  </audio>
+
+  <header>
+    <div class="nav">
+      <div class="nav-left">🎄 Calvin’s Christmas World</div>
+      <div class="nav-links">
+        <a href="#countdown">Countdown</a>
+        <a href="#tree-section">Tree</a>
+        <a href="#presents">Presents</a>
+      </div>
+      <button class="back-btn" onclick="location.href='index.html'">⬅ Back</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- Hero -->
+    <section class="hero">
+      <div>
+        <h1 class="hero-title">✨ Merry Christmas & Happy Holidays ✨</h1>
+        <p class="hero-text">
+          Welcome to the secret Christmas page. Click things. See what happens.
+          Some parts glow, some fall from the sky, some play music.
+        </p>
+        <p class="hero-tip">
+          Tip: Toggle the tree lights, turn on music, and open all the presents.
+        </p>
+      </div>
+      <div class="tree-wrapper" id="tree-section">
+        <div id="tree" class="tree lights-on" title="Click to toggle lights">
+          <div class="tree-star">⭐</div>
+          <div class="tree-layer"></div>
+          <div class="tree-layer"></div>
+          <div class="tree-layer"></div>
+          <div class="tree-trunk"></div>
+          <div class="tree-lights">
+            <span></span><span></span><span></span><span></span><span></span>
+          </div>
+        </div>
+        <div id="treeLabel" class="tree-label">Lights: ON (click to toggle)</div>
+      </div>
+    </section>
+
+    <!-- Countdown + controls + music -->
+    <section id="countdown">
+      <h2>⏰ Countdown to Christmas</h2>
+      <p style="font-size:0.9rem; opacity:0.85;">
+        Counting down to midnight on 25 December (your local time).
+      </p>
+
+      <div class="countdown-grid">
+        <div class="countdown-item">
+          <div class="countdown-number" id="days">--</div>
+          <div class="countdown-label">Days</div>
+        </div>
+        <div class="countdown-item">
+          <div class="countdown-number" id="hours">--</div>
+          <div class="countdown-label">Hours</div>
+        </div>
+        <div class="countdown-item">
+          <div class="countdown-number" id="minutes">--</div>
+          <div class="countdown-label">Minutes</div>
+        </div>
+        <div class="countdown-item">
+          <div class="countdown-number" id="seconds">--</div>
+          <div class="countdown-label">Seconds</div>
+        </div>
+      </div>
+
+      <div class="controls-row">
+        <button class="pill-btn" id="snowToggle">❄ Snow: ON</button>
+        <button class="pill-btn" id="sparkleToggle">✨ Sparkles: ON</button>
+      </div>
+
+      <div class="music-player">
+        <button class="music-btn" id="musicBtn">▶ Play</button>
+
+        <select id="trackSelect">
+          <option value="thick">Thick of It</option>
+          <option value="nggyu">Never Gonna Give You Up</option>
+          <option value="jingle">Jingle Bells</option>
+        </select>
+
+        <div class="music-status" id="musicStatus">
+          Selected: Thick of It (press Play)
+        </div>
+      </div>
+    </section>
+
+    <!-- Presents -->
+    <section id="presents">
+      <h2>🎁 Open the Presents</h2>
+      <p style="font-size:0.9rem; opacity:0.86;">
+        Click a present to reveal a random Christmas challenge or message.
+      </p>
+
+      <div class="presents-grid">
+        <div class="present" data-slot="1">
+          <div class="present-label">Present #1</div>
+        </div>
+        <div class="present" data-slot="2">
+          <div class="present-label">Present #2</div>
+        </div>
+        <div class="present" data-slot="3">
+          <div class="present-label">Present #3</div>
+        </div>
+        <div class="present" data-slot="4">
+          <div class="present-label">Present #4</div>
+        </div>
+      </div>
+
+      <div class="present-message" id="presentMessage"></div>
+    </section>
+  </main>
+
+  <footer>
+    Made with ❤️ by Calvin · © 2025
+  </footer>
+
+  <script>
+    // Tree lights toggle
+    const tree = document.getElementById("tree");
+    const treeLabel = document.getElementById("treeLabel");
+
+    tree.addEventListener("click", () => {
+      tree.classList.toggle("lights-on");
+      const on = tree.classList.contains("lights-on");
+      treeLabel.textContent = "Lights: " + (on ? "ON" : "OFF") + " (click to toggle)";
+    });
+
+    // Countdown
+    const daysEl = document.getElementById("days");
+    const hoursEl = document.getElementById("hours");
+    const minutesEl = document.getElementById("minutes");
+    const secondsEl = document.getElementById("seconds");
+
+    function getNextChristmas() {
+      const now = new Date();
+      const year = (now.getMonth() === 11 && now.getDate() > 25)
+        ? now.getFullYear() + 1
+        : now.getFullYear();
+      return new Date(year, 11, 25, 0, 0, 0, 0);
+    }
+
+    const christmasDate = getNextChristmas();
+
+    function updateCountdown() {
+      const now = new Date();
+      const diff = christmasDate - now;
+
+      if (diff <= 0) {
+        daysEl.textContent = "0";
+        hoursEl.textContent = "0";
+        minutesEl.textContent = "0";
+        secondsEl.textContent = "0";
+        return;
+      }
+
+      const totalSeconds = Math.floor(diff / 1000);
+      const days = Math.floor(totalSeconds / (60 * 60 * 24));
+      const hours = Math.floor((totalSeconds % (60 * 60 * 24)) / (60 * 60));
+      const minutes = Math.floor((totalSeconds % (60 * 60)) / 60);
+      const seconds = totalSeconds % 60;
+
+      daysEl.textContent = days;
+      hoursEl.textContent = hours;
+      minutesEl.textContent = minutes;
+      secondsEl.textContent = seconds;
+    }
+
+    updateCountdown();
+    setInterval(updateCountdown, 1000);
+
+    // Snow
+    let snowEnabled = true;
+    const snowToggle = document.getElementById("snowToggle");
+
+    function createSnowflake() {
+      if (!snowEnabled) return;
+      const snowflake = document.createElement("div");
+      snowflake.className = "snowflake";
+      const size = 4 + Math.random() * 6;
+      snowflake.style.width = size + "px";
+      snowflake.style.height = size + "px";
+      snowflake.style.left = Math.random() * window.innerWidth + "px";
+      snowflake.style.setProperty("--duration", (5 + Math.random() * 6) + "s");
+      document.body.appendChild(snowflake);
+      setTimeout(() => snowflake.remove(), 12000);
+    }
+
+    snowToggle.addEventListener("click", () => {
+      snowEnabled = !snowEnabled;
+      snowToggle.textContent = snowEnabled ? "❄ Snow: ON" : "❄ Snow: OFF";
+      if (snowEnabled) {
+        for (let i = 0; i < 30; i++) createSnowflake();
+      }
+    });
+
+    for (let i = 0; i < 40; i++) createSnowflake();
+    setInterval(createSnowflake, 400);
+
+    // Sparkles
+    let sparklesEnabled = true;
+    const sparkleToggle = document.getElementById("sparkleToggle");
+
+    sparkleToggle.addEventListener("click", () => {
+      sparklesEnabled = !sparklesEnabled;
+      sparkleToggle.textContent = sparklesEnabled ? "✨ Sparkles: ON" : "✨ Sparkles: OFF";
+    });
+
+    document.addEventListener("pointermove", (e) => {
+      if (!sparklesEnabled) return;
+      if (Math.random() > 0.35) return;
+      const s = document.createElement("div");
+      s.className = "sparkle";
+      s.style.left = e.clientX + "px";
+      s.style.top = e.clientY + "px";
+      document.body.appendChild(s);
+      setTimeout(() => s.remove(), 700);
+    });
+
+    // Music controls
+    const music = document.getElementById("bgMusic");
+    const musicBtn = document.getElementById("musicBtn");
+    const musicStatus = document.getElementById("musicStatus");
+    const musicSource = document.getElementById("musicSource");
+    const trackSelect = document.getElementById("trackSelect");
+
+    const tracks = {
+      thick: "music/thick-of-it.mp3",
+      nggyu: "music/never-gonna-give-you-up.mp3",
+      jingle: "music/jingle-bells.mp3"
+    };
+
+    function updateTrack() {
+      const key = trackSelect.value;
+      musicSource.src = tracks[key];
+      music.load();
+
+      const trackName = trackSelect.options[trackSelect.selectedIndex].text;
+      if (!music.paused) {
+        music.play().catch(() => {});
+        musicStatus.textContent = "Playing: " + trackName;
+      } else {
+        musicStatus.textContent = "Selected: " + trackName + " (press Play)";
+      }
+    }
+
+    trackSelect.addEventListener("change", updateTrack);
+
+    musicBtn.addEventListener("click", () => {
+      if (music.paused) {
+        music.play().catch(() => {
+          alert("Your browser blocked autoplay. Try clicking Play again.");
+        });
+        musicBtn.textContent = "⏸ Pause";
+      } else {
+        music.pause();
+        musicBtn.textContent = "▶ Play";
+      }
+
+      const trackName = trackSelect.options[trackSelect.selectedIndex].text;
+      musicStatus.textContent = music.paused
+        ? "Paused."
+        : "Playing: " + trackName;
+    });
+
+    music.addEventListener("play", () => {
+      const trackName = trackSelect.options[trackSelect.selectedIndex].text;
+      musicStatus.textContent = "Playing: " + trackName;
+      musicBtn.textContent = "⏸ Pause";
+    });
+
+    music.addEventListener("pause", () => {
+      musicStatus.textContent = "Paused.";
+      musicBtn.textContent = "▶ Play";
+    });
+
+    // Presents
+    const presents = document.querySelectorAll(".present");
+    const presentMessage = document.getElementById("presentMessage");
+
+    const presentMessages = [
+      "🎄 Challenge: Say “Merry Christmas” in 3 different languages.",
+      "🎁 Gratitude: Name 3 things you’re grateful for this year.",
+      "✨ Mission: Do a silly Christmas dance for 10 seconds.",
+      "😊 Task: Give someone a genuine compliment today.",
+      "☕ Quest: Make hot chocolate for someone in your family.",
+      "🎅 Fun: Do your best Santa laugh (HO HO HO!)",
+      "❄ Chill: Take 3 deep breaths and relax for a moment.",
+      "🎶 Game: Hum your favourite Christmas song for 15 seconds."
+    ];
+
+    function randomMessage() {
+      const index = Math.floor(Math.random() * presentMessages.length);
+      return presentMessages[index];
+    }
+
+    presents.forEach((present) => {
+      present.addEventListener("click", () => {
+        presentMessage.textContent = randomMessage();
+      });
+    });
+  </script>
+</body>
+</html>
+
