@@ -492,7 +492,7 @@
           waiting to taste your elf weapons.
         </p>
         <p class="hero-tip">
-          Tip: Sword = safe damage, bow = ranged, mace = low damage but JUMP with it for crits.
+          Tip: Sword = decent, Bow = ranged, Mace = weak on ground but STRONG if you jump-hit.
         </p>
       </div>
       <div class="tree-wrapper" id="tree-section">
@@ -602,7 +602,7 @@
             Boss has a huge crown and no face. Terrifying.
           </div>
           <div class="boss-info">
-            Controls: A / D or ← / → to move, W or ↑ to jump, J = sword (weak), K = ice arrow, L = mace (jump for crit).
+            Controls: A / D or ← / → to move, W or ↑ to jump, J = sword, K = ice arrow, L = mace (jump for crit).
             Double-click the game to reset after someone dies.
           </div>
           <canvas id="bossGame" width="480" height="260"></canvas>
@@ -829,7 +829,8 @@
       swordCooldown: 0,
       bowCooldown: 0,
       maceTimer: 0,
-      maceCooldown: 0
+      maceCooldown: 0,
+      maceDidHit: false
     };
 
     const boss = {
@@ -898,8 +899,9 @@
       snowballs.length = 0;
       icicles.length = 0;
       waves.length = 0;
+      player.maceDidHit = false;
       bossGameText.textContent =
-        "Round 2: The Boss is back with even more HP. J = sword, K = bow, L = mace (jump for crit).";
+        "Round 2: The Boss is back. J = sword, K = bow, L = mace (jump for crit).";
     }
 
     function spawnArrow() {
@@ -954,19 +956,16 @@
 
       const r = Math.random();
       if (r < 0.35) {
-        // Single snowball
         spawnSnowball();
         boss.attackCooldown = 800 + Math.random() * 500;
         bossGameText.textContent = "Boss throws a grumpy snowball.";
       } else if (r < 0.6) {
-        // Triple snowball volley
         spawnSnowball(-1);
         spawnSnowball(-1);
         spawnSnowball(-1);
         boss.attackCooldown = 1000 + Math.random() * 600;
         bossGameText.textContent = "Triple snowball volley! Dodge like a festive ninja.";
       } else if (r < 0.8) {
-        // Icicle rain
         for (let i = 0; i < 6; i++) {
           const ix = 40 + Math.random() * (canvas.width - 80);
           spawnIcicle(ix);
@@ -974,7 +973,6 @@
         boss.attackCooldown = 1200 + Math.random() * 800;
         bossGameText.textContent = "Icicle rain! Don’t stand where pointy things fall.";
       } else {
-        // Ground wave
         spawnWave();
         boss.attackCooldown = 900 + Math.random() * 700;
         bossGameText.textContent = "Ground shockwave! Jump it or eat it.";
@@ -991,9 +989,7 @@
     }
 
     function update(dt) {
-      if (player.hp <= 0 || boss.hp <= 0) {
-        return;
-      }
+      if (player.hp <= 0 || boss.hp <= 0) return;
 
       // Movement input
       player.vx = 0;
@@ -1012,24 +1008,25 @@
         player.onGround = false;
       }
 
-      // Sword attack (weak)
+      // Sword attack
       if ((keys["j"] || keys[" "]) && player.swordCooldown <= 0) {
-        player.swordTimer = 180; // ms
-        player.swordCooldown = 320; // ms
+        player.swordTimer = 180;
+        player.swordCooldown = 320;
       }
 
       // Bow attack
       if (keys["k"]) {
         if (!player.bowCooldown || player.bowCooldown <= 0) {
           spawnArrow();
-          player.bowCooldown = 420; // ms
+          player.bowCooldown = 420;
         }
       }
 
-      // Mace attack (L)
+      // Mace attack
       if (keys["l"] && player.maceCooldown <= 0) {
-        player.maceTimer = 220;
+        player.maceTimer = 200;
         player.maceCooldown = 550;
+        player.maceDidHit = false; // only one hit per swing
       }
 
       if (player.swordTimer > 0) player.swordTimer -= dt;
@@ -1048,6 +1045,8 @@
         player.y = groundY - player.h;
         player.vy = 0;
         player.onGround = true;
+      } else {
+        player.onGround = false;
       }
 
       // World bounds
@@ -1062,7 +1061,7 @@
         }
       }
 
-      // Update arrows
+      // Arrows
       for (let i = arrows.length - 1; i >= 0; i--) {
         const a = arrows[i];
         a.x += a.vx;
@@ -1071,7 +1070,7 @@
           continue;
         }
         if (boss.alive && boss.hp > 0 && rectsOverlap(a, boss)) {
-          boss.hp -= 6; // bow damage
+          boss.hp -= 6;
           boss.hp = Math.max(0, boss.hp);
           arrows.splice(i, 1);
           if (boss.hp === 0) {
@@ -1083,7 +1082,7 @@
         }
       }
 
-      // Update snowballs
+      // Snowballs
       for (let i = snowballs.length - 1; i >= 0; i--) {
         const s = snowballs[i];
         s.x += s.vx;
@@ -1104,7 +1103,7 @@
         }
       }
 
-      // Update icicles
+      // Icicles
       for (let i = icicles.length - 1; i >= 0; i--) {
         const ic = icicles[i];
         ic.y += ic.vy;
@@ -1124,7 +1123,7 @@
         }
       }
 
-      // Update ground waves
+      // Ground waves
       for (let i = waves.length - 1; i >= 0; i--) {
         const w = waves[i];
         w.x += w.vx;
@@ -1144,7 +1143,7 @@
         }
       }
 
-      // Sword hit check (weaker sword)
+      // Sword hit (3 dmg)
       if (player.swordTimer > 0 && boss.alive && boss.hp > 0) {
         const reach = 20;
         const swordRect = {
@@ -1154,7 +1153,7 @@
           h: player.h - 12
         };
         if (rectsOverlap(swordRect, boss)) {
-          boss.hp -= 3; // sword damage
+          boss.hp -= 3;
           boss.hp = Math.max(0, boss.hp);
           if (boss.hp === 0) {
             boss.alive = false;
@@ -1165,8 +1164,8 @@
         }
       }
 
-      // Mace hit check
-      if (player.maceTimer > 0 && boss.alive && boss.hp > 0) {
+      // Mace hit (1 dmg normal, 5 dmg crit, only once per swing)
+      if (player.maceTimer > 0 && !player.maceDidHit && boss.alive && boss.hp > 0) {
         const reach = 22;
         const maceRect = {
           x: player.facing === 1 ? player.x + player.w : player.x - reach,
@@ -1175,10 +1174,11 @@
           h: player.h - 8
         };
         if (rectsOverlap(maceRect, boss)) {
-          const isCrit = !player.onGround; // in air = crit
-          const dmg = isCrit ? 5 : 2;      // crit > sword, normal < sword
+          const isCrit = !player.onGround;
+          const dmg = isCrit ? 5 : 1;
           boss.hp -= dmg;
           boss.hp = Math.max(0, boss.hp);
+          player.maceDidHit = true;
           if (boss.hp === 0) {
             boss.alive = false;
             bossGameText.textContent = randomFrom(winLines);
@@ -1194,22 +1194,18 @@
     function draw() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // Background
       const grd = ctx.createLinearGradient(0, 0, 0, canvas.height);
       grd.addColorStop(0, "#020617");
       grd.addColorStop(1, "#0b1730");
       ctx.fillStyle = grd;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      // Ground
       ctx.fillStyle = "#0c1f3a";
       ctx.fillRect(0, groundY, canvas.width, canvas.height - groundY);
 
-      // HP bars
       const pRatio = player.hp / player.maxHp;
       const bRatio = boss.hp / boss.maxHp;
 
-      // Player HP
       ctx.fillStyle = "#ffffff";
       ctx.font = "10px system-ui";
       ctx.fillText("Elf HP", 10, 12);
@@ -1218,7 +1214,6 @@
       ctx.fillStyle = "#4ade80";
       ctx.fillRect(10, 16, 80 * pRatio, 8);
 
-      // Boss HP
       ctx.fillStyle = "#ffffff";
       ctx.fillText("Boss HP", canvas.width - 90, 12);
       ctx.strokeStyle = "#ffffff";
@@ -1227,10 +1222,8 @@
       ctx.fillRect(canvas.width - 90, 16, 80 * bRatio, 8);
 
       // Player
-      // Body
       ctx.fillStyle = "#22c55e";
       ctx.fillRect(player.x, player.y, player.w, player.h);
-      // Hat
       ctx.fillStyle = "#16a34a";
       ctx.beginPath();
       ctx.moveTo(player.x + player.w / 2, player.y - 10);
@@ -1241,7 +1234,7 @@
       ctx.fillStyle = "#ffffff";
       ctx.fillRect(player.x + player.w / 2 - 2, player.y - 12, 4, 4);
 
-      // Sword swing (angled candy cane)
+      // Sword
       if (player.swordTimer > 0) {
         ctx.save();
         const baseX = player.facing === 1 ? player.x + player.w : player.x;
@@ -1250,10 +1243,8 @@
         const angle = player.facing === 1 ? 0.4 : Math.PI - 0.4;
         ctx.rotate(angle);
         const swordLen = 26;
-        // Blade
         ctx.fillStyle = "#fee2e2";
         ctx.fillRect(0, -2, swordLen, 4);
-        // Red stripes
         ctx.fillStyle = "#f97373";
         for (let i = 0; i < swordLen; i += 6) {
           ctx.fillRect(i, -2, 3, 4);
@@ -1261,7 +1252,7 @@
         ctx.restore();
       }
 
-      // Mace swing
+      // Mace
       if (player.maceTimer > 0) {
         ctx.save();
         const baseX = player.facing === 1 ? player.x + player.w : player.x;
@@ -1269,14 +1260,12 @@
         ctx.translate(baseX, baseY);
         const angle = player.facing === 1 ? -0.3 : Math.PI + 0.3;
         ctx.rotate(angle);
-        // Handle
         ctx.strokeStyle = "#e5e7eb";
         ctx.lineWidth = 3;
         ctx.beginPath();
         ctx.moveTo(0, 0);
         ctx.lineTo(18, 0);
         ctx.stroke();
-        // Head
         ctx.fillStyle = "#facc15";
         ctx.beginPath();
         ctx.arc(22, 0, 5, 0, Math.PI * 2);
@@ -1284,20 +1273,19 @@
         ctx.restore();
       }
 
-      // Arrows (ice bolts)
+      // Arrows
       ctx.fillStyle = "#bae6fd";
       arrows.forEach((a) => {
         ctx.fillRect(a.x, a.y, a.w, a.h);
       });
 
-      // Boss (no face, big crown)
+      // Boss with only crown
       if (boss.hp > 0) {
         const bossGrd = ctx.createLinearGradient(boss.x, boss.y, boss.x, boss.y + boss.h);
         bossGrd.addColorStop(0, "#ef4444");
         bossGrd.addColorStop(1, "#b91c1c");
         ctx.fillStyle = bossGrd;
         ctx.fillRect(boss.x, boss.y, boss.w, boss.h);
-        // Crown only
         ctx.fillStyle = "#fde047";
         ctx.fillRect(boss.x + 5, boss.y - 14, boss.w - 10, 12);
         ctx.beginPath();
@@ -1309,7 +1297,6 @@
         ctx.closePath();
         ctx.fill();
       } else {
-        // Boss fainted
         ctx.fillStyle = "#9ca3af";
         ctx.fillRect(boss.x, boss.y + boss.h - 20, boss.w, 20);
       }
@@ -1354,15 +1341,15 @@
       requestAnimationFrame(gameLoop);
     }
 
-    // Double-click on canvas to reset game if someone dies
     canvas.addEventListener("dblclick", () => {
       resetGame();
     });
 
     bossGameText.textContent =
-      "Move with A / D (or ← / →), jump with W / ↑, J = sword, K = bow, L = mace (jump for crit). Boss has huge HP. Double-click to reset.";
+      "Move with A / D (or ← / →), jump with W / ↑, J = sword (3 dmg), K = bow, L = mace (1 dmg, 5 dmg if jump). Double-click to reset.";
 
     requestAnimationFrame(gameLoop);
   </script>
 </body>
 </html>
+
