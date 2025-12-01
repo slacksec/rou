@@ -515,11 +515,10 @@
   <!-- Santa fly-by -->
   <div class="santa">🎅🦌🦌🦌</div>
 
-  <!-- Audio (replace src with your own local MP3 if you want) -->
-  <audio id="bgMusic" loop>
-    <!-- Put a real file like /music/jingle-bells.mp3 on your server and update src -->
-    <source src="" type="audio/mpeg">
-  </audio>
+<audio id="bgMusic" loop>
+  <source id="musicSource" src="music/thick-of-it.mp3" type="audio/mpeg">
+</audio>
+
 
   <header>
     <div class="nav">
@@ -754,49 +753,63 @@
     for (let i = 0; i < 40; i++) createSnowflake();
     setInterval(createSnowflake, 400);
 
-    // -------------------------------
-    // Music controls
-    // -------------------------------
-    const music = document.getElementById('bgMusic');
-    const musicBtn = document.getElementById('musicBtn');
-    const musicStatus = document.getElementById('musicStatus');
+   // -------------------------------
+// Music controls
+// -------------------------------
+const music = document.getElementById('bgMusic');
+const musicBtn = document.getElementById('musicBtn');
+const musicStatus = document.getElementById('musicStatus');
+const musicSource = document.getElementById('musicSource');
+const trackSelect = document.getElementById('trackSelect');
 
-    function hasTrack() {
-      return music.querySelector('source').getAttribute('src');
-    }
+const tracks = {
+  thick: "music/thick-of-it.mp3",
+  nggyu: "music/never-gonna-give-you-up.mp3",
+  jingle: "music/jingle-bells.mp3"
+};
 
-    function updateMusicStatus() {
-      if (!hasTrack()) {
-        musicStatus.textContent = 'No track set (add an MP3 to the <audio> src to enable).';
-        return;
-      }
-      if (!music.paused) {
-        musicStatus.textContent = 'Playing Christmas music 🎵';
-      } else {
-        musicStatus.textContent = 'Paused (press play to resume).';
-      }
-    }
+function updateTrack() {
+  const trackKey = trackSelect.value;
+  musicSource.src = tracks[trackKey];
+  music.load();
 
-    musicBtn.addEventListener('click', () => {
-      if (!hasTrack()) {
-        alert('Add an MP3 file to the <audio> tag src in the HTML to enable music.');
-        return;
-      }
-      if (music.paused) {
-        music.play().catch(() => {
-          alert('Your browser blocked autoplay. Try clicking again.');
-        });
-        musicBtn.textContent = '⏸ Pause Music';
-      } else {
-        music.pause();
-        musicBtn.textContent = '▶ Play Music';
-      }
-      updateMusicStatus();
-    });
+  if (!music.paused) {
+    music.play();
+  }
 
-    music.addEventListener('play', updateMusicStatus);
-    music.addEventListener('pause', updateMusicStatus);
-    updateMusicStatus();
+  const names = {
+    thick: "Thick of It",
+    nggyu: "Never Gonna Give You Up",
+    jingle: "Jingle Bells"
+  };
+
+  musicStatus.textContent = "Selected: " + names[trackKey];
+}
+
+trackSelect.addEventListener("change", updateTrack);
+
+musicBtn.addEventListener("click", () => {
+  if (music.paused) {
+    music.play().catch(() => alert("Your browser blocked autoplay. Try clicking again."));
+    musicBtn.textContent = "⏸ Pause Music";
+  } else {
+    music.pause();
+    musicBtn.textContent = "▶ Play Music";
+  }
+  updateMusicStatus();
+});
+
+function updateMusicStatus() {
+  if (!music.paused) {
+    musicStatus.textContent = "Playing: " + trackSelect.options[trackSelect.selectedIndex].text + " 🎵";
+  } else {
+    musicStatus.textContent = "Paused.";
+  }
+}
+
+music.addEventListener("play", updateMusicStatus);
+music.addEventListener("pause", updateMusicStatus);
+
 
     // -------------------------------
     // Presents
