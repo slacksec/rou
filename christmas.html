@@ -596,7 +596,8 @@
     <section id="presents">
       <h2>🎁 Open the Presents</h2>
       <p style="font-size:0.9rem; opacity:0.86;">
-        Click a present to reveal a random Christmas challenge or message.
+        Click a present to reveal a random Christmas challenge or message.  
+        Each present gets a different one.
       </p>
 
       <div class="presents-grid">
@@ -787,7 +788,7 @@
       setTimeout(() => s.remove(), 700);
     });
 
-    // Presents
+    // Presents (no repeats)
     const presents = document.querySelectorAll(".present");
     const presentMessage = document.getElementById("presentMessage");
 
@@ -801,16 +802,33 @@
       "❄ Chill: Take 3 deep breaths and relax for a moment.",
       "🎶 Game: Hum your favourite Christmas song for 15 seconds.",
       "🍪 Sneaky: Hide a cookie for future-you (but remember where).",
-      "🌟 Calm: Look around and find 3 things that make you feel cozy."
+      "🌟 Calm: Look around and find 3 things that make you feel cozy.",
+      "📸 Memory: Take a photo of something that feels like ‘Christmas’ to you.",
+      "💌 Kindness: Send a nice message to someone you haven’t talked to in a while."
     ];
 
     function randomFrom(arr) {
       return arr[Math.floor(Math.random() * arr.length)];
     }
 
+    // pool used to ensure no repeats across presents
+    let availablePresentMessages = [...presentMessages];
+
+    function getUniquePresentMessage() {
+      if (availablePresentMessages.length === 0) {
+        // refill if somehow emptied (shouldn't happen with just 4 presents)
+        availablePresentMessages = [...presentMessages];
+      }
+      const idx = Math.floor(Math.random() * availablePresentMessages.length);
+      const msg = availablePresentMessages[idx];
+      availablePresentMessages.splice(idx, 1);
+      return msg;
+    }
+
     presents.forEach((present, index) => {
       present.addEventListener("click", () => {
-        const msg = randomFrom(presentMessages);
+        if (present.classList.contains("opened")) return;
+        const msg = getUniquePresentMessage();
         const textDiv = present.querySelector(".present-text");
         if (textDiv) textDiv.textContent = msg;
         present.classList.add("opened");
@@ -819,7 +837,7 @@
       });
     });
 
-    // Santa interactions
+    // Santa interactions (more jokes/tips/puns)
     const santaOutput = document.getElementById("santaOutput");
     const santaJokeBtn = document.getElementById("santaJokeBtn");
     const santaPunBtn = document.getElementById("santaPunBtn");
@@ -833,7 +851,14 @@
       "Why did Santa’s helper see the doctor? Because he had low ‘elf’ esteem.",
       "What do you get if you cross a snowman and a dog? Frostbite.",
       "Why is it so cold at Christmas? Because it’s Decembrrrrr.",
-      "What do you call a snowman with a six-pack? An abdominal snowman."
+      "What do you call a snowman with a six-pack? An abdominal snowman.",
+      "Why did Santa’s reindeer practice their jokes? They wanted to sleigh the audience.",
+      "What do you call Santa when he stops moving? Santa Pause.",
+      "Why did the Christmas tree go to the barber? It needed a trim-twig.",
+      "What do you get when you eat Christmas decorations? Tinsel-itis.",
+      "Why did the ornament go to school? It wanted to be a little brighter.",
+      "How does Santa keep his bathroom tiles immaculate? He uses Comet.",
+      "What’s Santa’s favourite place to visit in school? The elf-eteria."
     ];
 
     const santaPuns = [
@@ -844,7 +869,13 @@
       "I’m feeling extra Claus-trophobic with all this Christmas spirit.",
       "We’re having a tree-mendous time, aren’t we?",
       "You snow the drill: eat, nap, repeat.",
-      "Yule be sorry if you skip dessert."
+      "Yule be sorry if you skip dessert.",
+      "I’m just here for the sleigh rides and side quests.",
+      "My New Year’s resolution is 1080p. Got to see those Christmas lights clearly.",
+      "Let’s not get too wrapped up in presents.",
+      "I’ve got high sleigh-esteem this year.",
+      "This party is snow joke. It’s actually fun.",
+      "If you’re cold, just stand in the corner. It’s usually 90 degrees."
     ];
 
     const santaTips = [
@@ -854,7 +885,14 @@
       "Tell someone you appreciate them. It takes 5 seconds and lasts all day.",
       "You don’t need a perfect tree, just real laughter around it.",
       "Drink some water between the hot chocolate. Future-you will thank you.",
-      "Try to remember one good thing about this year. That’s your real present."
+      "Try to remember one good thing about this year. That’s your real present.",
+      "If things feel stressful, focus on one tiny nice thing: lights, music, a smell, a memory.",
+      "Smile at someone today. You won’t know how much they needed it.",
+      "It’s okay to be tired. Rest is part of the holiday, too.",
+      "You’re allowed to enjoy small things even if everything isn’t perfect.",
+      "Be kind to yourself the way you’re kind to your friends.",
+      "Pick one tradition you love and do it properly instead of doing ten things badly.",
+      "Sometimes the best Christmas upgrade is just turning your phone off for a bit."
     ];
 
     santaJokeBtn.addEventListener("click", () => {
@@ -921,7 +959,7 @@
       alive: true
     };
 
-    // hole mechanic removed (kept object but unused now)
+    // (hole removed from gameplay but object kept unused)
     const hole = {
       active: false,
       x: 0,
@@ -1045,7 +1083,7 @@
     }
 
     function spawnWave() {
-      const dir = player.x < boss.x ? -1 : 1; // now goes towards player side
+      const dir = player.x < boss.x ? -1 : 1; // goes towards player side
       waves.push({
         x: dir === -1 ? boss.x : boss.x + boss.w - 40,
         y: groundY - 8,
@@ -1065,7 +1103,7 @@
         boss.attackCooldown = 800 + Math.random() * 500;
         bossGameText.textContent = "Boss throws a grumpy snowball.";
       } else if (r < 0.6) {
-        // triple volley now also aims at whichever side you’re on
+        // triple volley aims where you are (side-based)
         spawnSnowball();
         spawnSnowball();
         spawnSnowball();
@@ -1098,7 +1136,6 @@
       if (!gameActive) return;
       if (player.hp <= 0 || boss.hp <= 0) return;
 
-      // cooldown timers in ms
       if (contactCooldown > 0) contactCooldown -= dt;
 
       // Movement input
@@ -1137,7 +1174,7 @@
       if (keys["l"] && player.maceCooldown <= 0) {
         player.maceTimer = 200;
         player.maceCooldown = 550;
-        player.maceDidHit = false; // only once per swing
+        player.maceDidHit = false;
       }
 
       if (player.swordTimer > 0) player.swordTimer -= dt;
@@ -1181,7 +1218,6 @@
 
           player.vx = 0;
 
-          // small touch damage, only every ~0.7s
           const contactDamage = 4;
           if (player.hp > 0 && contactCooldown <= 0) {
             player.hp = Math.max(0, player.hp - contactDamage);
@@ -1195,8 +1231,6 @@
           }
         }
       }
-
-      // (hole mechanic removed from update – no more instant void)
 
       // Boss AI
       if (boss.alive) {
@@ -1268,7 +1302,7 @@
         }
       }
 
-      // Ground waves (dir now depends on player side)
+      // Ground waves
       for (let i = waves.length - 1; i >= 0; i--) {
         const w = waves[i];
         w.x += w.vx;
@@ -1310,14 +1344,14 @@
         }
       }
 
-      // Mace hit (1 dmg normal, 7 dmg crit, only once per swing)
+      // Mace hit (1 dmg normal, 7 dmg crit)
       if (player.maceTimer > 0 && !player.maceDidHit && boss.alive && boss.hp > 0) {
         const reach = 24;
         const maceRect = {
           x: player.facing === 1 ? player.x + player.w : player.x - reach,
           y: player.y - 4,
           w: reach,
-          h: player.h + 8   // bigger hitbox so crits are easier to land
+          h: player.h + 8
         };
         if (rectsOverlap(maceRect, boss)) {
           const isCrit = !player.onGround && Math.abs(player.vy) > 0.4;
@@ -1349,8 +1383,6 @@
       // Ground
       ctx.fillStyle = "#0c1f3a";
       ctx.fillRect(0, groundY, canvas.width, canvas.height - groundY);
-
-      // (hole drawing removed; no more void behind boss)
 
       if (!gameActive) {
         // Idle / menu screen
