@@ -191,8 +191,8 @@
       width: 10px;
       height: 10px;
       border-radius: 50%;
-      background: #ffd166;
-      box-shadow: 0 0 8px rgba(255, 220, 160, 0.9);
+      background: #555555;         /* OFF = grey */
+      box-shadow: none;            /* no glow when off */
       z-index: 2;
     }
 
@@ -202,7 +202,10 @@
     .tree-lights span:nth-child(4) { top: 155px; left: 115px; }
     .tree-lights span:nth-child(5) { top: 185px; left: 45px; }
 
+    /* ON = yellow + glow + twinkle */
     .lights-on .tree-lights span {
+      background: #ffd166;
+      box-shadow: 0 0 8px rgba(255, 220, 160, 0.9);
       animation: twinkle 1.2s infinite alternate;
     }
 
@@ -671,7 +674,7 @@
           <div class="boss-info">
             Controls (when playing): A / D or ← / → to move, W or ↑ to jump,
             J = sword (4 dmg), K = ice arrow (3 dmg), L = mace (1 dmg, 7 dmg if you hit while in the air),
-            E = hail pickup / stun.
+            E = hail pickup / stun (3 seconds).
             Double-click the game to reset while playing.
           </div>
           <canvas id="bossGame" width="480" height="260"></canvas>
@@ -836,7 +839,7 @@
       });
     });
 
-    // Santa interactions (more jokes/tips/puns)
+    // Santa interactions
     const santaOutput = document.getElementById("santaOutput");
     const santaJokeBtn = document.getElementById("santaJokeBtn");
     const santaPunBtn = document.getElementById("santaPunBtn");
@@ -969,6 +972,7 @@
     let lastTime = 0;
     let contactCooldown = 0; // cooldown for boss touch damage (ms)
     let prevE = false;       // for hail pickup / throw edge detection
+    let stunSpin = 0;        // for spinning stars around stunned boss
 
     const hitBossLines = [
       "You slash with your candy cane. The Boss: “That’s *too* sweet!”",
@@ -1032,6 +1036,8 @@
       hailStones.length = 0;
 
       contactCooldown = 0;
+      stunSpin = 0;
+
       bossGameText.textContent =
         "Fight started! Move: A/D or ←/→, Jump: W/↑, Sword: J (4 dmg), Bow: K (3 dmg), Mace: L (jump = big crit), E = hail stun.";
     }
@@ -1197,9 +1203,6 @@
               break;
             }
           }
-          if (!picked) {
-            // nothing picked; do nothing special
-          }
         } else {
           // Currently carrying hail: try to stun
           if (boss.alive && boss.hp > 0) {
@@ -1210,12 +1213,12 @@
             const distance = Math.abs(bossCenter - playerCenter);
 
             if (facingBoss && distance < 200) {
-              // Stun
-              boss.stunTimer = 8000;
-              boss.attackCooldown = 8000;
+              // Stun for 3 seconds
+              boss.stunTimer = 3000;
+              boss.attackCooldown = 3000;
               player.carryingHail = false;
               bossGameText.textContent =
-                "Hail slam! Boss is stunned for 8 seconds. Go crazy!";
+                "Hail slam! Boss is stunned for 3 seconds. Go crazy!";
             } else {
               // Drop hail harmlessly
               player.carryingHail = false;
@@ -1316,6 +1319,7 @@
       if (boss.alive) {
         if (boss.stunTimer > 0) {
           boss.stunTimer -= dt;
+          stunSpin += dt * 0.01;  // spin stars while stunned
           if (boss.stunTimer <= 0) {
             boss.stunTimer = 0;
             boss.attackCooldown = 600 + Math.random() * 400;
@@ -1619,7 +1623,7 @@
         ctx.fillRect(a.x, a.y, a.w, a.h);
       });
 
-      // Boss with only crown (and stun glow if stunned)
+      // Boss with only crown (and spinning stars if stunned)
       if (boss.hp > 0) {
         const bossGrd = ctx.createLinearGradient(boss.x, boss.y, boss.x, boss.y + boss.h);
         bossGrd.addColorStop(0, "#ef4444");
@@ -1639,11 +1643,31 @@
         ctx.fill();
 
         if (boss.stunTimer > 0) {
-          ctx.strokeStyle = "rgba(190,242,100,0.9)";
-          ctx.lineWidth = 3;
-          ctx.beginPath();
-          ctx.arc(boss.x + boss.w / 2, boss.y + boss.h / 2, boss.w, 0, Math.PI * 2);
-          ctx.stroke();
+          // spinning stars around boss
+          const cx = boss.x + boss.w / 2;
+          const cy = boss.y + boss.h / 2;
+          const starCount = 5;
+          const radiusX = boss.w;
+          const radiusY = boss.h * 0.6;
+
+          ctx.save();
+          ctx.translate(cx, cy - 8);
+          ctx.strokeStyle = "#facc15";
+          ctx.lineWidth = 2;
+
+          for (let i = 0; i < starCount; i++) {
+            const angle = stunSpin + (i * (Math.PI * 2 / starCount));
+            const sx = Math.cos(angle) * radiusX;
+            const sy = Math.sin(angle) * radiusY;
+
+            ctx.beginPath();
+            ctx.moveTo(sx, sy - 4);
+            ctx.lineTo(sx, sy + 4);
+            ctx.moveTo(sx - 4, sy);
+            ctx.lineTo(sx + 4, sy);
+            ctx.stroke();
+          }
+          ctx.restore();
         }
       } else {
         ctx.fillStyle = "#9ca3af";
