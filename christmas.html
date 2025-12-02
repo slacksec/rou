@@ -896,7 +896,7 @@
       vx: 0,
       vy: 0,
       speed: 2.3,
-      jump: -7.2,
+      jump: -9.2, // higher jump
       onGround: false,
       facing: 1,
       hp: 120,
@@ -921,6 +921,7 @@
       alive: true
     };
 
+    // hole mechanic removed (kept object but unused now)
     const hole = {
       active: false,
       x: 0,
@@ -933,6 +934,7 @@
     const waves = [];
 
     let lastTime = 0;
+    let contactCooldown = 0; // cooldown for boss touch damage (ms)
 
     const hitBossLines = [
       "You slash with your candy cane. The Boss: “That’s *too* sweet!”",
@@ -990,8 +992,9 @@
       icicles.length = 0;
       waves.length = 0;
       hole.active = false;
+      contactCooldown = 0;
       bossGameText.textContent =
-        "Fight started! Move: A/D or ←/→, Jump: W/↑, Sword: J (4 dmg), Bow: K (3 dmg), Mace: L (jump = big crit). Don’t try sneaky spots behind the boss...";
+        "Fight started! Move: A/D or ←/→, Jump: W/↑, Sword: J (4 dmg), Bow: K (3 dmg), Mace: L (jump = big crit).";
     }
 
     bossPlayBtn.addEventListener("click", () => {
@@ -1042,9 +1045,9 @@
     }
 
     function spawnWave() {
-      const dir = -1;
+      const dir = player.x < boss.x ? -1 : 1; // now goes towards player side
       waves.push({
-        x: boss.x,
+        x: dir === -1 ? boss.x : boss.x + boss.w - 40,
         y: groundY - 8,
         vx: dir * 2.2,
         w: 40,
@@ -1057,13 +1060,15 @@
 
       const r = Math.random();
       if (r < 0.35) {
+        // single snowball aims at player side
         spawnSnowball();
         boss.attackCooldown = 800 + Math.random() * 500;
         bossGameText.textContent = "Boss throws a grumpy snowball.";
       } else if (r < 0.6) {
-        spawnSnowball(-1);
-        spawnSnowball(-1);
-        spawnSnowball(-1);
+        // triple volley now also aims at whichever side you’re on
+        spawnSnowball();
+        spawnSnowball();
+        spawnSnowball();
         boss.attackCooldown = 1000 + Math.random() * 600;
         bossGameText.textContent = "Triple snowball volley! Dodge like a festive ninja.";
       } else if (r < 0.8) {
@@ -1092,6 +1097,9 @@
     function update(dt) {
       if (!gameActive) return;
       if (player.hp <= 0 || boss.hp <= 0) return;
+
+      // cooldown timers in ms
+      if (contactCooldown > 0) contactCooldown -= dt;
 
       // Movement input
       player.vx = 0;
@@ -1156,58 +1164,39 @@
       if (player.x < 0) player.x = 0;
       if (player.x + player.w > canvas.width) player.x = canvas.width - player.w;
 
-      // --- NEW: Player collision with boss (no more body-cheese) ---
+      // Player collision with boss (solid + chip damage with cooldown)
       if (boss.alive && boss.hp > 0) {
         const playerRect = { x: player.x, y: player.y, w: player.w, h: player.h };
         const bossRect = { x: boss.x, y: boss.y, w: boss.w, h: boss.h };
 
         if (rectsOverlap(playerRect, bossRect)) {
-          // Decide from which side you hit the boss
           const playerCenter = player.x + player.w / 2;
           const bossCenter = boss.x + boss.w / 2;
 
           if (playerCenter < bossCenter) {
-            // Hit from the left -> push left
-            player.x = boss.x - player.w;
+            player.x = boss.x - player.w; // push left
           } else {
-            // Hit from the right -> push right
-            player.x = boss.x + boss.w;
+            player.x = boss.x + boss.w;   // push right
           }
 
           player.vx = 0;
 
-          const contactDamage = 3;
-          if (player.hp > 0) {
+          // small touch damage, only every ~0.7s
+          const contactDamage = 4;
+          if (player.hp > 0 && contactCooldown <= 0) {
             player.hp = Math.max(0, player.hp - contactDamage);
+            contactCooldown = 700; // ms
             if (player.hp === 0) {
               bossGameText.textContent = "You tried to body-check the Boss and got flattened.";
             } else {
               bossGameText.textContent =
-                "You bump into the Boss and get shoved back. Don’t melee-hug the crown.";
+                "You bump into the Boss and get shoved back. No friendly hugs.";
             }
           }
         }
       }
-      // -------------------------------------------------------------
 
-      // Anti-cheese: going behind the boss opens a deadly hole
-      if (!hole.active && player.x > boss.x + boss.w) {
-        hole.active = true;
-        hole.x = boss.x + boss.w + 4;
-        bossGameText.textContent =
-          "You slip behind the boss. Secret message: the floor behind him was never safe...";
-      }
-
-      if (hole.active && player.hp > 0) {
-        const onHoleX =
-          player.x + player.w > hole.x && player.x < hole.x + hole.w;
-        if (onHoleX && player.onGround) {
-          player.hp = 0;
-          bossGameText.textContent =
-            "You fall into the hidden void. Santa whispers: “No hiding behind bosses.”";
-          return;
-        }
-      }
+      // (hole mechanic removed from update – no more instant void)
 
       // Boss AI
       if (boss.alive) {
@@ -1279,7 +1268,7 @@
         }
       }
 
-      // Ground waves
+      // Ground waves (dir now depends on player side)
       for (let i = waves.length - 1; i >= 0; i--) {
         const w = waves[i];
         w.x += w.vx;
@@ -1361,13 +1350,7 @@
       ctx.fillStyle = "#0c1f3a";
       ctx.fillRect(0, groundY, canvas.width, canvas.height - groundY);
 
-      // Hole behind boss (cuts into ground)
-      if (hole.active) {
-        ctx.fillStyle = "#020617";
-        ctx.fillRect(hole.x, groundY, hole.w, canvas.height - groundY);
-        ctx.fillStyle = "#facc15";
-        ctx.fillRect(hole.x, groundY, hole.w, 2);
-      }
+      // (hole drawing removed; no more void behind boss)
 
       if (!gameActive) {
         // Idle / menu screen
