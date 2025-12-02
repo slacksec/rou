@@ -145,7 +145,7 @@
       border-right: 80px solid transparent;
       border-bottom: 90px solid #0b8a3e;
       filter: drop-shadow(0 0 10px rgba(0, 0, 0, 0.7));
-      z-index: 1; /* behind lights & star */
+      z-index: 1;
     }
 
     .layer-top {
@@ -182,7 +182,7 @@
       transform: translateX(-50%);
       font-size: 2.1rem;
       filter: drop-shadow(0 0 8px rgba(255, 255, 160, 1));
-      z-index: 3; /* star on top of everything */
+      z-index: 3;
       pointer-events: none;
     }
 
@@ -193,7 +193,7 @@
       border-radius: 50%;
       background: #ffd166;
       box-shadow: 0 0 8px rgba(255, 220, 160, 0.9);
-      z-index: 2; /* above branches, below star */
+      z-index: 2;
     }
 
     .tree-lights span:nth-child(1) { top: 90px; left: 50px; }
@@ -670,7 +670,8 @@
           </div>
           <div class="boss-info">
             Controls (when playing): A / D or ← / → to move, W or ↑ to jump,
-            J = sword (4 dmg), K = ice arrow (3 dmg), L = mace (1 dmg, 7 dmg if you hit while in the air).
+            J = sword (4 dmg), K = ice arrow (3 dmg), L = mace (1 dmg, 7 dmg if you hit while in the air),
+            E = hail pickup / stun.
             Double-click the game to reset while playing.
           </div>
           <canvas id="bossGame" width="480" height="260"></canvas>
@@ -811,12 +812,10 @@
       return arr[Math.floor(Math.random() * arr.length)];
     }
 
-    // pool used to ensure no repeats across presents
     let availablePresentMessages = [...presentMessages];
 
     function getUniquePresentMessage() {
       if (availablePresentMessages.length === 0) {
-        // refill if somehow emptied (shouldn't happen with just 4 presents)
         availablePresentMessages = [...presentMessages];
       }
       const idx = Math.floor(Math.random() * availablePresentMessages.length);
@@ -945,7 +944,8 @@
       bowCooldown: 0,
       maceTimer: 0,
       maceCooldown: 0,
-      maceDidHit: false
+      maceDidHit: false,
+      carryingHail: false
     };
 
     const boss = {
@@ -956,23 +956,19 @@
       hp: 400,
       maxHp: 400,
       attackCooldown: 120,
-      alive: true
-    };
-
-    // (hole removed from gameplay but object kept unused)
-    const hole = {
-      active: false,
-      x: 0,
-      w: 45
+      alive: true,
+      stunTimer: 0
     };
 
     const arrows = [];
     const snowballs = [];
     const icicles = [];
     const waves = [];
+    const hailStones = [];
 
     let lastTime = 0;
     let contactCooldown = 0; // cooldown for boss touch damage (ms)
+    let prevE = false;       // for hail pickup / throw edge detection
 
     const hitBossLines = [
       "You slash with your candy cane. The Boss: “That’s *too* sweet!”",
@@ -1020,19 +1016,24 @@
       player.maceTimer = 0;
       player.maceCooldown = 0;
       player.maceDidHit = false;
+      player.carryingHail = false;
+
       boss.x = canvas.width - 120;
       boss.y = groundY - boss.h;
       boss.hp = boss.maxHp;
       boss.attackCooldown = 120;
       boss.alive = true;
+      boss.stunTimer = 0;
+
       arrows.length = 0;
       snowballs.length = 0;
       icicles.length = 0;
       waves.length = 0;
-      hole.active = false;
+      hailStones.length = 0;
+
       contactCooldown = 0;
       bossGameText.textContent =
-        "Fight started! Move: A/D or ←/→, Jump: W/↑, Sword: J (4 dmg), Bow: K (3 dmg), Mace: L (jump = big crit).";
+        "Fight started! Move: A/D or ←/→, Jump: W/↑, Sword: J (4 dmg), Bow: K (3 dmg), Mace: L (jump = big crit), E = hail stun.";
     }
 
     bossPlayBtn.addEventListener("click", () => {
@@ -1093,33 +1094,56 @@
       });
     }
 
+    function spawnHailStorm() {
+      const count = 2 + Math.floor(Math.random() * 2); // 2–3 hail stones
+      for (let i = 0; i < count; i++) {
+        const x = 60 + Math.random() * (canvas.width - 120);
+        hailStones.push({
+          x: x,
+          y: -25,
+          vy: 3.4 + Math.random() * 0.9,
+          w: 18,
+          h: 18,
+          onGround: false
+        });
+      }
+    }
+
     function performBossAttack() {
       if (!boss.alive || boss.hp <= 0) return;
 
       const r = Math.random();
-      if (r < 0.35) {
-        // single snowball aims at player side
+      // Make hail rarer than others
+      if (r < 0.32) {
+        // single snowball
         spawnSnowball();
         boss.attackCooldown = 800 + Math.random() * 500;
         bossGameText.textContent = "Boss throws a grumpy snowball.";
       } else if (r < 0.6) {
-        // triple volley aims where you are (side-based)
+        // triple volley
         spawnSnowball();
         spawnSnowball();
         spawnSnowball();
         boss.attackCooldown = 1000 + Math.random() * 600;
         bossGameText.textContent = "Triple snowball volley! Dodge like a festive ninja.";
-      } else if (r < 0.8) {
+      } else if (r < 0.82) {
+        // icicle rain
         for (let i = 0; i < 6; i++) {
           const ix = 40 + Math.random() * (canvas.width - 80);
           spawnIcicle(ix);
         }
         boss.attackCooldown = 1200 + Math.random() * 800;
         bossGameText.textContent = "Icicle rain! Don’t stand where pointy things fall.";
-      } else {
+      } else if (r < 0.95) {
+        // shockwave
         spawnWave();
         boss.attackCooldown = 900 + Math.random() * 700;
         bossGameText.textContent = "Ground shockwave! Jump it or eat it.";
+      } else {
+        // hail storm (rarest)
+        spawnHailStorm();
+        boss.attackCooldown = 1400 + Math.random() * 800;
+        bossGameText.textContent = "Boss calls down GIANT hail. Do NOT tank that.";
       }
     }
 
@@ -1138,6 +1162,10 @@
 
       if (contactCooldown > 0) contactCooldown -= dt;
 
+      const eDown = !!keys["e"];
+      const ePressed = eDown && !prevE; // edge
+      prevE = eDown;
+
       // Movement input
       player.vx = 0;
       if (keys["a"] || keys["arrowleft"]) {
@@ -1149,29 +1177,81 @@
         player.facing = 1;
       }
 
-      // Jump
-      if ((keys["w"] || keys["arrowup"]) && player.onGround) {
+      // Hail pickup / throw
+      if (ePressed) {
+        if (!player.carryingHail) {
+          // Try to pick up hail on ground near player
+          let picked = false;
+          for (let i = hailStones.length - 1; i >= 0; i--) {
+            const h = hailStones[i];
+            if (!h.onGround) continue;
+            const hailRect = { x: h.x, y: h.y, w: h.w, h: h.h };
+            const playerRect = { x: player.x, y: player.y, w: player.w, h: player.h };
+            if (rectsOverlap(hailRect, playerRect) ||
+                Math.abs((h.x + h.w / 2) - (player.x + player.w / 2)) < 30) {
+              hailStones.splice(i, 1);
+              player.carryingHail = true;
+              bossGameText.textContent =
+                "You lifted a huge hail chunk! Move close, face the Boss and press E to stun.";
+              picked = true;
+              break;
+            }
+          }
+          if (!picked) {
+            // nothing picked; do nothing special
+          }
+        } else {
+          // Currently carrying hail: try to stun
+          if (boss.alive && boss.hp > 0) {
+            const playerCenter = player.x + player.w / 2;
+            const bossCenter = boss.x + boss.w / 2;
+            const dirToBoss = bossCenter > playerCenter ? 1 : -1;
+            const facingBoss = player.facing === dirToBoss;
+            const distance = Math.abs(bossCenter - playerCenter);
+
+            if (facingBoss && distance < 200) {
+              // Stun
+              boss.stunTimer = 8000;
+              boss.attackCooldown = 8000;
+              player.carryingHail = false;
+              bossGameText.textContent =
+                "Hail slam! Boss is stunned for 8 seconds. Go crazy!";
+            } else {
+              // Drop hail harmlessly
+              player.carryingHail = false;
+              bossGameText.textContent =
+                "You drop the hail. Try facing the Boss and being a bit closer.";
+            }
+          } else {
+            // Boss already dead, just drop hail
+            player.carryingHail = false;
+          }
+        }
+      }
+
+      // Jump (disabled while carrying hail)
+      if (!player.carryingHail && (keys["w"] || keys["arrowup"]) && player.onGround) {
         player.vy = player.jump;
         player.onGround = false;
       }
 
-      // Sword attack (4 dmg, once per swing)
-      if ((keys["j"] || keys[" "]) && player.swordCooldown <= 0) {
+      // Sword attack (4 dmg, once per swing) – disabled while carrying hail
+      if (!player.carryingHail && (keys["j"] || keys[" "]) && player.swordCooldown <= 0) {
         player.swordTimer = 180;
         player.swordCooldown = 320;
         player.swordDidHit = false;
       }
 
-      // Bow attack (3 dmg per arrow)
-      if (keys["k"]) {
+      // Bow attack (3 dmg per arrow) – disabled while carrying hail
+      if (!player.carryingHail && keys["k"]) {
         if (!player.bowCooldown || player.bowCooldown <= 0) {
           spawnArrow();
           player.bowCooldown = 420;
         }
       }
 
-      // Mace attack
-      if (keys["l"] && player.maceCooldown <= 0) {
+      // Mace attack – disabled while carrying hail
+      if (!player.carryingHail && keys["l"] && player.maceCooldown <= 0) {
         player.maceTimer = 200;
         player.maceCooldown = 550;
         player.maceDidHit = false;
@@ -1232,15 +1312,24 @@
         }
       }
 
-      // Boss AI
+      // Boss AI & stun
       if (boss.alive) {
-        boss.attackCooldown -= dt;
-        if (boss.attackCooldown <= 0) {
-          performBossAttack();
+        if (boss.stunTimer > 0) {
+          boss.stunTimer -= dt;
+          if (boss.stunTimer <= 0) {
+            boss.stunTimer = 0;
+            boss.attackCooldown = 600 + Math.random() * 400;
+            bossGameText.textContent = "Boss shakes off the hail stun. Back to chaos.";
+          }
+        } else {
+          boss.attackCooldown -= dt;
+          if (boss.attackCooldown <= 0) {
+            performBossAttack();
+          }
         }
       }
 
-      // Arrows (3 dmg now)
+      // Arrows (3 dmg)
       for (let i = arrows.length - 1; i >= 0; i--) {
         const a = arrows[i];
         a.x += a.vx;
@@ -1318,6 +1407,38 @@
             bossGameText.textContent = randomFrom(loseLines);
           } else {
             bossGameText.textContent = "Ground wave smacks your ankles. Jump earlier!";
+          }
+        }
+      }
+
+      // Hail stones (50% HP if hit; become pickups on ground)
+      const hailDamage = Math.ceil(player.maxHp * 0.5);
+      for (let i = hailStones.length - 1; i >= 0; i--) {
+        const h = hailStones[i];
+        if (!h.onGround) {
+          h.y += h.vy;
+          // Collision with player midair
+          const hailRect = { x: h.x, y: h.y, w: h.w, h: h.h };
+          const playerRect = { x: player.x, y: player.y, w: player.w, h: player.h };
+          if (player.hp > 0 && rectsOverlap(hailRect, playerRect)) {
+            player.hp -= hailDamage;
+            player.hp = Math.max(0, player.hp);
+            hailStones.splice(i, 1);
+            if (player.hp === 0) {
+              bossGameText.textContent =
+                "You tried to tank the hail. It tanked you instead.";
+            } else {
+              bossGameText.textContent =
+                "Hail smash! That took a HUGE chunk of HP.";
+            }
+            continue;
+          }
+
+          // Land on ground
+          if (h.y + h.h >= groundY) {
+            h.y = groundY - h.h;
+            h.vy = 0;
+            h.onGround = true;
           }
         }
       }
@@ -1431,6 +1552,28 @@
       ctx.fillStyle = "#ffffff";
       ctx.fillRect(player.x + player.w / 2 - 2, player.y - 12, 4, 4);
 
+      // If carrying hail: draw raised arms + hail above head
+      if (player.carryingHail) {
+        ctx.strokeStyle = "#bbf7fe";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        // left arm
+        ctx.moveTo(player.x + 5, player.y + 15);
+        ctx.lineTo(player.x - 2, player.y - 5);
+        // right arm
+        ctx.moveTo(player.x + player.w - 5, player.y + 15);
+        ctx.lineTo(player.x + player.w + 2, player.y - 5);
+        ctx.stroke();
+
+        // hail ball above head
+        ctx.fillStyle = "#bfdbfe";
+        ctx.beginPath();
+        ctx.arc(player.x + player.w / 2, player.y - 10, 7, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = "#93c5fd";
+        ctx.stroke();
+      }
+
       // Sword
       if (player.swordTimer > 0) {
         ctx.save();
@@ -1476,13 +1619,14 @@
         ctx.fillRect(a.x, a.y, a.w, a.h);
       });
 
-      // Boss with only crown
+      // Boss with only crown (and stun glow if stunned)
       if (boss.hp > 0) {
         const bossGrd = ctx.createLinearGradient(boss.x, boss.y, boss.x, boss.y + boss.h);
         bossGrd.addColorStop(0, "#ef4444");
         bossGrd.addColorStop(1, "#b91c1c");
         ctx.fillStyle = bossGrd;
         ctx.fillRect(boss.x, boss.y, boss.w, boss.h);
+
         ctx.fillStyle = "#fde047";
         ctx.fillRect(boss.x + 5, boss.y - 14, boss.w - 10, 12);
         ctx.beginPath();
@@ -1493,6 +1637,14 @@
         ctx.lineTo(boss.x + boss.w - 5, boss.y - 14);
         ctx.closePath();
         ctx.fill();
+
+        if (boss.stunTimer > 0) {
+          ctx.strokeStyle = "rgba(190,242,100,0.9)";
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.arc(boss.x + boss.w / 2, boss.y + boss.h / 2, boss.w, 0, Math.PI * 2);
+          ctx.stroke();
+        }
       } else {
         ctx.fillStyle = "#9ca3af";
         ctx.fillRect(boss.x, boss.y + boss.h - 20, boss.w, 20);
@@ -1527,6 +1679,17 @@
         waveGrd.addColorStop(1, "#a855f7");
         ctx.fillStyle = waveGrd;
         ctx.fillRect(w.x, w.y, w.w, w.h);
+      });
+
+      // Hail stones
+      hailStones.forEach((h) => {
+        const rad = h.w / 2;
+        ctx.fillStyle = "#bfdbfe";
+        ctx.beginPath();
+        ctx.arc(h.x + rad, h.y + rad, rad, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = "#93c5fd";
+        ctx.stroke();
       });
     }
 
