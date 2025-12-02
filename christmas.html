@@ -541,7 +541,7 @@
           Snow falls, lights blink, Santa talks, and there’s a crown Boss waiting for elf bonks.
         </p>
         <p class="hero-tip">
-          Tip: Sword = solid (4 dmg, one hit), Bow = ranged (3 dmg), Mace = weak on ground (1 dmg) but STRONG if you jump-hit (7 dmg).
+          Tip: Sword = solid (4 dmg, Bow = 3 dmg, Mace = 1 dmg on ground but 7 dmg if you jump-hit (crit).
         </p>
       </div>
       <div class="tree-wrapper" id="tree-section">
@@ -1115,6 +1115,19 @@
       }
     }
 
+    // NEW: drop hail at player's feet instead of deleting it
+    function dropHailAtPlayer() {
+      const size = 18;
+      hailStones.push({
+        x: player.x + player.w / 2 - size / 2,
+        y: groundY - size,
+        vy: 0,
+        w: size,
+        h: size,
+        onGround: true
+      });
+    }
+
     function performBossAttack() {
       if (!boss.alive || boss.hp <= 0) return;
 
@@ -1220,13 +1233,15 @@
               bossGameText.textContent =
                 "Hail slam! Boss is stunned for 3 seconds. Go crazy!";
             } else {
-              // Drop hail harmlessly
+              // Drop hail on ground instead of deleting it
+              dropHailAtPlayer();
               player.carryingHail = false;
               bossGameText.textContent =
                 "You drop the hail. Try facing the Boss and being a bit closer.";
             }
           } else {
-            // Boss already dead, just drop hail
+            // Boss already dead, just drop hail on ground
+            dropHailAtPlayer();
             player.carryingHail = false;
           }
         }
