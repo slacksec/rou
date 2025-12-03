@@ -1302,159 +1302,165 @@
     );
   }
 
-  function updateTutorialStep(dt) {
-    tutorialAttackTimer += dt;
+function updateTutorialStep(dt) {
+  tutorialAttackTimer += dt;
 
-    if (tutorialStep === 0) {
-      // done when moved + jumped
-      if (tutorialMoved && tutorialJumped) {
-        tutorialStep = 1;
-        bossGameText.textContent =
-          "Tutorial 2/7: Sword. Get near Boss and press J to hit it once.";
-      }
+  if (tutorialStep === 0) {
+    if (tutorialMoved && tutorialJumped) {
+      tutorialStep = 1;
+      tutorialAttackTimer = 0;
+      bossGameText.textContent =
+        "Tutorial 2/7: Sword. Get near Boss and press J to hit it once.";
+    }
+    return;
+  }
+
+  if (tutorialStep === 1) {
+    if (tutorialSwordHit) {
+      tutorialStep = 2;
+      tutorialAttackTimer = 0;
+      bossGameText.textContent =
+        "Tutorial 3/7: Bow. Press K to shoot an ice arrow and hit the Boss.";
+    }
+    return;
+  }
+
+  if (tutorialStep === 2) {
+    if (tutorialArrowHit) {
+      tutorialStep = 3;
+      tutorialAttackTimer = 0;
+      bossGameText.textContent =
+        "Tutorial 4/7: Mace crit. Jump, then press L while falling to bonk the Boss hard.";
+    }
+    return;
+  }
+
+  if (tutorialStep === 3) {
+    if (tutorialMaceCrit) {
+      tutorialStep = 4;
+      tutorialAttackTimer = 0;
+      tutorialIcicleActive = false;
+      tutorialIcicleDodged = false;
+      bossGameText.textContent =
+        "Tutorial 5/7: Icicles. One will fall. Move so it misses you.";
+    }
+    return;
+  }
+
+  if (tutorialStep === 4) {
+    if (!tutorialIcicleActive && !tutorialIcicleDodged && tutorialAttackTimer > 1500) {
+      spawnIcicle(player.x + player.w / 2);
+      tutorialAttackTimer = 0;
+    }
+    if (tutorialIcicleDodged) {
+      tutorialStep = 5;
+      tutorialAttackTimer = 0;
+      bossGameText.textContent =
+        "Tutorial 6/7: Hail. We’ll drop a hail block. Pick it up with E, then stun Boss with E again.";
+    }
+    return;
+  }
+
+  if (tutorialStep === 5) {
+    if (!hailStones.some(h => h.onGround) && !tutorialHailStun && tutorialAttackTimer > 1500) {
+      spawnTutorialHailOnGround();
+      tutorialAttackTimer = 0;
+    }
+    if (tutorialHailStun) {
+      tutorialStep = 6;
+      tutorialAttackTimer = 0;
+      tutorialFeaturesStage = 0;
+      bossGameText.textContent =
+        "Tutorial 7/7: Boss attacks + phases. Watch each attack and move/dodge.";
+    }
+    return;
+  }
+
+  // Step 6: demo all attacks & explain phases (slower)
+  if (tutorialStep === 6) {
+    if (tutorialFeaturesStage === 0) {
+      bossGameText.textContent =
+        "Boss has 3 phases: Phase 1 basics; Phase 2 adds ram + skeletons; Phase 3 can trigger earthquake.";
+      tutorialFeaturesStage = 1;
+      tutorialAttackTimer = 0;
       return;
     }
 
-    if (tutorialStep === 1) {
-      if (tutorialSwordHit) {
-        tutorialStep = 2;
-        bossGameText.textContent =
-          "Tutorial 3/7: Bow. Press K to shoot an ice arrow and hit the Boss.";
-      }
+    if (tutorialFeaturesStage === 1 && tutorialAttackTimer > 2500) {
+      spawnSnowball();
+      bossGameText.textContent =
+        "Single snowball: simple projectile. Move or jump to dodge.";
+      tutorialFeaturesStage = 2;
+      tutorialAttackTimer = 0;
       return;
     }
 
-    if (tutorialStep === 2) {
-      if (tutorialArrowHit) {
-        tutorialStep = 3;
-        bossGameText.textContent =
-          "Tutorial 4/7: Mace crit. Jump, then press L while falling to bonk the Boss hard.";
-      }
+    if (tutorialFeaturesStage === 2 && tutorialAttackTimer > 3500) {
+      spawnSnowball(); spawnSnowball(); spawnSnowball();
+      bossGameText.textContent =
+        "Triple snowball volley: several shots in a row.";
+      tutorialFeaturesStage = 3;
+      tutorialAttackTimer = 0;
       return;
     }
 
-    if (tutorialStep === 3) {
-      if (tutorialMaceCrit) {
-        tutorialStep = 4;
-        tutorialAttackTimer = 0;
-        tutorialIcicleActive = false;
-        tutorialIcicleDodged = false;
-        bossGameText.textContent =
-          "Tutorial 5/7: Icicles. One will fall. Move so it misses you.";
+    if (tutorialFeaturesStage === 3 && tutorialAttackTimer > 3500) {
+      for (let i = 0; i < 6; i++) {
+        const ix = 40 + Math.random() * (canvas.width - 80);
+        spawnIcicle(ix);
       }
+      bossGameText.textContent =
+        "Icicles: fall from above. Look up and move out of the way.";
+      tutorialFeaturesStage = 4;
+      tutorialAttackTimer = 0;
       return;
     }
 
-    if (tutorialStep === 4) {
-      if (!tutorialIcicleActive && !tutorialIcicleDodged && tutorialAttackTimer > 500) {
-        spawnIcicle(player.x + player.w / 2);
-        tutorialAttackTimer = 0;
-      }
-      if (tutorialIcicleDodged) {
-        tutorialStep = 5;
-        tutorialAttackTimer = 0;
-        bossGameText.textContent =
-          "Tutorial 6/7: Hail. We’ll drop a hail block. Pick it up with E, then stun Boss with E again.";
-      }
+    if (tutorialFeaturesStage === 4 && tutorialAttackTimer > 3500) {
+      spawnWave();
+      bossGameText.textContent =
+        "Ground shockwave: fast low wave along the floor. Jump over it.";
+      tutorialFeaturesStage = 5;
+      tutorialAttackTimer = 0;
       return;
     }
 
-    if (tutorialStep === 5) {
-      if (!hailStones.some(h => h.onGround) && !tutorialHailStun && tutorialAttackTimer > 500) {
-        spawnTutorialHailOnGround();
-      }
-      if (tutorialHailStun) {
-        tutorialStep = 6;
-        tutorialAttackTimer = 0;
-        tutorialFeaturesStage = 0;
-        bossGameText.textContent =
-          "Tutorial 7/7: Boss attacks + phases. Watch each attack and move/dodge.";
-      }
+    if (tutorialFeaturesStage === 5 && tutorialAttackTimer > 3500) {
+      startRamAttack();
+      bossGameText.textContent =
+        "Ram: Boss sweeps across. Don’t stand in front; dodge or jump.";
+      tutorialFeaturesStage = 6;
+      tutorialAttackTimer = 0;
       return;
     }
 
-    // Step 6: demo all attacks & explain phases
-    if (tutorialStep === 6) {
-      if (tutorialFeaturesStage === 0) {
-        bossGameText.textContent =
-          "Boss has 3 phases: Phase 1 basics; Phase 2 adds ram + skeletons; Phase 3 can trigger earthquake.";
-        tutorialFeaturesStage = 1;
-        tutorialAttackTimer = 0;
-        return;
-      }
+    if (tutorialFeaturesStage === 6 && tutorialAttackTimer > 4000) {
+      spawnSkeletons();
+      bossGameText.textContent =
+        "Skeletons: small minions. Sword ones chase; bow ones shoot. They’re weaker than Boss.";
+      tutorialFeaturesStage = 7;
+      tutorialAttackTimer = 0;
+      return;
+    }
 
-      if (tutorialFeaturesStage === 1 && tutorialAttackTimer > 1200) {
-        spawnSnowball();
-        bossGameText.textContent = "Single snowball: simple projectile. Move or jump to dodge.";
-        tutorialFeaturesStage = 2;
-        tutorialAttackTimer = 0;
-        return;
-      }
+    if (tutorialFeaturesStage === 7 && tutorialAttackTimer > 4500) {
+      startEarthquake();
+      bossGameText.textContent =
+        "Earthquake (Phase 3): screen wobbles, controls swap, extra icicles.";
+      tutorialFeaturesStage = 8;
+      tutorialAttackTimer = 0;
+      return;
+    }
 
-      if (tutorialFeaturesStage === 2 && tutorialAttackTimer > 1500) {
-        spawnSnowball(); spawnSnowball(); spawnSnowball();
-        bossGameText.textContent = "Triple snowball volley: multiple shots in a row.";
-        tutorialFeaturesStage = 3;
-        tutorialAttackTimer = 0;
-        return;
-      }
-
-      if (tutorialFeaturesStage === 3 && tutorialAttackTimer > 1500) {
-        for (let i = 0; i < 6; i++) {
-          const ix = 40 + Math.random() * (canvas.width - 80);
-          spawnIcicle(ix);
-        }
-        bossGameText.textContent = "Icicles: fall from above. Look up and move out of the way.";
-        tutorialFeaturesStage = 4;
-        tutorialAttackTimer = 0;
-        return;
-      }
-
-      if (tutorialFeaturesStage === 4 && tutorialAttackTimer > 1500) {
-        spawnWave();
-        bossGameText.textContent =
-          "Ground shockwave: fast low wave along the floor. Jump over it.";
-        tutorialFeaturesStage = 5;
-        tutorialAttackTimer = 0;
-        return;
-      }
-
-      if (tutorialFeaturesStage === 5 && tutorialAttackTimer > 1500) {
-        startRamAttack();
-        bossGameText.textContent =
-          "Ram: Boss sweeps across. Don’t stand in front; dodge or jump.";
-        tutorialFeaturesStage = 6;
-        tutorialAttackTimer = 0;
-        return;
-      }
-
-      if (tutorialFeaturesStage === 6 && tutorialAttackTimer > 2000) {
-        spawnSkeletons();
-        bossGameText.textContent =
-          "Skeletons: small minions. Sword ones chase; bow ones shoot. They’re weaker than Boss.";
-        tutorialFeaturesStage = 7;
-        tutorialAttackTimer = 0;
-        return;
-      }
-
-      if (tutorialFeaturesStage === 7 && tutorialAttackTimer > 2500) {
-        startEarthquake();
-        bossGameText.textContent =
-          "Earthquake (Phase 3): screen wobbles, controls swap, extra icicles. Keep calm and move carefully.";
-        tutorialFeaturesStage = 8;
-        tutorialAttackTimer = 0;
-        return;
-      }
-
-      if (tutorialFeaturesStage === 8 && tutorialAttackTimer > 4000) {
-        tutorialStep = 7;
-        tutorialMode = false;
-        gameActive = false;
-        bossGameText.textContent =
-          "Tutorial complete! Press Play again to start the real fight. Turn Tutorial OFF if you never want to see it again.";
-      }
+    if (tutorialFeaturesStage === 8 && tutorialAttackTimer > 6000) {
+      tutorialStep = 7;
+      tutorialMode = false;
+      gameActive = false;
+      bossGameText.textContent =
+        "Tutorial complete! Press Play again for the real fight. Turn Tutorial OFF if you never want to see it again.";
     }
   }
+}
 
   function update(dt) {
     if (!gameActive) return;
