@@ -1779,7 +1779,7 @@ function updateTutorialStep(dt) {
       }
     }
 
-    for (let i = skeletons.length - 1; i >= 0; i--) {
+      for (let i = skeletons.length - 1; i >= 0; i--) {
       const sk = skeletons[i];
       if (sk.contactCooldown > 0) sk.contactCooldown -= dt;
 
@@ -1787,6 +1787,7 @@ function updateTutorialStep(dt) {
       const skCenter = sk.x + sk.w / 2;
       const dir = playerCenter > skCenter ? 1 : -1;
 
+      // Movement AI
       if (sk.type === "sword") {
         sk.vx = dir * sk.speed;
       } else {
@@ -1795,13 +1796,24 @@ function updateTutorialStep(dt) {
         else if (dist > 140) sk.vx = dir * 0.8;
         else sk.vx = 0;
       }
+
       sk.x += sk.vx;
+
+      // Keep in bounds
       if (sk.x < 10) sk.x = 10;
       if (sk.x + sk.w > canvas.width - 10) sk.x = canvas.width - 10 - sk.w;
 
       const skRect = { x: sk.x, y: sk.y, w: sk.w, h: sk.h };
       const playerRect = { x: player.x, y: player.y, w: player.w, h: player.h };
+
+      // Collision with player – push skeleton OUT, no phasing
       if (player.hp > 0 && rectsOverlap(skRect, playerRect)) {
+        if (skCenter < playerCenter) {
+          sk.x = player.x - sk.w;
+        } else {
+          sk.x = player.x + player.w;
+        }
+
         if (sk.contactCooldown <= 0) {
           const dmg = sk.type === "sword" ? 3 : 2;
           if (!tutorialMode) {
@@ -1819,6 +1831,7 @@ function updateTutorialStep(dt) {
         }
       }
 
+      // Shooting for bow skeletons
       sk.attackCooldown -= dt;
       if (sk.type === "bow" && sk.attackCooldown <= 0) {
         spawnSkeletonArrow(sk);
@@ -1827,6 +1840,7 @@ function updateTutorialStep(dt) {
 
       if (sk.hp <= 0) skeletons.splice(i, 1);
     }
+
 
     for (let i = skeletonProjectiles.length - 1; i >= 0; i--) {
       const p = skeletonProjectiles[i];
