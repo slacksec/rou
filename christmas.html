@@ -647,9 +647,10 @@
             You are a small elf with a candy cane sword, ice bow, and a heavy mace.
             Boss has a huge crown and no face. Terrifying.
           </div>
-          <div style="margin-bottom:6px; display:flex; flex-wrap:wrap; gap:6px;">
-            <button class="char-btn" id="bossPlayBtn">▶ Play Boss Battle</button>
-            <button class="char-btn" id="bossStopBtn">⏹ Stop</button>
+         <div style="margin-bottom:6px; display:flex; flex-wrap:wrap; gap:6px;">
+  <button class="char-btn" id="bossPlayBtn">▶ Play Boss Battle</button>
+  <button class="char-btn" id="bossStopBtn">⏹ Stop</button>
+  <button class="char-btn" id="bossTutorialToggleBtn">Tutorial: ON</button>
           </div>
           <div class="boss-info">
             Controls: A / D or ← / → to move, W or ↑ to jump,
@@ -669,1217 +670,1519 @@
   <footer>
     Made with ❤️ by Calvin · © 2025
   </footer>
+<script>
+  // Tree
+  const tree = document.getElementById("tree");
+  const treeLabel = document.getElementById("treeLabel");
+  tree.addEventListener("click", () => {
+    tree.classList.toggle("lights-on");
+    const on = tree.classList.contains("lights-on");
+    treeLabel.textContent = "Lights: " + (on ? "ON" : "OFF") + " (click to toggle)";
+  });
 
-  <script>
-    // Tree
-    const tree = document.getElementById("tree");
-    const treeLabel = document.getElementById("treeLabel");
-    tree.addEventListener("click", () => {
-      tree.classList.toggle("lights-on");
-      const on = tree.classList.contains("lights-on");
-      treeLabel.textContent = "Lights: " + (on ? "ON" : "OFF") + " (click to toggle)";
-    });
+  // Countdown
+  const daysEl = document.getElementById("days");
+  const hoursEl = document.getElementById("hours");
+  const minutesEl = document.getElementById("minutes");
+  const secondsEl = document.getElementById("seconds");
 
-    // Countdown
-    const daysEl = document.getElementById("days");
-    const hoursEl = document.getElementById("hours");
-    const minutesEl = document.getElementById("minutes");
-    const secondsEl = document.getElementById("seconds");
+  function getNextChristmas() {
+    const now = new Date();
+    const year = (now.getMonth() === 11 && now.getDate() > 25)
+      ? now.getFullYear() + 1
+      : now.getFullYear();
+    return new Date(year, 11, 25, 0, 0, 0, 0);
+  }
 
-    function getNextChristmas() {
-      const now = new Date();
-      const year = (now.getMonth() === 11 && now.getDate() > 25)
-        ? now.getFullYear() + 1
-        : now.getFullYear();
-      return new Date(year, 11, 25, 0, 0, 0, 0);
+  const christmasDate = getNextChristmas();
+
+  function updateCountdown() {
+    const now = new Date();
+    const diff = christmasDate - now;
+    if (diff <= 0) {
+      daysEl.textContent = "0";
+      hoursEl.textContent = "0";
+      minutesEl.textContent = "0";
+      secondsEl.textContent = "0";
+      return;
     }
+    const totalSeconds = Math.floor(diff / 1000);
+    const days = Math.floor(totalSeconds / 86400);
+    const hours = Math.floor((totalSeconds % 86400) / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    daysEl.textContent = days;
+    hoursEl.textContent = hours;
+    minutesEl.textContent = minutes;
+    secondsEl.textContent = seconds;
+  }
+  updateCountdown();
+  setInterval(updateCountdown, 1000);
 
-    const christmasDate = getNextChristmas();
+  // Snow
+  let snowEnabled = true;
+  const snowToggle = document.getElementById("snowToggle");
 
-    function updateCountdown() {
-      const now = new Date();
-      const diff = christmasDate - now;
-      if (diff <= 0) {
-        daysEl.textContent = "0";
-        hoursEl.textContent = "0";
-        minutesEl.textContent = "0";
-        secondsEl.textContent = "0";
-        return;
-      }
-      const totalSeconds = Math.floor(diff / 1000);
-      const days = Math.floor(totalSeconds / 86400);
-      const hours = Math.floor((totalSeconds % 86400) / 3600);
-      const minutes = Math.floor((totalSeconds % 3600) / 60);
-      const seconds = totalSeconds % 60;
-      daysEl.textContent = days;
-      hoursEl.textContent = hours;
-      minutesEl.textContent = minutes;
-      secondsEl.textContent = seconds;
+  function createSnowflake() {
+    if (!snowEnabled) return;
+    const snowflake = document.createElement("div");
+    snowflake.className = "snowflake";
+    const size = 4 + Math.random() * 6;
+    snowflake.style.width = size + "px";
+    snowflake.style.height = size + "px";
+    snowflake.style.left = Math.random() * window.innerWidth + "px";
+    snowflake.style.setProperty("--duration", (5 + Math.random() * 6) + "s");
+    document.body.appendChild(snowflake);
+    setTimeout(() => snowflake.remove(), 12000);
+  }
+
+  snowToggle.addEventListener("click", () => {
+    snowEnabled = !snowEnabled;
+    snowToggle.textContent = snowEnabled ? "❄ Snow: ON" : "❄ Snow: OFF";
+    if (snowEnabled) for (let i = 0; i < 30; i++) createSnowflake();
+  });
+
+  for (let i = 0; i < 40; i++) createSnowflake();
+  setInterval(createSnowflake, 400);
+
+  // Sparkles
+  let sparklesEnabled = true;
+  const sparkleToggle = document.getElementById("sparkleToggle");
+  sparkleToggle.addEventListener("click", () => {
+    sparklesEnabled = !sparklesEnabled;
+    sparkleToggle.textContent = sparklesEnabled ? "✨ Sparkles: ON" : "✨ Sparkles: OFF";
+  });
+
+  document.addEventListener("pointermove", (e) => {
+    if (!sparklesEnabled) return;
+    if (Math.random() > 0.35) return;
+    const s = document.createElement("div");
+    s.className = "sparkle";
+    s.style.left = e.clientX + "px";
+    s.style.top = e.clientY + "px";
+    document.body.appendChild(s);
+    setTimeout(() => s.remove(), 700);
+  });
+
+  // Presents
+  const presents = document.querySelectorAll(".present");
+  const presentMessage = document.getElementById("presentMessage");
+  const presentMessages = [
+    "🎄 Challenge: Say “Merry Christmas” in 3 different languages.",
+    "🎁 Gratitude: Name 3 things you’re grateful for this year.",
+    "✨ Mission: Do a silly Christmas dance for 10 seconds.",
+    "😊 Task: Give someone a genuine compliment today.",
+    "☕ Quest: Make hot chocolate for someone in your family.",
+    "🎅 Fun: Do your best Santa laugh: HO HO HO!",
+    "❄ Chill: Take 3 deep breaths and relax for a moment.",
+    "🎶 Game: Hum your favourite Christmas song for 15 seconds.",
+    "🍪 Sneaky: Hide a cookie for future-you (but remember where).",
+    "🌟 Calm: Look around and find 3 things that make you feel cozy.",
+    "📸 Memory: Take a photo of something that feels like ‘Christmas’ to you.",
+    "💌 Kindness: Send a nice message to someone you haven’t talked to in a while."
+  ];
+
+  function randomFrom(arr) {
+    return arr[Math.floor(Math.random() * arr.length)];
+  }
+
+  let availablePresentMessages = [...presentMessages];
+
+  function getUniquePresentMessage() {
+    if (availablePresentMessages.length === 0) {
+      availablePresentMessages = [...presentMessages];
     }
-    updateCountdown();
-    setInterval(updateCountdown, 1000);
+    const idx = Math.floor(Math.random() * availablePresentMessages.length);
+    const msg = availablePresentMessages[idx];
+    availablePresentMessages.splice(idx, 1);
+    return msg;
+  }
 
-    // Snow
-    let snowEnabled = true;
-    const snowToggle = document.getElementById("snowToggle");
+  presents.forEach((present, index) => {
+    present.addEventListener("click", () => {
+      if (present.classList.contains("opened")) return;
+      const msg = getUniquePresentMessage();
+      present.querySelector(".present-text").textContent = msg;
+      present.classList.add("opened");
+      presentMessage.textContent =
+        "You opened Present #" + (index + 1) + ": " + msg;
+    });
+  });
 
-    function createSnowflake() {
-      if (!snowEnabled) return;
-      const snowflake = document.createElement("div");
-      snowflake.className = "snowflake";
-      const size = 4 + Math.random() * 6;
-      snowflake.style.width = size + "px";
-      snowflake.style.height = size + "px";
-      snowflake.style.left = Math.random() * window.innerWidth + "px";
-      snowflake.style.setProperty("--duration", (5 + Math.random() * 6) + "s");
-      document.body.appendChild(snowflake);
-      setTimeout(() => snowflake.remove(), 12000);
+  // Santa
+  const santaOutput = document.getElementById("santaOutput");
+  const santaJokeBtn = document.getElementById("santaJokeBtn");
+  const santaPunBtn = document.getElementById("santaPunBtn");
+  const santaTipBtn = document.getElementById("santaTipBtn");
+
+  const santaJokes = [
+    "Why did Santa go to music school? So he could improve his wrapping skills!",
+    "What do elves learn in school? The elf-abet.",
+    "Why was the snowman looking through the carrots? He was picking his nose.",
+    "What do you call a cat on the beach at Christmas? Sandy Claws.",
+    "Why did Santa’s helper see the doctor? Because he had low ‘elf’ esteem.",
+    "What do you get if you cross a snowman and a dog? Frostbite.",
+    "Why is it so cold at Christmas? Because it’s Decembrrrrr.",
+    "What do you call a snowman with a six-pack? An abdominal snowman.",
+    "Why did Santa’s reindeer practice their jokes? They wanted to sleigh the audience.",
+    "What do you call Santa when he stops moving? Santa Pause."
+  ];
+
+  const santaPuns = [
+    "This Christmas, I’m on the ‘nice-ish’ list. It’s… a gray area.",
+    "I told my tree we’d always be friends. It said, ‘I’m rooting for you.’",
+    "I’m very ‘present’ this year. Mostly because I bought none in advance.",
+    "Don’t mind my Christmas jokes. They’re snow laughing matter.",
+    "We’re having a tree-mendous time, aren’t we?",
+    "You snow the drill: eat, nap, repeat.",
+    "Yule be sorry if you skip dessert.",
+    "I’m just here for the sleigh rides and side quests."
+  ];
+
+  const santaTips = [
+    "The best gift you can give is your time and attention.",
+    "It’s okay if everything isn’t perfect. Cozy > perfect.",
+    "Take one small moment today just to breathe and enjoy where you are.",
+    "Tell someone you appreciate them. It takes 5 seconds and lasts all day.",
+    "You don’t need a perfect tree, just real laughter around it.",
+    "Drink some water between the hot chocolate. Future-you will thank you.",
+    "Try to remember one good thing about this year. That’s your real present."
+  ];
+
+  santaJokeBtn.addEventListener("click", () => {
+    santaOutput.textContent = randomFrom(santaJokes);
+  });
+  santaPunBtn.addEventListener("click", () => {
+    santaOutput.textContent = randomFrom(santaPuns);
+  });
+  santaTipBtn.addEventListener("click", () => {
+    santaOutput.textContent = randomFrom(santaTips);
+  });
+
+  // Boss game + tutorial
+  const canvas = document.getElementById("bossGame");
+  const ctx = canvas.getContext("2d");
+  const bossGameText = document.getElementById("bossGameText");
+  const bossPlayBtn = document.getElementById("bossPlayBtn");
+  const bossStopBtn = document.getElementById("bossStopBtn");
+  const bossTutorialToggleBtn = document.getElementById("bossTutorialToggleBtn");
+
+  let tutorialDisabled = localStorage.getItem("xmasBossTutorialDisabled") === "1";
+
+  function updateTutorialToggleLabel() {
+    bossTutorialToggleBtn.textContent = "Tutorial: " + (tutorialDisabled ? "OFF" : "ON");
+  }
+  updateTutorialToggleLabel();
+
+  bossTutorialToggleBtn.addEventListener("click", () => {
+    tutorialDisabled = !tutorialDisabled;
+    localStorage.setItem("xmasBossTutorialDisabled", tutorialDisabled ? "1" : "0");
+    updateTutorialToggleLabel();
+  });
+
+  let gameActive = false;
+  let tutorialMode = false;
+  let tutorialStep = 0;
+  let tutorialMoved = false;
+  let tutorialJumped = false;
+  let tutorialSwordHit = false;
+  let tutorialArrowHit = false;
+  let tutorialMaceCrit = false;
+  let tutorialIcicleActive = false;
+  let tutorialIcicleDodged = false;
+  let tutorialHailStun = false;
+  let tutorialFeaturesStage = 0;
+  let tutorialAttackTimer = 0;
+
+  const keys = {};
+  document.addEventListener("keydown", e => { keys[e.key.toLowerCase()] = true; });
+  document.addEventListener("keyup", e => { keys[e.key.toLowerCase()] = false; });
+
+  const groundY = canvas.height - 30;
+
+  const player = {
+    x: 60, y: groundY - 40, w: 26, h: 40,
+    vx: 0, vy: 0, speed: 2.3, jump: -9.2,
+    onGround: false, facing: 1,
+    hp: 120, maxHp: 120,
+    swordTimer: 0, swordCooldown: 0, swordDidHit: false,
+    bowCooldown: 0,
+    maceTimer: 0, maceCooldown: 0, maceDidHit: false,
+    carryingHail: false,
+    startX: 60
+  };
+
+  const boss = {
+    x: canvas.width - 120, y: groundY - 90,
+    w: 60, h: 90,
+    hp: 400, maxHp: 400,
+    attackCooldown: 120,
+    alive: true,
+    stunTimer: 0,
+    ramTimer: 0,
+    ramDir: -1
+  };
+
+  const arrows = [];
+  const snowballs = [];
+  const icicles = [];
+  const waves = [];
+  const hailStones = [];
+  const skeletons = [];
+  const skeletonProjectiles = [];
+
+  let lastTime = 0;
+  let totalTime = 0;
+  let contactCooldown = 0;
+  let prevE = false;
+  let stunSpin = 0;
+  let earthquakeTimer = 0;
+
+  const hitBossLines = [
+    "You slash with your candy cane. The Boss: “That’s *too* sweet!”",
+    "Ice arrow hits! Boss complains: “I said ‘no ice’!”",
+    "Festive hit! The Boss drops a gingerbread man in shock.",
+    "Your combo is so sparkly the Boss needs sunglasses."
+  ];
+
+  const maceCritLines = [
+    "Perfect jump bonk! The crown actually rattles.",
+    "Mace crit! Boss: “That was NOT in the Christmas manual.”",
+    "You slam the crown with a full jump swing. Massive jingle-damage."
+  ];
+
+  const bossHitYouLines = [
+    "Snowball to the face! That’s one way to chill out.",
+    "Boss: “Consider that a free sample of winter.”",
+    "You slip a bit. Boss laughs in evil jingle bells."
+  ];
+
+  const winLines = [
+    "Boss: “Fine. I admit it. Christmas is… kind of awesome.”",
+    "He drops his evil crown and puts on a Santa hat."
+  ];
+
+  const loseLines = [
+    "You fall. Santa yells: “TAKE A NAP AND TRY AGAIN.”",
+    "Boss: “Come back when your candy cane game is stronger.”",
+    "Try again Bozo!... Hamza!"
+  ];
+
+  function getBossPhase() {
+    const ratio = boss.hp / boss.maxHp;
+    if (ratio > 2 / 3) return 1;
+    if (ratio > 1 / 3) return 2;
+    return 3;
+  }
+
+  function resetGame() {
+    player.x = 60;
+    player.y = groundY - player.h;
+    player.vx = 0;
+    player.vy = 0;
+    player.hp = player.maxHp;
+    player.onGround = false;
+    player.swordTimer = 0;
+    player.swordCooldown = 0;
+    player.swordDidHit = false;
+    player.bowCooldown = 0;
+    player.maceTimer = 0;
+    player.maceCooldown = 0;
+    player.maceDidHit = false;
+    player.carryingHail = false;
+
+    boss.x = canvas.width - 120;
+    boss.y = groundY - boss.h;
+    boss.hp = boss.maxHp;
+    boss.attackCooldown = 120;
+    boss.alive = true;
+    boss.stunTimer = 0;
+    boss.ramTimer = 0;
+    boss.ramDir = -1;
+
+    arrows.length = 0;
+    snowballs.length = 0;
+    icicles.length = 0;
+    waves.length = 0;
+    hailStones.length = 0;
+    skeletons.length = 0;
+    skeletonProjectiles.length = 0;
+
+    contactCooldown = 0;
+    stunSpin = 0;
+    earthquakeTimer = 0;
+  }
+
+  function startTutorial() {
+    tutorialMode = true;
+    tutorialStep = 0;
+    tutorialMoved = false;
+    tutorialJumped = false;
+    tutorialSwordHit = false;
+    tutorialArrowHit = false;
+    tutorialMaceCrit = false;
+    tutorialIcicleActive = false;
+    tutorialIcicleDodged = false;
+    tutorialHailStun = false;
+    tutorialFeaturesStage = 0;
+    tutorialAttackTimer = 0;
+    gameActive = true;
+    resetGame();
+    bossGameText.textContent =
+      "Tutorial 1/7: Move left/right (A/D or ←/→). Then jump once (W/↑).";
+  }
+
+  function startRealFight() {
+    tutorialMode = false;
+    gameActive = true;
+    resetGame();
+    bossGameText.textContent =
+      "Boss fight started! Watch for snowballs, icicles, ram, skeletons, earthquake!";
+  }
+
+  bossPlayBtn.addEventListener("click", () => {
+    if (tutorialDisabled) {
+      startRealFight();
+    } else {
+      startTutorial();
     }
+  });
 
-    snowToggle.addEventListener("click", () => {
-      snowEnabled = !snowEnabled;
-      snowToggle.textContent = snowEnabled ? "❄ Snow: ON" : "❄ Snow: OFF";
-      if (snowEnabled) for (let i = 0; i < 30; i++) createSnowflake();
+  bossStopBtn.addEventListener("click", () => {
+    gameActive = false;
+    bossGameText.textContent =
+      "Boss battle stopped. Press “Play Boss Battle” to start again.";
+  });
+
+  function spawnArrow() {
+    const speed = 4;
+    arrows.push({
+      x: player.x + player.w / 2 + player.facing * 12,
+      y: player.y + player.h / 2,
+      vx: player.facing * speed,
+      w: 12,
+      h: 3
     });
+  }
 
-    for (let i = 0; i < 40; i++) createSnowflake();
-    setInterval(createSnowflake, 400);
-
-    // Sparkles
-    let sparklesEnabled = true;
-    const sparkleToggle = document.getElementById("sparkleToggle");
-    sparkleToggle.addEventListener("click", () => {
-      sparklesEnabled = !sparklesEnabled;
-      sparkleToggle.textContent = sparklesEnabled ? "✨ Sparkles: ON" : "✨ Sparkles: OFF";
+  function spawnSnowball(dirOverride) {
+    const dir =
+      typeof dirOverride === "number"
+        ? dirOverride
+        : player.x < boss.x ? -1 : 1;
+    snowballs.push({
+      x: boss.x + boss.w / 2,
+      y: boss.y + boss.h / 2,
+      vx: dir * (2.4 + Math.random() * 0.8),
+      vy: (Math.random() - 0.5) * 0.6,
+      w: 10,
+      h: 10
     });
+  }
 
-    document.addEventListener("pointermove", (e) => {
-      if (!sparklesEnabled) return;
-      if (Math.random() > 0.35) return;
-      const s = document.createElement("div");
-      s.className = "sparkle";
-      s.style.left = e.clientX + "px";
-      s.style.top = e.clientY + "px";
-      document.body.appendChild(s);
-      setTimeout(() => s.remove(), 700);
+  function spawnIcicle(xPos) {
+    icicles.push({
+      x: xPos,
+      y: -18,
+      vy: 3.2 + Math.random() * 0.8,
+      w: 10,
+      h: 20,
+      tutorialTag: tutorialMode && tutorialStep === 4 ? true : false
     });
-
-    // Presents
-    const presents = document.querySelectorAll(".present");
-    const presentMessage = document.getElementById("presentMessage");
-    const presentMessages = [
-      "🎄 Challenge: Say “Merry Christmas” in 3 different languages.",
-      "🎁 Gratitude: Name 3 things you’re grateful for this year.",
-      "✨ Mission: Do a silly Christmas dance for 10 seconds.",
-      "😊 Task: Give someone a genuine compliment today.",
-      "☕ Quest: Make hot chocolate for someone in your family.",
-      "🎅 Fun: Do your best Santa laugh: HO HO HO!",
-      "❄ Chill: Take 3 deep breaths and relax for a moment.",
-      "🎶 Game: Hum your favourite Christmas song for 15 seconds.",
-      "🍪 Sneaky: Hide a cookie for future-you (but remember where).",
-      "🌟 Calm: Look around and find 3 things that make you feel cozy.",
-      "📸 Memory: Take a photo of something that feels like ‘Christmas’ to you.",
-      "💌 Kindness: Send a nice message to someone you haven’t talked to in a while."
-    ];
-
-    function randomFrom(arr) {
-      return arr[Math.floor(Math.random() * arr.length)];
-    }
-
-    let availablePresentMessages = [...presentMessages];
-
-    function getUniquePresentMessage() {
-      if (availablePresentMessages.length === 0) {
-        availablePresentMessages = [...presentMessages];
-      }
-      const idx = Math.floor(Math.random() * availablePresentMessages.length);
-      const msg = availablePresentMessages[idx];
-      availablePresentMessages.splice(idx, 1);
-      return msg;
-    }
-
-    presents.forEach((present, index) => {
-      present.addEventListener("click", () => {
-        if (present.classList.contains("opened")) return;
-        const msg = getUniquePresentMessage();
-        present.querySelector(".present-text").textContent = msg;
-        present.classList.add("opened");
-        presentMessage.textContent =
-          "You opened Present #" + (index + 1) + ": " + msg;
-      });
-    });
-
-    // Santa
-    const santaOutput = document.getElementById("santaOutput");
-    const santaJokeBtn = document.getElementById("santaJokeBtn");
-    const santaPunBtn = document.getElementById("santaPunBtn");
-    const santaTipBtn = document.getElementById("santaTipBtn");
-
-    const santaJokes = [
-      "Why did Santa go to music school? So he could improve his wrapping skills!",
-      "What do elves learn in school? The elf-abet.",
-      "Why was the snowman looking through the carrots? He was picking his nose.",
-      "What do you call a cat on the beach at Christmas? Sandy Claws.",
-      "Why did Santa’s helper see the doctor? Because he had low ‘elf’ esteem.",
-      "What do you get if you cross a snowman and a dog? Frostbite.",
-      "Why is it so cold at Christmas? Because it’s Decembrrrrr.",
-      "What do you call a snowman with a six-pack? An abdominal snowman.",
-      "Why did Santa’s reindeer practice their jokes? They wanted to sleigh the audience.",
-      "What do you call Santa when he stops moving? Santa Pause."
-    ];
-
-    const santaPuns = [
-      "This Christmas, I’m on the ‘nice-ish’ list. It’s… a gray area.",
-      "I told my tree we’d always be friends. It said, ‘I’m rooting for you.’",
-      "I’m very ‘present’ this year. Mostly because I bought none in advance.",
-      "Don’t mind my Christmas jokes. They’re snow laughing matter.",
-      "We’re having a tree-mendous time, aren’t we?",
-      "You snow the drill: eat, nap, repeat.",
-      "Yule be sorry if you skip dessert.",
-      "I’m just here for the sleigh rides and side quests."
-    ];
-
-    const santaTips = [
-      "The best gift you can give is your time and attention.",
-      "It’s okay if everything isn’t perfect. Cozy > perfect.",
-      "Take one small moment today just to breathe and enjoy where you are.",
-      "Tell someone you appreciate them. It takes 5 seconds and lasts all day.",
-      "You don’t need a perfect tree, just real laughter around it.",
-      "Drink some water between the hot chocolate. Future-you will thank you.",
-      "Try to remember one good thing about this year. That’s your real present."
-    ];
-
-    santaJokeBtn.addEventListener("click", () => {
-      santaOutput.textContent = randomFrom(santaJokes);
-    });
-    santaPunBtn.addEventListener("click", () => {
-      santaOutput.textContent = randomFrom(santaPuns);
-    });
-    santaTipBtn.addEventListener("click", () => {
-      santaOutput.textContent = randomFrom(santaTips);
-    });
-
-    // Boss game
-    const canvas = document.getElementById("bossGame");
-    const ctx = canvas.getContext("2d");
-    const bossGameText = document.getElementById("bossGameText");
-    const bossPlayBtn = document.getElementById("bossPlayBtn");
-    const bossStopBtn = document.getElementById("bossStopBtn");
-
-    let gameActive = false;
-    const keys = {};
-    document.addEventListener("keydown", e => { keys[e.key.toLowerCase()] = true; });
-    document.addEventListener("keyup", e => { keys[e.key.toLowerCase()] = false; });
-
-    const groundY = canvas.height - 30;
-
-    const player = {
-      x: 60,
-      y: groundY - 40,
-      w: 26,
-      h: 40,
-      vx: 0,
-      vy: 0,
-      speed: 2.3,
-      jump: -9.2,
-      onGround: false,
-      facing: 1,
-      hp: 120,
-      maxHp: 120,
-      swordTimer: 0,
-      swordCooldown: 0,
-      swordDidHit: false,
-      bowCooldown: 0,
-      maceTimer: 0,
-      maceCooldown: 0,
-      maceDidHit: false,
-      carryingHail: false
-    };
-
-    const boss = {
-      x: canvas.width - 120,
-      y: groundY - 90,
-      w: 60,
-      h: 90,
-      hp: 400,
-      maxHp: 400,
-      attackCooldown: 120,
-      alive: true,
-      stunTimer: 0,
-      ramTimer: 0,
-      ramDir: -1
-    };
-
-    const arrows = [];
-    const snowballs = [];
-    const icicles = [];
-    const waves = [];
-    const hailStones = [];
-    const skeletons = [];
-    const skeletonProjectiles = [];
-
-    let lastTime = 0;
-    let totalTime = 0;
-    let contactCooldown = 0;
-    let prevE = false;
-    let stunSpin = 0;
-    let earthquakeTimer = 0;
-
-    const hitBossLines = [
-      "You slash with your candy cane. The Boss: “That’s *too* sweet!”",
-      "Ice arrow hits! Boss complains: “I said ‘no ice’!”",
-      "Festive hit! The Boss drops a gingerbread man in shock.",
-      "Your combo is so sparkly the Boss needs sunglasses."
-    ];
-
-    const maceCritLines = [
-      "Perfect jump bonk! The crown actually rattles.",
-      "Mace crit! Boss: “That was NOT in the Christmas manual.”",
-      "You slam the crown with a full jump swing. Massive jingle-damage."
-    ];
-
-    const bossHitYouLines = [
-      "Snowball to the face! That’s one way to chill out.",
-      "Boss: “Consider that a free sample of winter.”",
-      "You slip a bit. Boss laughs in evil jingle bells."
-    ];
-
-    const winLines = [
-      "Boss: “Fine. I admit it. Christmas is… kind of awesome.”",
-      "He drops his evil crown and puts on a Santa hat."
-    ];
-
-    const loseLines = [
-      "You fall. Santa yells: “TAKE A NAP AND TRY AGAIN.”",
-      "Boss: “Come back when your candy cane game is stronger.”",
-      "Try again Bozo!... Hamza!"
-    ];
-
-    function getBossPhase() {
-      const ratio = boss.hp / boss.maxHp;
-      if (ratio > 2 / 3) return 1;
-      if (ratio > 1 / 3) return 2;
-      return 3;
-    }
-
-    function resetGame() {
-      player.x = 60;
-      player.y = groundY - player.h;
-      player.vx = 0;
-      player.vy = 0;
-      player.hp = player.maxHp;
-      player.swordTimer = 0;
-      player.swordCooldown = 0;
-      player.swordDidHit = false;
-      player.bowCooldown = 0;
-      player.maceTimer = 0;
-      player.maceCooldown = 0;
-      player.maceDidHit = false;
-      player.carryingHail = false;
-
-      boss.x = canvas.width - 120;
-      boss.y = groundY - boss.h;
-      boss.hp = boss.maxHp;
-      boss.attackCooldown = 120;
-      boss.alive = true;
-      boss.stunTimer = 0;
-      boss.ramTimer = 0;
-      boss.ramDir = -1;
-
-      arrows.length = 0;
-      snowballs.length = 0;
-      icicles.length = 0;
-      waves.length = 0;
-      hailStones.length = 0;
-      skeletons.length = 0;
-      skeletonProjectiles.length = 0;
-
-      contactCooldown = 0;
-      stunSpin = 0;
-      earthquakeTimer = 0;
-
+    if (tutorialMode && tutorialStep === 4) {
+      tutorialIcicleActive = true;
+      tutorialIcicleDodged = false;
       bossGameText.textContent =
-        "Fight started! Sword: 4, Bow: 3, Mace: 1 / 7 crit, E = hail stun.";
+        "Tutorial 5/7: Dodge the icicle! Move so it misses you.";
     }
+  }
 
-    bossPlayBtn.addEventListener("click", () => {
-      gameActive = true;
-      resetGame();
+  function spawnWave() {
+    const dir = player.x < boss.x ? -1 : 1;
+    waves.push({
+      x: dir === -1 ? boss.x : boss.x + boss.w - 40,
+      y: groundY - 8,
+      vx: dir * 2.2,
+      w: 40,
+      h: 8
     });
+  }
 
-    bossStopBtn.addEventListener("click", () => {
-      gameActive = false;
-      bossGameText.textContent =
-        "Boss battle stopped. Press “Play Boss Battle” again if you want another round.";
-    });
-
-    function spawnArrow() {
-      const speed = 4;
-      arrows.push({
-        x: player.x + player.w / 2 + player.facing * 12,
-        y: player.y + player.h / 2,
-        vx: player.facing * speed,
-        w: 12,
-        h: 3
-      });
-    }
-
-    function spawnSnowball(dirOverride) {
-      const dir =
-        typeof dirOverride === "number"
-          ? dirOverride
-          : player.x < boss.x ? -1 : 1;
-      snowballs.push({
-        x: boss.x + boss.w / 2,
-        y: boss.y + boss.h / 2,
-        vx: dir * (2.4 + Math.random() * 0.8),
-        vy: (Math.random() - 0.5) * 0.6,
-        w: 10,
-        h: 10
-      });
-    }
-
-    function spawnIcicle(xPos) {
-      icicles.push({
-        x: xPos,
-        y: -18,
-        vy: 3.2 + Math.random() * 0.8,
-        w: 10,
-        h: 20
-      });
-    }
-
-    function spawnWave() {
-      const dir = player.x < boss.x ? -1 : 1;
-      waves.push({
-        x: dir === -1 ? boss.x : boss.x + boss.w - 40,
-        y: groundY - 8,
-        vx: dir * 2.2,
-        w: 40,
-        h: 8
-      });
-    }
-
-    function spawnHailStorm() {
-      const count = 2 + Math.floor(Math.random() * 2);
-      for (let i = 0; i < count; i++) {
-        const x = 60 + Math.random() * (canvas.width - 120);
-        hailStones.push({
-          x,
-          y: -25,
-          vy: 3.4 + Math.random() * 0.9,
-          w: 18,
-          h: 18,
-          onGround: false
-        });
-      }
-    }
-
-    function dropHailAtPlayer() {
-      const size = 18;
+  function spawnHailStorm() {
+    const count = 2 + Math.floor(Math.random() * 2);
+    for (let i = 0; i < count; i++) {
+      const x = 60 + Math.random() * (canvas.width - 120);
       hailStones.push({
-        x: player.x + player.w / 2 - size / 2,
-        y: groundY - size,
-        vy: 0,
-        w: size,
-        h: size,
-        onGround: true
+        x,
+        y: -25,
+        vy: 3.4 + Math.random() * 0.9,
+        w: 18,
+        h: 18,
+        onGround: false
       });
     }
+  }
 
-    // Skeletons spawn near the boss, smaller than elf
-    function spawnSkeletons() {
-      const maxTotal = 3;
-      if (skeletons.length >= maxTotal) return;
-      const slotsLeft = maxTotal - skeletons.length;
-      const toSpawn = 1 + Math.floor(Math.random() * Math.min(3, slotsLeft));
-      for (let i = 0; i < toSpawn; i++) {
-        const type = Math.random() < 0.5 ? "sword" : "bow";
-        const h = 26;
-        const base = boss.x + boss.w / 2;
-        const offset = Math.random() < 0.5 ? -35 : 35;
-        let x = base + offset;
-        if (x < 10) x = 10;
-        if (x > canvas.width - 28) x = canvas.width - 28;
-        const sk = {
-          type,
-          x,
-          y: groundY - h,
-          w: 18,
-          h,
-          vx: 0,
-          speed: type === "sword" ? 1.5 : 1.2,
-          hp: type === "sword" ? 35 : 25,
-          maxHp: type === "sword" ? 35 : 25,
-          attackCooldown: 1000 + Math.random() * 500,
-          contactCooldown: 0
-        };
-        skeletons.push(sk);
-      }
+  function dropHailAtPlayer() {
+    const size = 18;
+    hailStones.push({
+      x: player.x + player.w / 2 - size / 2,
+      y: groundY - size,
+      vy: 0,
+      w: size,
+      h: size,
+      onGround: true
+    });
+  }
+
+  function spawnTutorialHailOnGround() {
+    const size = 18;
+    const x = canvas.width / 2 - size / 2;
+    hailStones.push({
+      x,
+      y: groundY - size,
+      vy: 0,
+      w: size,
+      h: size,
+      onGround: true
+    });
+    bossGameText.textContent =
+      "Tutorial 6/7: Stand on the hail and press E to pick it up. Face Boss and press E again to stun.";
+  }
+
+  function spawnSkeletons() {
+    const maxTotal = 3;
+    if (skeletons.length >= maxTotal) return;
+    const slotsLeft = maxTotal - skeletons.length;
+    const toSpawn = 1 + Math.floor(Math.random() * Math.min(3, slotsLeft));
+    for (let i = 0; i < toSpawn; i++) {
+      const type = Math.random() < 0.5 ? "sword" : "bow";
+      const h = 26;
+      const base = boss.x + boss.w / 2;
+      const offset = Math.random() < 0.5 ? -35 : 35;
+      let x = base + offset;
+      if (x < 10) x = 10;
+      if (x > canvas.width - 28) x = canvas.width - 28;
+      const sk = {
+        type,
+        x,
+        y: groundY - h,
+        w: 18,
+        h,
+        vx: 0,
+        speed: type === "sword" ? 1.5 : 1.2,
+        hp: type === "sword" ? 35 : 25,
+        maxHp: type === "sword" ? 35 : 25,
+        attackCooldown: 1000 + Math.random() * 500,
+        contactCooldown: 0
+      };
+      skeletons.push(sk);
+    }
+    if (tutorialMode && tutorialStep === 6) {
       bossGameText.textContent =
-        "Skeleton backup arrives! Smaller, but still annoying.";
+        "These are skeleton minions. Sword ones chase you, bow ones shoot.";
+    }
+  }
+
+  function spawnSkeletonArrow(sk) {
+    const playerCenter = player.x + player.w / 2;
+    const dir = playerCenter > sk.x ? 1 : -1;
+    skeletonProjectiles.push({
+      x: sk.x + sk.w / 2 + dir * 6,
+      y: sk.y + sk.h / 2,
+      vx: dir * 2.8,
+      w: 9,
+      h: 3
+    });
+  }
+
+  function startEarthquake() {
+    earthquakeTimer = 5000;
+    boss.attackCooldown = 1000;
+    bossGameText.textContent =
+      "Earthquake: screen wobbles, controls swap, icicles more common in real fight!";
+  }
+
+  function startRamAttack() {
+    boss.ramTimer = 1500;
+    const playerCenter = player.x + player.w / 2;
+    const bossCenter = boss.x + boss.w / 2;
+    boss.ramDir = playerCenter < bossCenter ? -1 : 1;
+    boss.attackCooldown = 1600;
+    bossGameText.textContent =
+      "Ram attack: Boss sweeps across the arena. Jump or move out of the way.";
+  }
+
+  function performBossAttack() {
+    if (!boss.alive || boss.hp <= 0) return;
+    const phase = getBossPhase();
+    const r = Math.random();
+    const eqActive = earthquakeTimer > 0;
+
+    if (phase >= 3 && earthquakeTimer <= 0 && Math.random() < 0.2) {
+      startEarthquake();
+      return;
     }
 
-    function spawnSkeletonArrow(sk) {
-      const playerCenter = player.x + player.w / 2;
-      const dir = playerCenter > sk.x ? 1 : -1;
-      skeletonProjectiles.push({
-        x: sk.x + sk.w / 2 + dir * 6,
-        y: sk.y + sk.h / 2,
-        vx: dir * 2.8,
-        w: 9,
-        h: 3
-      });
-    }
-
-    function startEarthquake() {
-      earthquakeTimer = 5000;
-      boss.attackCooldown = 1000;
-      bossGameText.textContent =
-        "EARTHQUAKE! Screen wobbles, controls feel weird, icicles more likely!";
-    }
-
-    function startRamAttack() {
-      boss.ramTimer = 1500;
-      const playerCenter = player.x + player.w / 2;
-      const bossCenter = boss.x + boss.w / 2;
-      boss.ramDir = playerCenter < bossCenter ? -1 : 1;
-      boss.attackCooldown = 1600;
-      bossGameText.textContent =
-        "Boss charges across the arena! Don’t be in the way.";
-    }
-
-    function performBossAttack() {
-      if (!boss.alive || boss.hp <= 0) return;
-      const phase = getBossPhase();
-      const r = Math.random();
-      const eqActive = earthquakeTimer > 0;
-
-      if (phase >= 3 && earthquakeTimer <= 0 && Math.random() < 0.2) {
-        startEarthquake();
-        return;
+    if (eqActive && r < 0.6) {
+      for (let i = 0; i < 7; i++) {
+        const ix = 40 + Math.random() * (canvas.width - 80);
+        spawnIcicle(ix);
       }
+      boss.attackCooldown = 900 + Math.random() * 600;
+      bossGameText.textContent = "Earthquake boosts icicle rain! Stay mobile.";
+      return;
+    }
 
-      if (eqActive && r < 0.6) {
-        for (let i = 0; i < 7; i++) {
-          const ix = 40 + Math.random() * (canvas.width - 80);
-          spawnIcicle(ix);
-        }
-        boss.attackCooldown = 900 + Math.random() * 600;
-        bossGameText.textContent = "Earthquake boosts icicle rain! Stay mobile.";
-        return;
-      }
-
-      if (phase === 1) {
-        if (r < 0.32) {
-          spawnSnowball();
-          boss.attackCooldown = 800 + Math.random() * 500;
-          bossGameText.textContent = "Boss throws a grumpy snowball.";
-        } else if (r < 0.6) {
-          spawnSnowball(); spawnSnowball(); spawnSnowball();
-          boss.attackCooldown = 1000 + Math.random() * 600;
-          bossGameText.textContent = "Triple snowball volley!";
-        } else if (r < 0.82) {
-          for (let i = 0; i < 6; i++) {
-            const ix = 40 + Math.random() * (canvas.width - 80);
-            spawnIcicle(ix);
-          }
-          boss.attackCooldown = 1200 + Math.random() * 800;
-          bossGameText.textContent = "Icicle rain!";
-        } else if (r < 0.96) {
-          spawnWave();
-          boss.attackCooldown = 900 + Math.random() * 700;
-          bossGameText.textContent = "Ground shockwave!";
-        } else {
-          spawnHailStorm();
-          boss.attackCooldown = 1400 + Math.random() * 800;
-          bossGameText.textContent = "Boss calls down GIANT hail.";
-        }
-        return;
-      }
-
-      if (r < 0.23) {
+    if (phase === 1) {
+      if (r < 0.32) {
         spawnSnowball();
-        boss.attackCooldown = 700 + Math.random() * 400;
+        boss.attackCooldown = 800 + Math.random() * 500;
         bossGameText.textContent = "Boss throws a grumpy snowball.";
-      } else if (r < 0.46) {
+      } else if (r < 0.6) {
         spawnSnowball(); spawnSnowball(); spawnSnowball();
-        boss.attackCooldown = 900 + Math.random() * 500;
+        boss.attackCooldown = 1000 + Math.random() * 600;
         bossGameText.textContent = "Triple snowball volley!";
-      } else if (r < 0.64) {
+      } else if (r < 0.82) {
         for (let i = 0; i < 6; i++) {
           const ix = 40 + Math.random() * (canvas.width - 80);
           spawnIcicle(ix);
         }
-        boss.attackCooldown = 1100 + Math.random() * 700;
-        bossGameText.textContent = "Icicle rain!";
-      } else if (r < 0.78) {
-        spawnWave();
-        boss.attackCooldown = 800 + Math.random() * 600;
-        bossGameText.textContent = "Ground shockwave!";
-      } else if (r < 0.88) {
-        startRamAttack();
-      } else if (r < 0.96) {
-        spawnSkeletons();
         boss.attackCooldown = 1200 + Math.random() * 800;
+        bossGameText.textContent = "Icicle rain!";
+      } else if (r < 0.96) {
+        spawnWave();
+        boss.attackCooldown = 900 + Math.random() * 700;
+        bossGameText.textContent = "Ground shockwave!";
       } else {
         spawnHailStorm();
         boss.attackCooldown = 1400 + Math.random() * 800;
         bossGameText.textContent = "Boss calls down GIANT hail.";
       }
+      return;
     }
 
-    function rectsOverlap(a, b) {
-      return (
-        a.x < b.x + b.w &&
-        a.x + a.w > b.x &&
-        a.y < b.y + b.h &&
-        a.y + a.h > b.y
-      );
+    if (r < 0.23) {
+      spawnSnowball();
+      boss.attackCooldown = 700 + Math.random() * 400;
+      bossGameText.textContent = "Boss throws a grumpy snowball.";
+    } else if (r < 0.46) {
+      spawnSnowball(); spawnSnowball(); spawnSnowball();
+      boss.attackCooldown = 900 + Math.random() * 500;
+      bossGameText.textContent = "Triple snowball volley!";
+    } else if (r < 0.64) {
+      for (let i = 0; i < 6; i++) {
+        const ix = 40 + Math.random() * (canvas.width - 80);
+        spawnIcicle(ix);
+      }
+      boss.attackCooldown = 1100 + Math.random() * 700;
+      bossGameText.textContent = "Icicle rain!";
+    } else if (r < 0.78) {
+      spawnWave();
+      boss.attackCooldown = 800 + Math.random() * 600;
+      bossGameText.textContent = "Ground shockwave!";
+    } else if (r < 0.88) {
+      startRamAttack();
+    } else if (r < 0.96) {
+      spawnSkeletons();
+      boss.attackCooldown = 1200 + Math.random() * 800;
+    } else {
+      spawnHailStorm();
+      boss.attackCooldown = 1400 + Math.random() * 800;
+      bossGameText.textContent = "Boss calls down GIANT hail.";
+    }
+  }
+
+  function rectsOverlap(a, b) {
+    return (
+      a.x < b.x + b.w &&
+      a.x + a.w > b.x &&
+      a.y < b.y + b.h &&
+      a.y + a.h > b.y
+    );
+  }
+
+  function updateTutorialStep(dt) {
+    tutorialAttackTimer += dt;
+
+    if (tutorialStep === 0) {
+      // done when moved + jumped
+      if (tutorialMoved && tutorialJumped) {
+        tutorialStep = 1;
+        bossGameText.textContent =
+          "Tutorial 2/7: Sword. Get near Boss and press J to hit it once.";
+      }
+      return;
     }
 
-    let snowToggleGuard = 0;
+    if (tutorialStep === 1) {
+      if (tutorialSwordHit) {
+        tutorialStep = 2;
+        bossGameText.textContent =
+          "Tutorial 3/7: Bow. Press K to shoot an ice arrow and hit the Boss.";
+      }
+      return;
+    }
 
-    function update(dt) {
-      if (!gameActive) return;
-      if (player.hp <= 0 || boss.hp <= 0) return;
+    if (tutorialStep === 2) {
+      if (tutorialArrowHit) {
+        tutorialStep = 3;
+        bossGameText.textContent =
+          "Tutorial 4/7: Mace crit. Jump, then press L while falling to bonk the Boss hard.";
+      }
+      return;
+    }
 
-      totalTime += dt;
-      if (contactCooldown > 0) contactCooldown -= dt;
-      if (earthquakeTimer > 0) {
-        earthquakeTimer -= dt;
-        if (earthquakeTimer <= 0) {
-          earthquakeTimer = 0;
+    if (tutorialStep === 3) {
+      if (tutorialMaceCrit) {
+        tutorialStep = 4;
+        tutorialAttackTimer = 0;
+        tutorialIcicleActive = false;
+        tutorialIcicleDodged = false;
+        bossGameText.textContent =
+          "Tutorial 5/7: Icicles. One will fall. Move so it misses you.";
+      }
+      return;
+    }
+
+    if (tutorialStep === 4) {
+      if (!tutorialIcicleActive && !tutorialIcicleDodged && tutorialAttackTimer > 500) {
+        spawnIcicle(player.x + player.w / 2);
+        tutorialAttackTimer = 0;
+      }
+      if (tutorialIcicleDodged) {
+        tutorialStep = 5;
+        tutorialAttackTimer = 0;
+        bossGameText.textContent =
+          "Tutorial 6/7: Hail. We’ll drop a hail block. Pick it up with E, then stun Boss with E again.";
+      }
+      return;
+    }
+
+    if (tutorialStep === 5) {
+      if (!hailStones.some(h => h.onGround) && !tutorialHailStun && tutorialAttackTimer > 500) {
+        spawnTutorialHailOnGround();
+      }
+      if (tutorialHailStun) {
+        tutorialStep = 6;
+        tutorialAttackTimer = 0;
+        tutorialFeaturesStage = 0;
+        bossGameText.textContent =
+          "Tutorial 7/7: Boss attacks + phases. Watch each attack and move/dodge.";
+      }
+      return;
+    }
+
+    // Step 6: demo all attacks & explain phases
+    if (tutorialStep === 6) {
+      if (tutorialFeaturesStage === 0) {
+        bossGameText.textContent =
+          "Boss has 3 phases: Phase 1 basics; Phase 2 adds ram + skeletons; Phase 3 can trigger earthquake.";
+        tutorialFeaturesStage = 1;
+        tutorialAttackTimer = 0;
+        return;
+      }
+
+      if (tutorialFeaturesStage === 1 && tutorialAttackTimer > 1200) {
+        spawnSnowball();
+        bossGameText.textContent = "Single snowball: simple projectile. Move or jump to dodge.";
+        tutorialFeaturesStage = 2;
+        tutorialAttackTimer = 0;
+        return;
+      }
+
+      if (tutorialFeaturesStage === 2 && tutorialAttackTimer > 1500) {
+        spawnSnowball(); spawnSnowball(); spawnSnowball();
+        bossGameText.textContent = "Triple snowball volley: multiple shots in a row.";
+        tutorialFeaturesStage = 3;
+        tutorialAttackTimer = 0;
+        return;
+      }
+
+      if (tutorialFeaturesStage === 3 && tutorialAttackTimer > 1500) {
+        for (let i = 0; i < 6; i++) {
+          const ix = 40 + Math.random() * (canvas.width - 80);
+          spawnIcicle(ix);
+        }
+        bossGameText.textContent = "Icicles: fall from above. Look up and move out of the way.";
+        tutorialFeaturesStage = 4;
+        tutorialAttackTimer = 0;
+        return;
+      }
+
+      if (tutorialFeaturesStage === 4 && tutorialAttackTimer > 1500) {
+        spawnWave();
+        bossGameText.textContent =
+          "Ground shockwave: fast low wave along the floor. Jump over it.";
+        tutorialFeaturesStage = 5;
+        tutorialAttackTimer = 0;
+        return;
+      }
+
+      if (tutorialFeaturesStage === 5 && tutorialAttackTimer > 1500) {
+        startRamAttack();
+        bossGameText.textContent =
+          "Ram: Boss sweeps across. Don’t stand in front; dodge or jump.";
+        tutorialFeaturesStage = 6;
+        tutorialAttackTimer = 0;
+        return;
+      }
+
+      if (tutorialFeaturesStage === 6 && tutorialAttackTimer > 2000) {
+        spawnSkeletons();
+        bossGameText.textContent =
+          "Skeletons: small minions. Sword ones chase; bow ones shoot. They’re weaker than Boss.";
+        tutorialFeaturesStage = 7;
+        tutorialAttackTimer = 0;
+        return;
+      }
+
+      if (tutorialFeaturesStage === 7 && tutorialAttackTimer > 2500) {
+        startEarthquake();
+        bossGameText.textContent =
+          "Earthquake (Phase 3): screen wobbles, controls swap, extra icicles. Keep calm and move carefully.";
+        tutorialFeaturesStage = 8;
+        tutorialAttackTimer = 0;
+        return;
+      }
+
+      if (tutorialFeaturesStage === 8 && tutorialAttackTimer > 4000) {
+        tutorialStep = 7;
+        tutorialMode = false;
+        gameActive = false;
+        bossGameText.textContent =
+          "Tutorial complete! Press Play again to start the real fight. Turn Tutorial OFF if you never want to see it again.";
+      }
+    }
+  }
+
+  function update(dt) {
+    if (!gameActive) return;
+
+    if (player.hp <= 0 || boss.hp <= 0) {
+      return;
+    }
+
+    totalTime += dt;
+    if (contactCooldown > 0) contactCooldown -= dt;
+    if (earthquakeTimer > 0) {
+      earthquakeTimer -= dt;
+      if (earthquakeTimer <= 0) {
+        earthquakeTimer = 0;
+        if (!tutorialMode) {
           bossGameText.textContent =
             "The ground stops wobbling. Controls feel normal again.";
         }
       }
+    }
 
-      const eDown = !!keys["e"];
-      const ePressed = eDown && !prevE;
-      prevE = eDown;
+    const eDown = !!keys["e"];
+    const ePressed = eDown && !prevE;
+    prevE = eDown;
 
-      let moveLeft = keys["a"] || keys["arrowleft"];
-      let moveRight = keys["d"] || keys["arrowright"];
-      if (earthquakeTimer > 0) {
-        const tmp = moveLeft;
-        moveLeft = moveRight;
-        moveRight = tmp;
-      }
+    let moveLeft = keys["a"] || keys["arrowleft"];
+    let moveRight = keys["d"] || keys["arrowright"];
+    if (earthquakeTimer > 0) {
+      const tmp = moveLeft;
+      moveLeft = moveRight;
+      moveRight = tmp;
+    }
 
-      player.vx = 0;
-      if (moveLeft) {
-        player.vx = -player.speed;
-        player.facing = -1;
-      }
-      if (moveRight) {
-        player.vx = player.speed;
-        player.facing = 1;
-      }
+    player.vx = 0;
+    if (moveLeft) {
+      player.vx = -player.speed;
+      player.facing = -1;
+    }
+    if (moveRight) {
+      player.vx = player.speed;
+      player.facing = 1;
+    }
 
-      if (ePressed) {
-        if (!player.carryingHail) {
-          for (let i = hailStones.length - 1; i >= 0; i--) {
-            const h = hailStones[i];
-            if (!h.onGround) continue;
-            const hailRect = { x: h.x, y: h.y, w: h.w, h: h.h };
-            const playerRect = { x: player.x, y: player.y, w: player.w, h: player.h };
-            if (rectsOverlap(hailRect, playerRect) ||
-                Math.abs((h.x + h.w / 2) - (player.x + player.w / 2)) < 30) {
-              hailStones.splice(i, 1);
-              player.carryingHail = true;
-              bossGameText.textContent =
-                "You lifted a huge hail chunk! Face Boss + E to stun.";
-              break;
-            }
+    if (tutorialMode && tutorialStep === 0) {
+      if (Math.abs(player.x - player.startX) > 10) tutorialMoved = true;
+    }
+
+    if (ePressed) {
+      if (!player.carryingHail) {
+        for (let i = hailStones.length - 1; i >= 0; i--) {
+          const h = hailStones[i];
+          if (!h.onGround) continue;
+          const hailRect = { x: h.x, y: h.y, w: h.w, h: h.h };
+          const playerRect = { x: player.x, y: player.y, w: player.w, h: player.h };
+          if (rectsOverlap(hailRect, playerRect) ||
+              Math.abs((h.x + h.w / 2) - (player.x + player.w / 2)) < 30) {
+            hailStones.splice(i, 1);
+            player.carryingHail = true;
+            bossGameText.textContent =
+              tutorialMode && tutorialStep === 5
+                ? "Nice! Now face the Boss and press E again to stun."
+                : "You lifted a huge hail chunk! Face Boss + E to stun.";
+            break;
           }
-        } else {
-          if (boss.alive && boss.hp > 0) {
-            const playerCenter = player.x + player.w / 2;
-            const bossCenter = boss.x + boss.w / 2;
-            const dirToBoss = bossCenter > playerCenter ? 1 : -1;
-            const facingBoss = player.facing === dirToBoss;
-            const distance = Math.abs(bossCenter - playerCenter);
+        }
+      } else {
+        if (boss.alive && boss.hp > 0) {
+          const playerCenter = player.x + player.w / 2;
+          const bossCenter = boss.x + boss.w / 2;
+          const dirToBoss = bossCenter > playerCenter ? 1 : -1;
+          const facingBoss = player.facing === dirToBoss;
+          const distance = Math.abs(bossCenter - playerCenter);
 
-            if (facingBoss && distance < 200) {
-              boss.stunTimer = 3000;
-              boss.attackCooldown = 3000;
-              boss.ramTimer = 0;
-              player.carryingHail = false;
-              bossGameText.textContent =
-                "Hail slam! Boss stunned for 3 seconds.";
-            } else {
-              dropHailAtPlayer();
-              player.carryingHail = false;
-              bossGameText.textContent =
-                "You drop the hail. Try facing the Boss and being closer.";
+          if (facingBoss && distance < 200) {
+            boss.stunTimer = 3000;
+            boss.attackCooldown = 3000;
+            boss.ramTimer = 0;
+            player.carryingHail = false;
+            bossGameText.textContent =
+              tutorialMode && tutorialStep === 5
+                ? "Perfect stun! In the real fight, this buys you big damage time."
+                : "Hail slam! Boss stunned for 3 seconds.";
+            if (tutorialMode && tutorialStep === 5) {
+              tutorialHailStun = true;
             }
           } else {
             dropHailAtPlayer();
             player.carryingHail = false;
+            bossGameText.textContent =
+              "You drop the hail. Try facing the Boss and being closer.";
           }
+        } else {
+          dropHailAtPlayer();
+          player.carryingHail = false;
         }
       }
+    }
 
-      if (!player.carryingHail && (keys["w"] || keys["arrowup"]) && player.onGround) {
-        player.vy = player.jump;
-        player.onGround = false;
-      }
+    if (!player.carryingHail && (keys["w"] || keys["arrowup"]) && player.onGround) {
+      player.vy = player.jump;
+      player.onGround = false;
+      if (tutorialMode && tutorialStep === 0) tutorialJumped = true;
+    }
 
-      if (!player.carryingHail && (keys["j"] || keys[" "]) && player.swordCooldown <= 0) {
-        player.swordTimer = 180;
-        player.swordCooldown = 320;
-        player.swordDidHit = false;
-      }
-      if (!player.carryingHail && keys["k"] && (!player.bowCooldown || player.bowCooldown <= 0)) {
-        spawnArrow();
-        player.bowCooldown = 420;
-      }
-      if (!player.carryingHail && keys["l"] && player.maceCooldown <= 0) {
-        player.maceTimer = 200;
-        player.maceCooldown = 550;
-        player.maceDidHit = false;
-      }
+    if (!player.carryingHail && (keys["j"] || keys[" "]) && player.swordCooldown <= 0) {
+      player.swordTimer = 180;
+      player.swordCooldown = 320;
+      player.swordDidHit = false;
+    }
+    if (!player.carryingHail && keys["k"] && (!player.bowCooldown || player.bowCooldown <= 0)) {
+      spawnArrow();
+      player.bowCooldown = 420;
+    }
+    if (!player.carryingHail && keys["l"] && player.maceCooldown <= 0) {
+      player.maceTimer = 200;
+      player.maceCooldown = 550;
+      player.maceDidHit = false;
+    }
 
-      if (player.swordTimer > 0) player.swordTimer -= dt;
-      if (player.swordCooldown > 0) player.swordCooldown -= dt;
-      if (player.bowCooldown > 0) player.bowCooldown -= dt;
-      if (player.maceTimer > 0) player.maceTimer -= dt;
-      if (player.maceCooldown > 0) player.maceCooldown -= dt;
+    if (player.swordTimer > 0) player.swordTimer -= dt;
+    if (player.swordCooldown > 0) player.swordCooldown -= dt;
+    if (player.bowCooldown > 0) player.bowCooldown -= dt;
+    if (player.maceTimer > 0) player.maceTimer -= dt;
+    if (player.maceCooldown > 0) player.maceCooldown -= dt;
 
-      player.x += player.vx;
-      player.vy += 0.35;
-      player.y += player.vy;
+    player.x += player.vx;
+    player.vy += 0.35;
+    player.y += player.vy;
 
-      if (player.y + player.h >= groundY) {
-        player.y = groundY - player.h;
-        player.vy = 0;
-        player.onGround = true;
-      } else {
-        player.onGround = false;
-      }
+    if (player.y + player.h >= groundY) {
+      player.y = groundY - player.h;
+      player.vy = 0;
+      player.onGround = true;
+    } else {
+      player.onGround = false;
+    }
 
-      if (player.x < 0) player.x = 0;
-      if (player.x + player.w > canvas.width) player.x = canvas.width - player.w;
+    if (player.x < 0) player.x = 0;
+    if (player.x + player.w > canvas.width) player.x = canvas.width - player.w;
 
-      if (boss.alive) {
-        if (boss.stunTimer > 0) {
-          boss.stunTimer -= dt;
-          stunSpin += dt * 0.01;
-          if (boss.stunTimer <= 0) {
-            boss.stunTimer = 0;
+    if (boss.alive) {
+      if (boss.stunTimer > 0) {
+        boss.stunTimer -= dt;
+        stunSpin += dt * 0.01;
+        if (boss.stunTimer <= 0) {
+          boss.stunTimer = 0;
+          if (!tutorialMode) {
             boss.attackCooldown = 600 + Math.random() * 400;
             bossGameText.textContent = "Boss shakes off the stun.";
           }
-        } else if (boss.ramTimer > 0) {
-          boss.ramTimer -= dt;
-          boss.x += boss.ramDir * 4.3;
-          if (boss.x < 20) { boss.x = 20; boss.ramDir = 1; }
-          if (boss.x + boss.w > canvas.width - 20) {
-            boss.x = canvas.width - 20 - boss.w;
-            boss.ramDir = -1;
-          }
-          if (boss.ramTimer <= 0) {
-            boss.ramTimer = 0;
-            boss.attackCooldown = 800 + Math.random() * 500;
-            bossGameText.textContent = "Ram attack ends.";
-          }
-        } else {
-          boss.attackCooldown -= dt;
-          if (boss.attackCooldown <= 0) performBossAttack();
         }
+      } else if (boss.ramTimer > 0) {
+        boss.ramTimer -= dt;
+        boss.x += boss.ramDir * 4.3;
+        if (boss.x < 20) { boss.x = 20; boss.ramDir = 1; }
+        if (boss.x + boss.w > canvas.width - 20) {
+          boss.x = canvas.width - 20 - boss.w;
+          boss.ramDir = -1;
+        }
+        if (boss.ramTimer <= 0 && !tutorialMode) {
+          boss.ramTimer = 0;
+          boss.attackCooldown = 800 + Math.random() * 500;
+          bossGameText.textContent = "Ram attack ends.";
+        }
+      } else if (!tutorialMode) {
+        boss.attackCooldown -= dt;
+        if (boss.attackCooldown <= 0) performBossAttack();
       }
+    }
 
-      if (boss.alive && boss.hp > 0) {
-        const playerRect = { x: player.x, y: player.y, w: player.w, h: player.h };
-        const bossRect = { x: boss.x, y: boss.y, w: boss.w, h: boss.h };
-        if (rectsOverlap(playerRect, bossRect)) {
-          const playerCenter = player.x + player.w / 2;
-          const bossCenter = boss.x + boss.w / 2;
-          if (playerCenter < bossCenter) player.x = boss.x - player.w;
-          else player.x = boss.x + boss.w;
-          player.vx = 0;
+    if (boss.alive && boss.hp > 0) {
+      const playerRect = { x: player.x, y: player.y, w: player.w, h: player.h };
+      const bossRect = { x: boss.x, y: boss.y, w: boss.w, h: boss.h };
+      if (rectsOverlap(playerRect, bossRect)) {
+        const playerCenter = player.x + player.w / 2;
+        const bossCenter = boss.x + boss.w / 2;
+        if (playerCenter < bossCenter) player.x = boss.x - player.w;
+        else player.x = boss.x + boss.w;
+        player.vx = 0;
 
-          const contactDamage = 4;
-          if (player.hp > 0 && contactCooldown <= 0) {
+        const contactDamage = 4;
+        if (player.hp > 0 && contactCooldown <= 0) {
+          if (!tutorialMode) {
             player.hp = Math.max(0, player.hp - contactDamage);
             contactCooldown = 700;
             bossGameText.textContent =
               player.hp === 0
                 ? "You tried to body-check the Boss and got flattened."
                 : "You bump into the Boss and get shoved back.";
+          } else {
+            bossGameText.textContent =
+              "Touching the Boss hurts in the real fight. Stay a bit away.";
+            contactCooldown = 700;
           }
         }
       }
+    }
 
-      for (let i = arrows.length - 1; i >= 0; i--) {
-        const a = arrows[i];
-        a.x += a.vx;
-        if (a.x < -20 || a.x > canvas.width + 20) {
-          arrows.splice(i, 1);
-          continue;
-        }
-        if (boss.alive && boss.hp > 0 && rectsOverlap(a, boss)) {
+    for (let i = arrows.length - 1; i >= 0; i--) {
+      const a = arrows[i];
+      a.x += a.vx;
+      if (a.x < -20 || a.x > canvas.width + 20) {
+        arrows.splice(i, 1);
+        continue;
+      }
+      if (boss.alive && boss.hp > 0 && rectsOverlap(a, boss)) {
+        if (!tutorialMode) {
           boss.hp = Math.max(0, boss.hp - 3);
-          arrows.splice(i, 1);
+        } else {
+          tutorialArrowHit = true;
+        }
+        arrows.splice(i, 1);
+        if (!tutorialMode) {
           bossGameText.textContent =
             boss.hp === 0 ? randomFrom(winLines) : randomFrom(hitBossLines);
           if (boss.hp === 0) boss.alive = false;
         }
       }
+    }
 
-      for (let i = snowballs.length - 1; i >= 0; i--) {
-        const s = snowballs[i];
-        s.x += s.vx;
-        s.y += s.vy;
-        if (s.x < -30 || s.x > canvas.width + 30 || s.y > canvas.height + 30) {
-          snowballs.splice(i, 1);
-          continue;
-        }
-        if (player.hp > 0 && rectsOverlap(s, player)) {
+    for (let i = snowballs.length - 1; i >= 0; i--) {
+      const s = snowballs[i];
+      s.x += s.vx;
+      s.y += s.vy;
+      if (s.x < -30 || s.x > canvas.width + 30 || s.y > canvas.height + 30) {
+        snowballs.splice(i, 1);
+        continue;
+      }
+      if (player.hp > 0 && rectsOverlap(s, player)) {
+        snowballs.splice(i, 1);
+        if (!tutorialMode) {
           player.hp = Math.max(0, player.hp - 8);
-          snowballs.splice(i, 1);
           bossGameText.textContent =
             player.hp === 0 ? randomFrom(loseLines) : randomFrom(bossHitYouLines);
+        } else {
+          bossGameText.textContent =
+            "That’s how snowballs hit. In the real fight, they take HP.";
         }
       }
+    }
 
-      for (let i = icicles.length - 1; i >= 0; i--) {
-        const ic = icicles[i];
-        ic.y += ic.vy;
-        if (ic.y > canvas.height + 20) {
-          icicles.splice(i, 1);
-          continue;
+    for (let i = icicles.length - 1; i >= 0; i--) {
+      const ic = icicles[i];
+      ic.y += ic.vy;
+      if (ic.y > canvas.height + 20) {
+        if (tutorialMode && tutorialStep === 4 && ic.tutorialTag) {
+          tutorialIcicleActive = false;
+          tutorialIcicleDodged = true;
+          bossGameText.textContent =
+            "Nice dodge! That’s how you avoid falling icicles.";
         }
-        if (player.hp > 0 && rectsOverlap(ic, player)) {
+        icicles.splice(i, 1);
+        continue;
+      }
+      if (player.hp > 0 && rectsOverlap(ic, player)) {
+        if (tutorialMode && tutorialStep === 4 && ic.tutorialTag) {
+          tutorialIcicleActive = false;
+          tutorialIcicleDodged = false;
+          bossGameText.textContent =
+            "The icicle hit you. In the real fight you lose HP. We’ll try again.";
+        } else if (!tutorialMode) {
           player.hp = Math.max(0, player.hp - 14);
-          icicles.splice(i, 1);
           bossGameText.textContent =
             player.hp === 0 ? randomFrom(loseLines) : "Icicle hit! That’s one spicy snow-cone.";
-          icicles.splice(i, 1);
         }
+        icicles.splice(i, 1);
       }
+    }
 
-      for (let i = waves.length - 1; i >= 0; i--) {
-        const w = waves[i];
-        w.x += w.vx;
-        if (w.x < -60 || w.x > canvas.width + 60) {
-          waves.splice(i, 1);
-          continue;
-        }
-        if (player.hp > 0 && rectsOverlap(w, player)) {
+    for (let i = waves.length - 1; i >= 0; i--) {
+      const w = waves[i];
+      w.x += w.vx;
+      if (w.x < -60 || w.x > canvas.width + 60) {
+        waves.splice(i, 1);
+        continue;
+      }
+      if (player.hp > 0 && rectsOverlap(w, player)) {
+        waves.splice(i, 1);
+        if (!tutorialMode) {
           player.hp = Math.max(0, player.hp - 16);
-          waves.splice(i, 1);
           bossGameText.textContent =
             player.hp === 0 ? randomFrom(loseLines) : "Ground wave smacks your ankles.";
+        } else {
+          bossGameText.textContent =
+            "That’s the shockwave. In real fight: jump over it.";
         }
       }
+    }
 
-      const hailDamage = Math.ceil(player.maxHp * 0.5);
-      for (let i = hailStones.length - 1; i >= 0; i--) {
-        const h = hailStones[i];
-        if (!h.onGround) {
-          h.y += h.vy;
-          const hailRect = { x: h.x, y: h.y, w: h.w, h: h.h };
-          const playerRect = { x: player.x, y: player.y, w: player.w, h: player.h };
-          if (player.hp > 0 && rectsOverlap(hailRect, playerRect)) {
+    const hailDamage = Math.ceil(player.maxHp * 0.5);
+    for (let i = hailStones.length - 1; i >= 0; i--) {
+      const h = hailStones[i];
+      if (!h.onGround) {
+        h.y += h.vy;
+        const hailRect = { x: h.x, y: h.y, w: h.w, h: h.h };
+        const playerRect = { x: player.x, y: player.y, w: player.w, h: player.h };
+        if (player.hp > 0 && rectsOverlap(hailRect, playerRect)) {
+          hailStones.splice(i, 1);
+          if (!tutorialMode) {
             player.hp = Math.max(0, player.hp - hailDamage);
-            hailStones.splice(i, 1);
             bossGameText.textContent =
               player.hp === 0
                 ? "You tried to tank the hail. It tanked you instead."
                 : "Hail smash! Huge chunk of HP gone.";
-            continue;
+          } else {
+            bossGameText.textContent =
+              "Hail hurts a LOT in the real fight. Better to dodge or pick it up.";
           }
-          if (h.y + h.h >= groundY) {
-            h.y = groundY - h.h;
-            h.vy = 0;
-            h.onGround = true;
-          }
+          continue;
+        }
+        if (h.y + h.h >= groundY) {
+          h.y = groundY - h.h;
+          h.vy = 0;
+          h.onGround = true;
         }
       }
+    }
 
-      for (let i = skeletons.length - 1; i >= 0; i--) {
-        const sk = skeletons[i];
-        if (sk.contactCooldown > 0) sk.contactCooldown -= dt;
+    for (let i = skeletons.length - 1; i >= 0; i--) {
+      const sk = skeletons[i];
+      if (sk.contactCooldown > 0) sk.contactCooldown -= dt;
 
-        const playerCenter = player.x + player.w / 2;
-        const skCenter = sk.x + sk.w / 2;
-        const dir = playerCenter > skCenter ? 1 : -1;
+      const playerCenter = player.x + player.w / 2;
+      const skCenter = sk.x + sk.w / 2;
+      const dir = playerCenter > skCenter ? 1 : -1;
 
-        if (sk.type === "sword") {
-          sk.vx = dir * sk.speed;
-        } else {
-          const dist = Math.abs(playerCenter - skCenter);
-          if (dist < 80) sk.vx = -dir * sk.speed;
-          else if (dist > 140) sk.vx = dir * 0.8;
-          else sk.vx = 0;
-        }
-        sk.x += sk.vx;
-        if (sk.x < 10) sk.x = 10;
-        if (sk.x + sk.w > canvas.width - 10) sk.x = canvas.width - 10 - sk.w;
+      if (sk.type === "sword") {
+        sk.vx = dir * sk.speed;
+      } else {
+        const dist = Math.abs(playerCenter - skCenter);
+        if (dist < 80) sk.vx = -dir * sk.speed;
+        else if (dist > 140) sk.vx = dir * 0.8;
+        else sk.vx = 0;
+      }
+      sk.x += sk.vx;
+      if (sk.x < 10) sk.x = 10;
+      if (sk.x + sk.w > canvas.width - 10) sk.x = canvas.width - 10 - sk.w;
 
-        const skRect = { x: sk.x, y: sk.y, w: sk.w, h: sk.h };
-        const playerRect = { x: player.x, y: player.y, w: player.w, h: player.h };
-        if (player.hp > 0 && rectsOverlap(skRect, playerRect)) {
-          if (sk.contactCooldown <= 0) {
-            const dmg = sk.type === "sword" ? 3 : 2;
+      const skRect = { x: sk.x, y: sk.y, w: sk.w, h: sk.h };
+      const playerRect = { x: player.x, y: player.y, w: player.w, h: player.h };
+      if (player.hp > 0 && rectsOverlap(skRect, playerRect)) {
+        if (sk.contactCooldown <= 0) {
+          const dmg = sk.type === "sword" ? 3 : 2;
+          if (!tutorialMode) {
             player.hp = Math.max(0, player.hp - dmg);
             sk.contactCooldown = 700;
             bossGameText.textContent =
               player.hp === 0
                 ? "Skeleton bonk finishes you off."
                 : "Skeleton hits you. Weaker than Boss, still hurts.";
+          } else {
+            sk.contactCooldown = 700;
+            bossGameText.textContent =
+              "Skeleton contact hurts in the real fight. Try to hit them first.";
           }
         }
-
-        sk.attackCooldown -= dt;
-        if (sk.type === "bow" && sk.attackCooldown <= 0) {
-          spawnSkeletonArrow(sk);
-          sk.attackCooldown = 1500 + Math.random() * 800;
-        }
-
-        if (sk.hp <= 0) skeletons.splice(i, 1);
       }
 
-      for (let i = skeletonProjectiles.length - 1; i >= 0; i--) {
-        const p = skeletonProjectiles[i];
-        p.x += p.vx;
-        if (p.x < -20 || p.x > canvas.width + 20) {
-          skeletonProjectiles.splice(i, 1);
-          continue;
-        }
-        if (player.hp > 0 && rectsOverlap(p, player)) {
+      sk.attackCooldown -= dt;
+      if (sk.type === "bow" && sk.attackCooldown <= 0) {
+        spawnSkeletonArrow(sk);
+        sk.attackCooldown = 1500 + Math.random() * 800;
+      }
+
+      if (sk.hp <= 0) skeletons.splice(i, 1);
+    }
+
+    for (let i = skeletonProjectiles.length - 1; i >= 0; i--) {
+      const p = skeletonProjectiles[i];
+      p.x += p.vx;
+      if (p.x < -20 || p.x > canvas.width + 20) {
+        skeletonProjectiles.splice(i, 1);
+        continue;
+      }
+      if (player.hp > 0 && rectsOverlap(p, player)) {
+        skeletonProjectiles.splice(i, 1);
+        if (!tutorialMode) {
           player.hp = Math.max(0, player.hp - 6);
-          skeletonProjectiles.splice(i, 1);
           bossGameText.textContent =
             player.hp === 0
               ? randomFrom(loseLines)
               : "Arrow from a skeleton archer clips you.";
+        } else {
+          bossGameText.textContent =
+            "That’s what skeleton arrows look like. In real fight: they chip away HP.";
         }
       }
+    }
 
-      if (player.swordTimer > 0 && !player.swordDidHit && boss.alive && boss.hp > 0) {
-        const reach = 20;
-        const swordRect = {
-          x: player.facing === 1 ? player.x + player.w : player.x - reach,
-          y: player.y + 6,
-          w: reach,
-          h: player.h - 12
-        };
-        if (rectsOverlap(swordRect, boss)) {
+    if (player.swordTimer > 0 && !player.swordDidHit && boss.alive && boss.hp > 0) {
+      const reach = 20;
+      const swordRect = {
+        x: player.facing === 1 ? player.x + player.w : player.x - reach,
+        y: player.y + 6,
+        w: reach,
+        h: player.h - 12
+      };
+      if (rectsOverlap(swordRect, boss)) {
+        player.swordDidHit = true;
+        if (!tutorialMode) {
           boss.hp = Math.max(0, boss.hp - 4);
-          player.swordDidHit = true;
           bossGameText.textContent =
             boss.hp === 0 ? randomFrom(winLines) : randomFrom(hitBossLines);
           if (boss.hp === 0) boss.alive = false;
-        }
-        for (let i = skeletons.length - 1; i >= 0; i--) {
-          const sk = skeletons[i];
-          const skRect = { x: sk.x, y: sk.y, w: sk.w, h: sk.h };
-          if (rectsOverlap(swordRect, skRect)) sk.hp -= 6;
+        } else if (tutorialStep === 1) {
+          tutorialSwordHit = true;
+          bossGameText.textContent =
+            "Nice sword hit! Short range but solid damage.";
         }
       }
+      for (let i = skeletons.length - 1; i >= 0; i--) {
+        const sk = skeletons[i];
+        const skRect = { x: sk.x, y: sk.y, w: sk.w, h: sk.h };
+        if (rectsOverlap(swordRect, skRect)) sk.hp -= 6;
+      }
+    }
 
-      if (player.maceTimer > 0 && !player.maceDidHit && boss.alive && boss.hp > 0) {
-        const reach = 24;
-        const maceRect = {
-          x: player.facing === 1 ? player.x + player.w : player.x - reach,
-          y: player.y - 4,
-          w: reach,
-          h: player.h + 8
-        };
-        if (rectsOverlap(maceRect, boss)) {
-          const isCrit = !player.onGround && Math.abs(player.vy) > 0.4;
-          const dmg = isCrit ? 7 : 1;
+    if (player.maceTimer > 0 && !player.maceDidHit && boss.alive && boss.hp > 0) {
+      const reach = 24;
+      const maceRect = {
+        x: player.facing === 1 ? player.x + player.w : player.x - reach,
+        y: player.y - 4,
+        w: reach,
+        h: player.h + 8
+      };
+      if (rectsOverlap(maceRect, boss)) {
+        const isCrit = !player.onGround && Math.abs(player.vy) > 0.4;
+        const dmg = isCrit ? 7 : 1;
+        player.maceDidHit = true;
+        if (!tutorialMode) {
           boss.hp = Math.max(0, boss.hp - dmg);
-          player.maceDidHit = true;
           bossGameText.textContent =
             boss.hp === 0
               ? randomFrom(winLines)
               : (isCrit ? randomFrom(maceCritLines) : randomFrom(hitBossLines));
           if (boss.hp === 0) boss.alive = false;
-        }
-        for (let i = skeletons.length - 1; i >= 0; i--) {
-          const sk = skeletons[i];
-          const skRect = { x: sk.x, y: sk.y, w: sk.w, h: sk.h };
-          if (rectsOverlap(maceRect, skRect)) {
-            const isCrit = !player.onGround && Math.abs(player.vy) > 0.4;
-            sk.hp -= isCrit ? 9 : 3;
+        } else {
+          if (isCrit && tutorialStep === 3) {
+            tutorialMaceCrit = true;
+            bossGameText.textContent =
+              "Huge crit! That’s how mace jump-bonks work.";
+          } else if (isCrit) {
+            bossGameText.textContent =
+              "Nice crit! In real fight that deals big damage.";
+          } else {
+            bossGameText.textContent =
+              "Ground mace hit is weak. Try jumping then hitting for crit.";
           }
+        }
+      }
+      for (let i = skeletons.length - 1; i >= 0; i--) {
+        const sk = skeletons[i];
+        const skRect = { x: sk.x, y: sk.y, w: sk.w, h: sk.h };
+        if (rectsOverlap(maceRect, skRect)) {
+          const isCrit = !player.onGround && Math.abs(player.vy) > 0.4;
+          sk.hp -= isCrit ? 9 : 3;
         }
       }
     }
 
-    function draw() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.save();
-      if (earthquakeTimer > 0) {
-        const t = totalTime * 0.02;
-        const dx = Math.sin(t) * 3;
-        const dy = Math.cos(t * 1.2) * 2;
-        ctx.translate(dx, dy);
-      }
+    if (tutorialMode) {
+      updateTutorialStep(dt);
+    }
+  }
 
-      const grd = ctx.createLinearGradient(0, 0, 0, canvas.height);
-      grd.addColorStop(0, "#020617");
-      grd.addColorStop(1, "#0b1730");
-      ctx.fillStyle = grd;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.save();
+    if (earthquakeTimer > 0) {
+      const t = totalTime * 0.02;
+      const dx = Math.sin(t) * 3;
+      const dy = Math.cos(t * 1.2) * 2;
+      ctx.translate(dx, dy);
+    }
 
-      ctx.fillStyle = "#0c1f3a";
-      ctx.fillRect(0, groundY, canvas.width, canvas.height - groundY);
+    const grd = ctx.createLinearGradient(0, 0, 0, canvas.height);
+    grd.addColorStop(0, "#020617");
+    grd.addColorStop(1, "#0b1730");
+    ctx.fillStyle = grd;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "#0c1f3a";
+    ctx.fillRect(0, groundY, canvas.width, canvas.height - groundY);
 
-      if (!gameActive) {
-        ctx.fillStyle = "rgba(15,23,42,0.9)";
-        ctx.fillRect(40, 40, canvas.width - 80, canvas.height - 80);
-        ctx.strokeStyle = "rgba(148,163,184,0.9)";
-        ctx.strokeRect(40, 40, canvas.width - 80, canvas.height - 80);
-        ctx.fillStyle = "#e5e7eb";
-        ctx.font = "14px system-ui";
-        ctx.fillText("Christmas Boss Battle", 80, 80);
-        ctx.font = "11px system-ui";
-        ctx.fillText("Press “Play Boss Battle” to start.", 80, 100);
-        ctx.fillText("Or ignore it and just enjoy the snow & jokes.", 80, 116);
-        ctx.restore();
-        return;
-      }
+    if (!gameActive || (tutorialMode && tutorialStep === 7)) {
+      ctx.fillStyle = "rgba(15,23,42,0.9)";
+      ctx.fillRect(40, 40, canvas.width - 80, canvas.height - 80);
+      ctx.strokeStyle = "rgba(148,163,184,0.9)";
+      ctx.strokeRect(40, 40, canvas.width - 80, canvas.height - 80);
+      ctx.fillStyle = "#e5e7eb";
+      ctx.font = "14px system-ui";
+      ctx.fillText("Christmas Boss Battle", 80, 80);
+      ctx.font = "11px system-ui";
+      ctx.fillText("Press “Play Boss Battle” to start.", 80, 100);
+      ctx.fillText("If Tutorial is ON, you’ll learn moves & attacks first.", 80, 116);
+      ctx.restore();
+      return;
+    }
 
-      const pRatio = player.hp / player.maxHp;
-      const bRatio = boss.hp / boss.maxHp;
-      const phase = getBossPhase();
+    const pRatio = player.hp / player.maxHp;
+    const bRatio = boss.hp / boss.maxHp;
+    const phase = getBossPhase();
 
-      ctx.fillStyle = "#ffffff";
-      ctx.font = "10px system-ui";
-      ctx.fillText("Elf HP", 10, 12);
-      ctx.strokeStyle = "#ffffff";
-      ctx.strokeRect(10, 16, 80, 8);
-      ctx.fillStyle = "#4ade80";
-      ctx.fillRect(10, 16, 80 * pRatio, 8);
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "10px system-ui";
+    ctx.fillText("Elf HP", 10, 12);
+    ctx.strokeStyle = "#ffffff";
+    ctx.strokeRect(10, 16, 80, 8);
+    ctx.fillStyle = "#4ade80";
+    ctx.fillRect(10, 16, 80 * pRatio, 8);
 
-      const bx = canvas.width - 120;
-      const by = 8;
-      const bw = 100;
-      const bh = 10;
+    const bx = canvas.width - 120;
+    const by = 8;
+    const bw = 100;
+    const bh = 10;
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "10px system-ui";
+    ctx.fillText("Boss HP", bx, by - 2);
+    ctx.strokeStyle = "#ffffff";
+    ctx.strokeRect(bx, by, bw, bh);
+    ctx.strokeStyle = "rgba(148,163,184,0.8)";
+    ctx.beginPath();
+    ctx.moveTo(bx + bw / 3, by);
+    ctx.lineTo(bx + bw / 3, by + bh);
+    ctx.moveTo(bx + (2 * bw) / 3, by);
+    ctx.lineTo(bx + (2 * bw) / 3, by + bh);
+    ctx.stroke();
 
-      ctx.fillStyle = "#ffffff";
-      ctx.font = "10px system-ui";
-      ctx.fillText("Boss HP", bx, by - 2);
+    const hpWidth = bw * bRatio;
+    ctx.fillStyle = phase === 1 ? "#f97373" : phase === 2 ? "#fb923c" : "#facc15";
+    ctx.fillRect(bx, by, hpWidth, bh);
+    ctx.fillStyle = "#e5e7eb";
+    ctx.font = "9px system-ui";
+    ctx.fillText("Phase " + phase, bx + 28, by + 20);
 
-      ctx.strokeStyle = "#ffffff";
-      ctx.strokeRect(bx, by, bw, bh);
-      ctx.strokeStyle = "rgba(148,163,184,0.8)";
+    ctx.fillStyle = "#22c55e";
+    ctx.fillRect(player.x, player.y, player.w, player.h);
+    ctx.fillStyle = "#16a34a";
+    ctx.beginPath();
+    ctx.moveTo(player.x + player.w / 2, player.y - 10);
+    ctx.lineTo(player.x, player.y + 5);
+    ctx.lineTo(player.x + player.w, player.y + 5);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(player.x + player.w / 2 - 2, player.y - 12, 4, 4);
+
+    if (player.carryingHail) {
+      ctx.strokeStyle = "#bbf7fe";
+      ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.moveTo(bx + bw / 3, by);
-      ctx.lineTo(bx + bw / 3, by + bh);
-      ctx.moveTo(bx + (2 * bw) / 3, by);
-      ctx.lineTo(bx + (2 * bw) / 3, by + bh);
+      ctx.moveTo(player.x + 5, player.y + 15);
+      ctx.lineTo(player.x - 2, player.y - 5);
+      ctx.moveTo(player.x + player.w - 5, player.y + 15);
+      ctx.lineTo(player.x + player.w + 2, player.y - 5);
       ctx.stroke();
 
-      const hpWidth = bw * bRatio;
-      ctx.fillStyle = phase === 1 ? "#f97373" : phase === 2 ? "#fb923c" : "#facc15";
-      ctx.fillRect(bx, by, hpWidth, bh);
-
-      ctx.fillStyle = "#e5e7eb";
-      ctx.font = "9px system-ui";
-      ctx.fillText("Phase " + phase, bx + 28, by + 20);
-
-      ctx.fillStyle = "#22c55e";
-      ctx.fillRect(player.x, player.y, player.w, player.h);
-      ctx.fillStyle = "#16a34a";
+      ctx.fillStyle = "#bfdbfe";
       ctx.beginPath();
-      ctx.moveTo(player.x + player.w / 2, player.y - 10);
-      ctx.lineTo(player.x, player.y + 5);
-      ctx.lineTo(player.x + player.w, player.y + 5);
-      ctx.closePath();
+      ctx.arc(player.x + player.w / 2, player.y - 10, 7, 0, Math.PI * 2);
       ctx.fill();
-      ctx.fillStyle = "#ffffff";
-      ctx.fillRect(player.x + player.w / 2 - 2, player.y - 12, 4, 4);
+      ctx.strokeStyle = "#93c5fd";
+      ctx.stroke();
+    }
 
-      if (player.carryingHail) {
-        ctx.strokeStyle = "#bbf7fe";
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(player.x + 5, player.y + 15);
-        ctx.lineTo(player.x - 2, player.y - 5);
-        ctx.moveTo(player.x + player.w - 5, player.y + 15);
-        ctx.lineTo(player.x + player.w + 2, player.y - 5);
-        ctx.stroke();
-
-        ctx.fillStyle = "#bfdbfe";
-        ctx.beginPath();
-        ctx.arc(player.x + player.w / 2, player.y - 10, 7, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.strokeStyle = "#93c5fd";
-        ctx.stroke();
+    if (player.swordTimer > 0) {
+      ctx.save();
+      const baseX = player.facing === 1 ? player.x + player.w : player.x;
+      const baseY = player.y + player.h / 2;
+      ctx.translate(baseX, baseY);
+      const angle = player.facing === 1 ? 0.4 : Math.PI - 0.4;
+      ctx.rotate(angle);
+      const swordLen = 26;
+      ctx.fillStyle = "#fee2e2";
+      ctx.fillRect(0, -2, swordLen, 4);
+      ctx.fillStyle = "#f97373";
+      for (let i = 0; i < swordLen; i += 6) {
+        ctx.fillRect(i, -2, 3, 4);
       }
-
-      if (player.swordTimer > 0) {
-        ctx.save();
-        const baseX = player.facing === 1 ? player.x + player.w : player.x;
-        const baseY = player.y + player.h / 2;
-        ctx.translate(baseX, baseY);
-        const angle = player.facing === 1 ? 0.4 : Math.PI - 0.4;
-        ctx.rotate(angle);
-        const swordLen = 26;
-        ctx.fillStyle = "#fee2e2";
-        ctx.fillRect(0, -2, swordLen, 4);
-        ctx.fillStyle = "#f97373";
-        for (let i = 0; i < swordLen; i += 6) {
-          ctx.fillRect(i, -2, 3, 4);
-        }
-        ctx.restore();
-      }
-
-      if (player.maceTimer > 0) {
-        ctx.save();
-        const baseX = player.facing === 1 ? player.x + player.w : player.x;
-        const baseY = player.y + player.h / 2;
-        ctx.translate(baseX, baseY);
-        const angle = player.facing === 1 ? -0.3 : Math.PI + 0.3;
-        ctx.rotate(angle);
-        ctx.strokeStyle = "#e5e7eb";
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.moveTo(0, 0);
-        ctx.lineTo(18, 0);
-        ctx.stroke();
-        ctx.fillStyle = "#facc15";
-        ctx.beginPath();
-        ctx.arc(22, 0, 5, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
-      }
-
-      ctx.fillStyle = "#bae6fd";
-      arrows.forEach(a => ctx.fillRect(a.x, a.y, a.w, a.h));
-
-      if (boss.hp > 0) {
-        const bossGrd = ctx.createLinearGradient(boss.x, boss.y, boss.x, boss.y + boss.h);
-        bossGrd.addColorStop(0, "#ef4444");
-        bossGrd.addColorStop(1, "#b91c1c");
-        ctx.fillStyle = bossGrd;
-        ctx.fillRect(boss.x, boss.y, boss.w, boss.h);
-
-        ctx.fillStyle = "#fde047";
-        ctx.fillRect(boss.x + 5, boss.y - 14, boss.w - 10, 12);
-        ctx.beginPath();
-        ctx.moveTo(boss.x + 5, boss.y - 14);
-        ctx.lineTo(boss.x + 15, boss.y - 26);
-        ctx.lineTo(boss.x + 30, boss.y - 14);
-        ctx.lineTo(boss.x + 45, boss.y - 26);
-        ctx.lineTo(boss.x + boss.w - 5, boss.y - 14);
-        ctx.closePath();
-        ctx.fill();
-
-        if (boss.stunTimer > 0) {
-          const cx = boss.x + boss.w / 2;
-          const cy = boss.y + boss.h / 2;
-          const starCount = 5;
-          const radiusX = boss.w;
-          const radiusY = boss.h * 0.6;
-
-          ctx.save();
-          ctx.translate(cx, cy - 8);
-          ctx.strokeStyle = "#facc15";
-          ctx.lineWidth = 2;
-          for (let i = 0; i < starCount; i++) {
-            const angle = stunSpin + (i * (Math.PI * 2 / starCount));
-            const sx = Math.cos(angle) * radiusX;
-            const sy = Math.sin(angle) * radiusY;
-            ctx.beginPath();
-            ctx.moveTo(sx, sy - 4);
-            ctx.lineTo(sx, sy + 4);
-            ctx.moveTo(sx - 4, sy);
-            ctx.lineTo(sx + 4, sy);
-            ctx.stroke();
-          }
-          ctx.restore();
-        }
-      } else {
-        ctx.fillStyle = "#9ca3af";
-        ctx.fillRect(boss.x, boss.y + boss.h - 20, boss.w, 20);
-      }
-
-      snowballs.forEach(s => {
-        const rad = s.w / 2;
-        ctx.fillStyle = "#e5f2ff";
-        ctx.beginPath();
-        ctx.arc(s.x + rad, s.y + rad, rad, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.strokeStyle = "rgba(148,163,184,0.8)";
-        ctx.stroke();
-      });
-
-      icicles.forEach(ic => {
-        ctx.fillStyle = "#e0f2fe";
-        ctx.beginPath();
-        ctx.moveTo(ic.x + ic.w / 2, ic.y);
-        ctx.lineTo(ic.x, ic.y + ic.h);
-        ctx.lineTo(ic.x + ic.w, ic.y + ic.h);
-        ctx.closePath();
-        ctx.fill();
-      });
-
-      waves.forEach(w => {
-        const waveGrd = ctx.createLinearGradient(w.x, w.y, w.x + w.w, w.y);
-        waveGrd.addColorStop(0, "#38bdf8");
-        waveGrd.addColorStop(1, "#a855f7");
-        ctx.fillStyle = waveGrd;
-        ctx.fillRect(w.x, w.y, w.w, w.h);
-      });
-
-      hailStones.forEach(h => {
-        const rad = h.w / 2;
-        ctx.fillStyle = "#bfdbfe";
-        ctx.beginPath();
-        ctx.arc(h.x + rad, h.y + rad, rad, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.strokeStyle = "#93c5fd";
-        ctx.stroke();
-      });
-
-      skeletons.forEach(sk => {
-        ctx.fillStyle = sk.type === "sword" ? "#e5e7eb" : "#cbd5f5";
-        ctx.fillRect(sk.x, sk.y, sk.w, sk.h);
-
-        // Move skull/plate & HP bar higher above the head
-        ctx.fillStyle = "#f9fafb";
-        ctx.fillRect(sk.x + 3, sk.y - 16, sk.w - 6, 7);
-
-        const ratio = sk.hp / sk.maxHp;
-        const sx = sk.x;
-        const sy = sk.y - 22;
-        const sw = sk.w;
-        const sh = 4;
-        ctx.strokeStyle = "#ffffff";
-        ctx.strokeRect(sx, sy, sw, sh);
-        ctx.fillStyle = "#22c55e";
-        ctx.fillRect(sx, sy, sw * ratio, sh);
-      });
-
-      ctx.fillStyle = "#fbbf24";
-      skeletonProjectiles.forEach(p => ctx.fillRect(p.x, p.y, p.w, p.h));
-
       ctx.restore();
     }
 
-    function gameLoop(timestamp) {
-      const dt = timestamp - lastTime;
-      lastTime = timestamp;
-      update(dt);
-      draw();
-      requestAnimationFrame(gameLoop);
+    if (player.maceTimer > 0) {
+      ctx.save();
+      const baseX = player.facing === 1 ? player.x + player.w : player.x;
+      const baseY = player.y + player.h / 2;
+      ctx.translate(baseX, baseY);
+      const angle = player.facing === 1 ? -0.3 : Math.PI + 0.3;
+      ctx.rotate(angle);
+      ctx.strokeStyle = "#e5e7eb";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(18, 0);
+      ctx.stroke();
+      ctx.fillStyle = "#facc15";
+      ctx.beginPath();
+      ctx.arc(22, 0, 5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
     }
 
-    canvas.addEventListener("dblclick", () => {
-      if (gameActive) resetGame();
+    ctx.fillStyle = "#bae6fd";
+    arrows.forEach(a => ctx.fillRect(a.x, a.y, a.w, a.h));
+
+    if (boss.hp > 0) {
+      const bossGrd = ctx.createLinearGradient(boss.x, boss.y, boss.x, boss.y + boss.h);
+      bossGrd.addColorStop(0, "#ef4444");
+      bossGrd.addColorStop(1, "#b91c1c");
+      ctx.fillStyle = bossGrd;
+      ctx.fillRect(boss.x, boss.y, boss.w, boss.h);
+
+      ctx.fillStyle = "#fde047";
+      ctx.fillRect(boss.x + 5, boss.y - 14, boss.w - 10, 12);
+      ctx.beginPath();
+      ctx.moveTo(boss.x + 5, boss.y - 14);
+      ctx.lineTo(boss.x + 15, boss.y - 26);
+      ctx.lineTo(boss.x + 30, boss.y - 14);
+      ctx.lineTo(boss.x + 45, boss.y - 26);
+      ctx.lineTo(boss.x + boss.w - 5, boss.y - 14);
+      ctx.closePath();
+      ctx.fill();
+
+      if (boss.stunTimer > 0) {
+        const cx = boss.x + boss.w / 2;
+        const cy = boss.y + boss.h / 2;
+        const starCount = 5;
+        const radiusX = boss.w;
+        const radiusY = boss.h * 0.6;
+
+        ctx.save();
+        ctx.translate(cx, cy - 8);
+        ctx.strokeStyle = "#facc15";
+        ctx.lineWidth = 2;
+        for (let i = 0; i < starCount; i++) {
+          const angle = stunSpin + (i * (Math.PI * 2 / starCount));
+          const sx = Math.cos(angle) * radiusX;
+          const sy = Math.sin(angle) * radiusY;
+          ctx.beginPath();
+          ctx.moveTo(sx, sy - 4);
+          ctx.lineTo(sx, sy + 4);
+          ctx.moveTo(sx - 4, sy);
+          ctx.lineTo(sx + 4, sy);
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
+    } else {
+      ctx.fillStyle = "#9ca3af";
+      ctx.fillRect(boss.x, boss.y + boss.h - 20, boss.w, 20);
+    }
+
+    snowballs.forEach(s => {
+      const rad = s.w / 2;
+      ctx.fillStyle = "#e5f2ff";
+      ctx.beginPath();
+      ctx.arc(s.x + rad, s.y + rad, rad, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "rgba(148,163,184,0.8)";
+      ctx.stroke();
     });
 
-    bossGameText.textContent =
-      "Boss battle idle. Press “Play Boss Battle” if you want to fight. Or don’t. It’s Christmas.";
+    icicles.forEach(ic => {
+      ctx.fillStyle = "#e0f2fe";
+      ctx.beginPath();
+      ctx.moveTo(ic.x + ic.w / 2, ic.y);
+      ctx.lineTo(ic.x, ic.y + ic.h);
+      ctx.lineTo(ic.x + ic.w, ic.y + ic.h);
+      ctx.closePath();
+      ctx.fill();
+    });
 
+    waves.forEach(w => {
+      const waveGrd = ctx.createLinearGradient(w.x, w.y, w.x + w.w, w.y);
+      waveGrd.addColorStop(0, "#38bdf8");
+      waveGrd.addColorStop(1, "#a855f7");
+      ctx.fillStyle = waveGrd;
+      ctx.fillRect(w.x, w.y, w.w, w.h);
+    });
+
+    hailStones.forEach(h => {
+      const rad = h.w / 2;
+      ctx.fillStyle = "#bfdbfe";
+      ctx.beginPath();
+      ctx.arc(h.x + rad, h.y + rad, rad, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "#93c5fd";
+      ctx.stroke();
+    });
+
+    skeletons.forEach(sk => {
+      ctx.fillStyle = sk.type === "sword" ? "#e5e7eb" : "#cbd5f5";
+      ctx.fillRect(sk.x, sk.y, sk.w, sk.h);
+      ctx.fillStyle = "#f9fafb";
+      ctx.fillRect(sk.x + 3, sk.y - 16, sk.w - 6, 7);
+
+      const ratio = sk.hp / sk.maxHp;
+      const sx = sk.x;
+      const sy = sk.y - 22;
+      const sw = sk.w;
+      const sh = 4;
+      ctx.strokeStyle = "#ffffff";
+      ctx.strokeRect(sx, sy, sw, sh);
+      ctx.fillStyle = "#22c55e";
+      ctx.fillRect(sx, sy, sw * ratio, sh);
+    });
+
+    ctx.fillStyle = "#fbbf24";
+    skeletonProjectiles.forEach(p => ctx.fillRect(p.x, p.y, p.w, p.h));
+
+    ctx.restore();
+  }
+
+  function gameLoop(timestamp) {
+    const dt = timestamp - lastTime;
+    lastTime = timestamp;
+    update(dt);
+    draw();
     requestAnimationFrame(gameLoop);
-  </script>
+  }
+
+  canvas.addEventListener("dblclick", () => {
+    if (gameActive) resetGame();
+  });
+
+  bossGameText.textContent =
+    "Boss battle idle. Press “Play Boss Battle” if you want to fight. Tutorial explains every move & attack.";
+
+  requestAnimationFrame(gameLoop);
+</script>
 </body>
 </html>
