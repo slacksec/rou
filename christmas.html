@@ -951,7 +951,8 @@
 
     const loseLines = [
       "You fall. Santa yells: “TAKE A NAP AND TRY AGAIN.”",
-      "Boss: “Come back when your candy cane game is stronger.”"
+      "Boss: “Come back when your candy cane game is stronger.”",
+      "Try again Bozo!... Hamza!"
     ];
 
     function getBossPhase() {
@@ -1086,7 +1087,7 @@
       });
     }
 
-    // Skeletons: smaller than elf
+    // Skeletons spawn near the boss, smaller than elf
     function spawnSkeletons() {
       const maxTotal = 3;
       if (skeletons.length >= maxTotal) return;
@@ -1094,11 +1095,15 @@
       const toSpawn = 1 + Math.floor(Math.random() * Math.min(3, slotsLeft));
       for (let i = 0; i < toSpawn; i++) {
         const type = Math.random() < 0.5 ? "sword" : "bow";
-        const startLeft = Math.random() < 0.5;
         const h = 26;
+        const base = boss.x + boss.w / 2;
+        const offset = Math.random() < 0.5 ? -35 : 35;
+        let x = base + offset;
+        if (x < 10) x = 10;
+        if (x > canvas.width - 28) x = canvas.width - 28;
         const sk = {
           type,
-          x: startLeft ? 40 : canvas.width - 80,
+          x,
           y: groundY - h,
           w: 18,
           h,
@@ -1150,13 +1155,11 @@
       const r = Math.random();
       const eqActive = earthquakeTimer > 0;
 
-      // Earthquake only from Phase 3
       if (phase >= 3 && earthquakeTimer <= 0 && Math.random() < 0.2) {
         startEarthquake();
         return;
       }
 
-      // During quake: bias to icicles
       if (eqActive && r < 0.6) {
         for (let i = 0; i < 7; i++) {
           const ix = 40 + Math.random() * (canvas.width - 80);
@@ -1195,7 +1198,6 @@
         return;
       }
 
-      // Phase 2 & 3
       if (r < 0.23) {
         spawnSnowball();
         boss.attackCooldown = 700 + Math.random() * 400;
@@ -1236,6 +1238,8 @@
       );
     }
 
+    let snowToggleGuard = 0;
+
     function update(dt) {
       if (!gameActive) return;
       if (player.hp <= 0 || boss.hp <= 0) return;
@@ -1255,7 +1259,6 @@
       const ePressed = eDown && !prevE;
       prevE = eDown;
 
-      // Movement (swap L/R during quake)
       let moveLeft = keys["a"] || keys["arrowleft"];
       let moveRight = keys["d"] || keys["arrowright"];
       if (earthquakeTimer > 0) {
@@ -1274,7 +1277,6 @@
         player.facing = 1;
       }
 
-      // Hail pickup / stun
       if (ePressed) {
         if (!player.carryingHail) {
           for (let i = hailStones.length - 1; i >= 0; i--) {
@@ -1319,13 +1321,11 @@
         }
       }
 
-      // Jump (no jump while holding hail)
       if (!player.carryingHail && (keys["w"] || keys["arrowup"]) && player.onGround) {
         player.vy = player.jump;
         player.onGround = false;
       }
 
-      // Sword / Bow / Mace
       if (!player.carryingHail && (keys["j"] || keys[" "]) && player.swordCooldown <= 0) {
         player.swordTimer = 180;
         player.swordCooldown = 320;
@@ -1347,7 +1347,6 @@
       if (player.maceTimer > 0) player.maceTimer -= dt;
       if (player.maceCooldown > 0) player.maceCooldown -= dt;
 
-      // Move + gravity
       player.x += player.vx;
       player.vy += 0.35;
       player.y += player.vy;
@@ -1363,7 +1362,6 @@
       if (player.x < 0) player.x = 0;
       if (player.x + player.w > canvas.width) player.x = canvas.width - player.w;
 
-      // Boss movement / stun / ram
       if (boss.alive) {
         if (boss.stunTimer > 0) {
           boss.stunTimer -= dt;
@@ -1392,11 +1390,9 @@
         }
       }
 
-      // Player vs Boss collision
       if (boss.alive && boss.hp > 0) {
         const playerRect = { x: player.x, y: player.y, w: player.w, h: player.h };
         const bossRect = { x: boss.x, y: boss.y, w: boss.w, h: boss.h };
-
         if (rectsOverlap(playerRect, bossRect)) {
           const playerCenter = player.x + player.w / 2;
           const bossCenter = boss.x + boss.w / 2;
@@ -1416,7 +1412,6 @@
         }
       }
 
-      // Player arrows
       for (let i = arrows.length - 1; i >= 0; i--) {
         const a = arrows[i];
         a.x += a.vx;
@@ -1433,7 +1428,6 @@
         }
       }
 
-      // Snowballs
       for (let i = snowballs.length - 1; i >= 0; i--) {
         const s = snowballs[i];
         s.x += s.vx;
@@ -1450,7 +1444,6 @@
         }
       }
 
-      // Icicles
       for (let i = icicles.length - 1; i >= 0; i--) {
         const ic = icicles[i];
         ic.y += ic.vy;
@@ -1463,10 +1456,10 @@
           icicles.splice(i, 1);
           bossGameText.textContent =
             player.hp === 0 ? randomFrom(loseLines) : "Icicle hit! That’s one spicy snow-cone.";
+          icicles.splice(i, 1);
         }
       }
 
-      // Waves
       for (let i = waves.length - 1; i >= 0; i--) {
         const w = waves[i];
         w.x += w.vx;
@@ -1482,7 +1475,6 @@
         }
       }
 
-      // Hail
       const hailDamage = Math.ceil(player.maxHp * 0.5);
       for (let i = hailStones.length - 1; i >= 0; i--) {
         const h = hailStones[i];
@@ -1507,7 +1499,6 @@
         }
       }
 
-      // Skeletons
       for (let i = skeletons.length - 1; i >= 0; i--) {
         const sk = skeletons[i];
         if (sk.contactCooldown > 0) sk.contactCooldown -= dt;
@@ -1551,7 +1542,6 @@
         if (sk.hp <= 0) skeletons.splice(i, 1);
       }
 
-      // Skeleton projectiles
       for (let i = skeletonProjectiles.length - 1; i >= 0; i--) {
         const p = skeletonProjectiles[i];
         p.x += p.vx;
@@ -1564,12 +1554,11 @@
           skeletonProjectiles.splice(i, 1);
           bossGameText.textContent =
             player.hp === 0
-              ? "Skeleton arrow takes you out."
+              ? randomFrom(loseLines)
               : "Arrow from a skeleton archer clips you.";
         }
       }
 
-      // Sword vs Boss + skeletons
       if (player.swordTimer > 0 && !player.swordDidHit && boss.alive && boss.hp > 0) {
         const reach = 20;
         const swordRect = {
@@ -1592,7 +1581,6 @@
         }
       }
 
-      // Mace vs Boss + skeletons
       if (player.maceTimer > 0 && !player.maceDidHit && boss.alive && boss.hp > 0) {
         const reach = 24;
         const maceRect = {
@@ -1661,7 +1649,6 @@
       const bRatio = boss.hp / boss.maxHp;
       const phase = getBossPhase();
 
-      // Player HP
       ctx.fillStyle = "#ffffff";
       ctx.font = "10px system-ui";
       ctx.fillText("Elf HP", 10, 12);
@@ -1670,7 +1657,6 @@
       ctx.fillStyle = "#4ade80";
       ctx.fillRect(10, 16, 80 * pRatio, 8);
 
-      // Boss HP bar moved further in from edge
       const bx = canvas.width - 120;
       const by = 8;
       const bw = 100;
@@ -1698,7 +1684,6 @@
       ctx.font = "9px system-ui";
       ctx.fillText("Phase " + phase, bx + 28, by + 20);
 
-      // Player
       ctx.fillStyle = "#22c55e";
       ctx.fillRect(player.x, player.y, player.w, player.h);
       ctx.fillStyle = "#16a34a";
@@ -1769,7 +1754,6 @@
       ctx.fillStyle = "#bae6fd";
       arrows.forEach(a => ctx.fillRect(a.x, a.y, a.w, a.h));
 
-      // Boss + crown + stun stars
       if (boss.hp > 0) {
         const bossGrd = ctx.createLinearGradient(boss.x, boss.y, boss.x, boss.y + boss.h);
         bossGrd.addColorStop(0, "#ef4444");
@@ -1817,7 +1801,6 @@
         ctx.fillRect(boss.x, boss.y + boss.h - 20, boss.w, 20);
       }
 
-      // Snowballs
       snowballs.forEach(s => {
         const rad = s.w / 2;
         ctx.fillStyle = "#e5f2ff";
@@ -1828,7 +1811,6 @@
         ctx.stroke();
       });
 
-      // Icicles
       icicles.forEach(ic => {
         ctx.fillStyle = "#e0f2fe";
         ctx.beginPath();
@@ -1839,7 +1821,6 @@
         ctx.fill();
       });
 
-      // Waves
       waves.forEach(w => {
         const waveGrd = ctx.createLinearGradient(w.x, w.y, w.x + w.w, w.y);
         waveGrd.addColorStop(0, "#38bdf8");
@@ -1848,7 +1829,6 @@
         ctx.fillRect(w.x, w.y, w.w, w.h);
       });
 
-      // Hail
       hailStones.forEach(h => {
         const rad = h.w / 2;
         ctx.fillStyle = "#bfdbfe";
@@ -1859,16 +1839,17 @@
         ctx.stroke();
       });
 
-      // Skeletons (smaller + HP bars)
       skeletons.forEach(sk => {
         ctx.fillStyle = sk.type === "sword" ? "#e5e7eb" : "#cbd5f5";
         ctx.fillRect(sk.x, sk.y, sk.w, sk.h);
+
+        // Move skull/plate & HP bar higher above the head
         ctx.fillStyle = "#f9fafb";
-        ctx.fillRect(sk.x + 3, sk.y - 7, sk.w - 6, 7);
+        ctx.fillRect(sk.x + 3, sk.y - 16, sk.w - 6, 7);
 
         const ratio = sk.hp / sk.maxHp;
         const sx = sk.x;
-        const sy = sk.y - 11;
+        const sy = sk.y - 22;
         const sw = sk.w;
         const sh = 4;
         ctx.strokeStyle = "#ffffff";
@@ -1902,4 +1883,3 @@
   </script>
 </body>
 </html>
-
