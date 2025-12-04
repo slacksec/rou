@@ -647,11 +647,18 @@
             You are a small elf with a candy cane sword, ice bow, and a heavy mace.
             Boss has a huge crown and no face. Terrifying.
           </div>
-         <div style="margin-bottom:6px; display:flex; flex-wrap:wrap; gap:6px;">
-  <button class="char-btn" id="bossPlayBtn">▶ Play Boss Battle</button>
+        <div style="margin-bottom:6px; display:flex; flex-wrap:wrap; gap:6px; align-items:center;">
+  <button class="char-btn" id="bossEasyBtn">🎵 Easy</button>
+  <button class="char-btn" id="bossNormalBtn">▶ Normal</button>
+
+  <div class="hard-btn-wrap">
+    <button class="char-btn" id="bossHardBtn">💀 Hard</button>
+    <span id="bossHardLock" class="hard-lock">🔒</span>
+  </div>
+
   <button class="char-btn" id="bossStopBtn">⏹ Stop</button>
   <button class="char-btn" id="bossTutorialToggleBtn">Tutorial: ON</button>
-          </div>
+</div>
           <div class="boss-info">
             Controls: A / D or ← / → to move, W or ↑ to jump,
             J = sword (4), K = bow (3), L = mace (1 / 7 crit),
