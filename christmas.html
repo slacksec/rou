@@ -896,6 +896,8 @@ const bossTutorialToggleBtn = document.getElementById("bossTutorialToggleBtn");
 
 
   let tutorialDisabled = localStorage.getItem("xmasBossTutorialDisabled") === "1";
+let gameDifficulty = null; // "normal" or "hard" or null
+let hardUnlocked = localStorage.getItem("xmasBossHardUnlocked") === "1";
 
   function updateTutorialToggleLabel() {
     bossTutorialToggleBtn.textContent = "Tutorial: " + (tutorialDisabled ? "OFF" : "ON");
