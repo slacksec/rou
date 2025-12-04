@@ -11,18 +11,6 @@
       padding: 0;
       box-sizing: border-box;
     }
-.hard-btn-wrap {
-  position: relative;
-  display: inline-block;
-}
-
-.hard-lock {
-  position: absolute;
-  top: -8px;
-  right: -8px;
-  font-size: 0.9rem;
-  pointer-events: none;
-}
 
     body {
       min-height: 100vh;
@@ -659,18 +647,11 @@
             You are a small elf with a candy cane sword, ice bow, and a heavy mace.
             Boss has a huge crown and no face. Terrifying.
           </div>
-        <div style="margin-bottom:6px; display:flex; flex-wrap:wrap; gap:6px; align-items:center;">
-  <button class="char-btn" id="bossEasyBtn">🎵 Easy</button>
-  <button class="char-btn" id="bossNormalBtn">▶ Normal</button>
-
-  <div class="hard-btn-wrap">
-    <button class="char-btn" id="bossHardBtn">💀 Hard</button>
-    <span id="bossHardLock" class="hard-lock">🔒</span>
-  </div>
-
+         <div style="margin-bottom:6px; display:flex; flex-wrap:wrap; gap:6px;">
+  <button class="char-btn" id="bossPlayBtn">▶ Play Boss Battle</button>
   <button class="char-btn" id="bossStopBtn">⏹ Stop</button>
   <button class="char-btn" id="bossTutorialToggleBtn">Tutorial: ON</button>
-</div>
+          </div>
           <div class="boss-info">
             Controls: A / D or ← / → to move, W or ↑ to jump,
             J = sword (4), K = bow (3), L = mace (1 / 7 crit),
@@ -685,11 +666,7 @@
       </div>
     </section>
   </main>
-<canvas id="bossGame" width="480" height="260"></canvas>
-<div id="bossRickContainer" style="display:none;"></div>
-<div class="boss-game-text" id="bossGameText">
-  Boss battle idle. Press “Play Boss Battle” if you want to fight.
-</div>
+
   <footer>
     Made with ❤️ by Calvin · © 2025
   </footer>
@@ -883,21 +860,14 @@
   });
 
   // Boss game + tutorial
-const canvas = document.getElementById("bossGame");
-const ctx = canvas.getContext("2d");
-const bossGameText = document.getElementById("bossGameText");
-const bossRickContainer = document.getElementById("bossRickContainer");
-const bossEasyBtn = document.getElementById("bossEasyBtn");
-const bossNormalBtn = document.getElementById("bossNormalBtn");
-const bossHardBtn = document.getElementById("bossHardBtn");
-const bossHardLock = document.getElementById("bossHardLock");
-const bossStopBtn = document.getElementById("bossStopBtn");
-const bossTutorialToggleBtn = document.getElementById("bossTutorialToggleBtn");
-
+  const canvas = document.getElementById("bossGame");
+  const ctx = canvas.getContext("2d");
+  const bossGameText = document.getElementById("bossGameText");
+  const bossPlayBtn = document.getElementById("bossPlayBtn");
+  const bossStopBtn = document.getElementById("bossStopBtn");
+  const bossTutorialToggleBtn = document.getElementById("bossTutorialToggleBtn");
 
   let tutorialDisabled = localStorage.getItem("xmasBossTutorialDisabled") === "1";
-let gameDifficulty = null; // "normal" or "hard" or null
-let hardUnlocked = localStorage.getItem("xmasBossHardUnlocked") === "1";
 
   function updateTutorialToggleLabel() {
     bossTutorialToggleBtn.textContent = "Tutorial: " + (tutorialDisabled ? "OFF" : "ON");
@@ -909,28 +879,6 @@ let hardUnlocked = localStorage.getItem("xmasBossHardUnlocked") === "1";
     localStorage.setItem("xmasBossTutorialDisabled", tutorialDisabled ? "1" : "0");
     updateTutorialToggleLabel();
   });
-function hideRickroll() {
-  if (!bossRickContainer) return;
-  bossRickContainer.innerHTML = "";
-  bossRickContainer.style.display = "none";
-  canvas.style.display = "block";
-}
-
-function playEasyRickroll() {
-  gameActive = false;
-  tutorialMode = false;
-  hideRickroll();
-  canvas.style.display = "none";
-
-  bossRickContainer.style.display = "block";
-  bossRickContainer.innerHTML =
-    '<iframe width="480" height="260" ' +
-    'src="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1&controls=0&loop=1&playlist=dQw4w9WgXcQ" ' +
-    'title="YouTube video" frameborder="0" ' +
-    'allow="autoplay; encrypted-media" allowfullscreen></iframe>';
-
-  bossGameText.textContent = "u just got elf rolled! lol";
-}
 
   let gameActive = false;
   let tutorialMode = false;
@@ -1014,10 +962,10 @@ function playEasyRickroll() {
     "He drops his evil crown and puts on a Santa hat."
   ];
 
-   const loseLines = [
+  const loseLines = [
     "You fall. Santa yells: “TAKE A NAP AND TRY AGAIN.”",
     "Boss: “Come back when your candy cane game is stronger.”",
-    "Try again Bozo!... yes you."
+    "Try again Bozo!... Hamza!"
   ];
 
   function getBossPhase() {
@@ -1711,45 +1659,27 @@ function updateTutorialStep(dt) {
       }
     }
 
-      for (let i = arrows.length - 1; i >= 0; i--) {
+    for (let i = arrows.length - 1; i >= 0; i--) {
       const a = arrows[i];
       a.x += a.vx;
       if (a.x < -20 || a.x > canvas.width + 20) {
         arrows.splice(i, 1);
         continue;
       }
-
-      let hitSomething = false;
-
-      // Hit Boss first
       if (boss.alive && boss.hp > 0 && rectsOverlap(a, boss)) {
-        hitSomething = true;
         if (!tutorialMode) {
           boss.hp = Math.max(0, boss.hp - 3);
-          bossGameText.textContent =
-            boss.hp === 0 ? randomFrom(winLines) : randomFrom(hitBossLines);
-          if (boss.hp === 0) boss.alive = false;
         } else {
           tutorialArrowHit = true;
         }
-      } else {
-        // Otherwise try hit skeletons
-        for (let j = 0; j < skeletons.length; j++) {
-          const sk = skeletons[j];
-          const skRect = { x: sk.x, y: sk.y, w: sk.w, h: sk.h };
-          if (rectsOverlap(a, skRect)) {
-            sk.hp -= 3; // bow damage vs skeletons
-            hitSomething = true;
-            break;
-          }
+        arrows.splice(i, 1);
+        if (!tutorialMode) {
+          bossGameText.textContent =
+            boss.hp === 0 ? randomFrom(winLines) : randomFrom(hitBossLines);
+          if (boss.hp === 0) boss.alive = false;
         }
       }
-
-      if (hitSomething) {
-        arrows.splice(i, 1);
-      }
     }
-
 
     for (let i = snowballs.length - 1; i >= 0; i--) {
       const s = snowballs[i];
