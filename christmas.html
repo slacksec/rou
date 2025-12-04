@@ -962,10 +962,10 @@
     "He drops his evil crown and puts on a Santa hat."
   ];
 
-  const loseLines = [
+   const loseLines = [
     "You fall. Santa yells: “TAKE A NAP AND TRY AGAIN.”",
     "Boss: “Come back when your candy cane game is stronger.”",
-    "Try again Bozo!... Hamza!"
+    "Try again Bozo!... yes you."
   ];
 
   function getBossPhase() {
@@ -1659,27 +1659,45 @@ function updateTutorialStep(dt) {
       }
     }
 
-    for (let i = arrows.length - 1; i >= 0; i--) {
+      for (let i = arrows.length - 1; i >= 0; i--) {
       const a = arrows[i];
       a.x += a.vx;
       if (a.x < -20 || a.x > canvas.width + 20) {
         arrows.splice(i, 1);
         continue;
       }
+
+      let hitSomething = false;
+
+      // Hit Boss first
       if (boss.alive && boss.hp > 0 && rectsOverlap(a, boss)) {
+        hitSomething = true;
         if (!tutorialMode) {
           boss.hp = Math.max(0, boss.hp - 3);
-        } else {
-          tutorialArrowHit = true;
-        }
-        arrows.splice(i, 1);
-        if (!tutorialMode) {
           bossGameText.textContent =
             boss.hp === 0 ? randomFrom(winLines) : randomFrom(hitBossLines);
           if (boss.hp === 0) boss.alive = false;
+        } else {
+          tutorialArrowHit = true;
+        }
+      } else {
+        // Otherwise try hit skeletons
+        for (let j = 0; j < skeletons.length; j++) {
+          const sk = skeletons[j];
+          const skRect = { x: sk.x, y: sk.y, w: sk.w, h: sk.h };
+          if (rectsOverlap(a, skRect)) {
+            sk.hp -= 3; // bow damage vs skeletons
+            hitSomething = true;
+            break;
+          }
         }
       }
+
+      if (hitSomething) {
+        arrows.splice(i, 1);
+      }
     }
+
 
     for (let i = snowballs.length - 1; i >= 0; i--) {
       const s = snowballs[i];
