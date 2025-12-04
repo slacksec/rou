@@ -883,12 +883,17 @@
   });
 
   // Boss game + tutorial
-  const canvas = document.getElementById("bossGame");
-  const ctx = canvas.getContext("2d");
-  const bossGameText = document.getElementById("bossGameText");
-  const bossPlayBtn = document.getElementById("bossPlayBtn");
-  const bossStopBtn = document.getElementById("bossStopBtn");
-  const bossTutorialToggleBtn = document.getElementById("bossTutorialToggleBtn");
+const canvas = document.getElementById("bossGame");
+const ctx = canvas.getContext("2d");
+const bossGameText = document.getElementById("bossGameText");
+const bossRickContainer = document.getElementById("bossRickContainer");
+const bossEasyBtn = document.getElementById("bossEasyBtn");
+const bossNormalBtn = document.getElementById("bossNormalBtn");
+const bossHardBtn = document.getElementById("bossHardBtn");
+const bossHardLock = document.getElementById("bossHardLock");
+const bossStopBtn = document.getElementById("bossStopBtn");
+const bossTutorialToggleBtn = document.getElementById("bossTutorialToggleBtn");
+
 
   let tutorialDisabled = localStorage.getItem("xmasBossTutorialDisabled") === "1";
 
