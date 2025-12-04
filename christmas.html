@@ -909,6 +909,28 @@ let hardUnlocked = localStorage.getItem("xmasBossHardUnlocked") === "1";
     localStorage.setItem("xmasBossTutorialDisabled", tutorialDisabled ? "1" : "0");
     updateTutorialToggleLabel();
   });
+function hideRickroll() {
+  if (!bossRickContainer) return;
+  bossRickContainer.innerHTML = "";
+  bossRickContainer.style.display = "none";
+  canvas.style.display = "block";
+}
+
+function playEasyRickroll() {
+  gameActive = false;
+  tutorialMode = false;
+  hideRickroll();
+  canvas.style.display = "none";
+
+  bossRickContainer.style.display = "block";
+  bossRickContainer.innerHTML =
+    '<iframe width="480" height="260" ' +
+    'src="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1&controls=0&loop=1&playlist=dQw4w9WgXcQ" ' +
+    'title="YouTube video" frameborder="0" ' +
+    'allow="autoplay; encrypted-media" allowfullscreen></iframe>';
+
+  bossGameText.textContent = "u just got elf rolled! lol";
+}
 
   let gameActive = false;
   let tutorialMode = false;
