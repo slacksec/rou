@@ -648,19 +648,21 @@
             Boss has a huge crown and no face. Terrifying.
           </div>
          <div style="margin-bottom:6px; display:flex; flex-wrap:wrap; gap:6px;">
-  <button class="char-btn" id="bossPlayBtn">▶ Play Boss Battle</button>
+  <button class="char-btn" id="bossEasyBtn">Easy</button>
+  <button class="char-btn" id="bossNormalBtn">▶ Normal</button>
+  <button class="char-btn" id="bossHardBtn" style="position:relative;">🔥 Hard <span id="hardLock" style="position:absolute; top:0; right:0; background:rgba(0,0,0,0.7); padding:2px 6px; border-radius:999px; font-size:0.7rem;">🔒</span></button>
   <button class="char-btn" id="bossStopBtn">⏹ Stop</button>
   <button class="char-btn" id="bossTutorialToggleBtn">Tutorial: ON</button>
           </div>
           <div class="boss-info">
             Controls: A / D or ← / → to move, W or ↑ to jump,
-            J = sword (4), K = bow (3), L = mace (1 / 7 crit),
-            E = hail pickup / stun (3s).  
+            J = sword (4), K = bow (3), L = mace (1 / 7 crit) [no mace in Hard],
+            E = interact. Tip: if not working try hold E.  
             Double-click the game to reset while playing.
           </div>
           <canvas id="bossGame" width="480" height="260"></canvas>
           <div class="boss-game-text" id="bossGameText">
-            Boss battle idle. Press “Play Boss Battle” if you want to fight.
+            Boss battle idle. Choose a difficulty: Easy (lol), Normal, or Hard (beat Normal to unlock).
           </div>
         </div>
       </div>
@@ -863,11 +865,22 @@
   const canvas = document.getElementById("bossGame");
   const ctx = canvas.getContext("2d");
   const bossGameText = document.getElementById("bossGameText");
-  const bossPlayBtn = document.getElementById("bossPlayBtn");
+  const bossEasyBtn = document.getElementById("bossEasyBtn");
+  const bossNormalBtn = document.getElementById("bossNormalBtn");
+  const bossHardBtn = document.getElementById("bossHardBtn");
   const bossStopBtn = document.getElementById("bossStopBtn");
   const bossTutorialToggleBtn = document.getElementById("bossTutorialToggleBtn");
+  const hardLock = document.getElementById("hardLock");
 
   let tutorialDisabled = localStorage.getItem("xmasBossTutorialDisabled") === "1";
+  let hardModeUnlocked = localStorage.getItem("xmasBossHardUnlocked") === "1";
+  let currentDifficulty = "normal"; // "easy", "normal", or "hard"
+  let showElfRolled = false;
+
+  // Update hard lock visibility
+  if (hardModeUnlocked) {
+    hardLock.style.display = "none";
+  }
 
   function updateTutorialToggleLabel() {
     bossTutorialToggleBtn.textContent = "Tutorial: " + (tutorialDisabled ? "OFF" : "ON");
@@ -920,7 +933,9 @@
     alive: true,
     stunTimer: 0,
     ramTimer: 0,
-    ramDir: -1
+    ramDir: -1,
+    forcefieldActive: false,
+    forcefieldRadius: 80
   };
 
   const arrows = [];
@@ -930,6 +945,9 @@
   const hailStones = [];
   const skeletons = [];
   const skeletonProjectiles = [];
+  
+  let forcefieldPlatform = null; // {x, y, w, h, buttonHoldTime}
+  let playerOnPlatform = false;
 
   let lastTime = 0;
   let totalTime = 0;
@@ -993,12 +1011,20 @@
 
     boss.x = canvas.width - 120;
     boss.y = groundY - boss.h;
-    boss.hp = boss.maxHp;
+    // Set boss HP based on difficulty
+    if (currentDifficulty === "hard") {
+      boss.maxHp = 1000; // 2.5x the normal 400
+      boss.hp = 1000;
+    } else {
+      boss.maxHp = 400;
+      boss.hp = 400;
+    }
     boss.attackCooldown = 120;
     boss.alive = true;
     boss.stunTimer = 0;
     boss.ramTimer = 0;
     boss.ramDir = -1;
+    boss.forcefieldActive = false;
 
     arrows.length = 0;
     snowballs.length = 0;
@@ -1008,6 +1034,8 @@
     skeletons.length = 0;
     skeletonProjectiles.length = 0;
 
+    forcefieldPlatform = null;
+    playerOnPlatform = false;
     contactCooldown = 0;
     stunSpin = 0;
     earthquakeTimer = 0;
@@ -1040,7 +1068,29 @@
       "Boss fight started! Watch for snowballs, icicles, ram, skeletons, earthquake!";
   }
 
-  bossPlayBtn.addEventListener("click", () => {
+  function unlockHardMode() {
+    if (currentDifficulty === "normal" && !hardModeUnlocked) {
+      hardModeUnlocked = true;
+      localStorage.setItem("xmasBossHardUnlocked", "1");
+      hardLock.style.display = "none";
+      bossGameText.textContent = randomFrom(winLines) + " 🔥 HARD MODE UNLOCKED!";
+    }
+  }
+
+  bossEasyBtn.addEventListener("click", () => {
+    currentDifficulty = "easy";
+    showElfRolled = true;
+    gameActive = false;
+    bossGameText.textContent = "LMAO get elf rolled lol 🎅";
+    // Redirect to Rick Roll after a short delay
+    setTimeout(() => {
+      window.location.href = "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
+    }, 1500);
+  });
+
+  bossNormalBtn.addEventListener("click", () => {
+    currentDifficulty = "normal";
+    showElfRolled = false;
     if (tutorialDisabled) {
       startRealFight();
     } else {
@@ -1048,10 +1098,25 @@
     }
   });
 
+  bossHardBtn.addEventListener("click", () => {
+    if (!hardModeUnlocked) {
+      bossGameText.textContent = "🔒 Hard mode locked! Defeat the boss on Normal to unlock.";
+      return;
+    }
+    currentDifficulty = "hard";
+    showElfRolled = false;
+    tutorialMode = false;
+    gameActive = true;
+    resetGame();
+    bossGameText.textContent =
+      "HARD MODE: Boss has 2.5x HP, rams more often, and NO MACE! Good luck! 🔥";
+  });
+
   bossStopBtn.addEventListener("click", () => {
     gameActive = false;
+    showElfRolled = false;
     bossGameText.textContent =
-      "Boss battle stopped. Press “Play Boss Battle” to start again.";
+      "Boss battle stopped. Choose a difficulty to start again.";
   });
 
   function spawnArrow() {
@@ -1213,6 +1278,28 @@
       "Ram attack: Boss sweeps across the arena. Jump or move out of the way.";
   }
 
+  function startForcefield() {
+    boss.forcefieldActive = true;
+    boss.attackCooldown = 8000; // Long cooldown while forcefield is active
+    
+    // Create platform for button at random x position
+    const platformW = 60;
+    const minX = 100;
+    const maxX = canvas.width - 100 - platformW;
+    const randomX = minX + Math.random() * (maxX - minX);
+    
+    forcefieldPlatform = {
+      x: randomX,
+      y: boss.y - 35,
+      w: platformW,
+      h: 12,
+      buttonHoldTime: 0
+    };
+    
+    bossGameText.textContent =
+      "FORCEFIELD! Boss is shielded and raining icicles! Jump to platform and hold E for 2s!";
+  }
+
   function performBossAttack() {
     if (!boss.alive || boss.hp <= 0) return;
     const phase = getBossPhase();
@@ -1221,6 +1308,12 @@
 
     if (phase >= 3 && earthquakeTimer <= 0 && Math.random() < 0.2) {
       startEarthquake();
+      return;
+    }
+
+    // Forcefield attack in phase 3 (rare but not too rare)
+    if (phase >= 3 && !boss.forcefieldActive && Math.random() < 0.15) {
+      startForcefield();
       return;
     }
 
@@ -1262,6 +1355,9 @@
       return;
     }
 
+    // Hard mode: more frequent ram attacks
+    const ramThreshold = currentDifficulty === "hard" ? 0.65 : 0.88;
+    
     if (r < 0.23) {
       spawnSnowball();
       boss.attackCooldown = 700 + Math.random() * 400;
@@ -1270,18 +1366,18 @@
       spawnSnowball(); spawnSnowball(); spawnSnowball();
       boss.attackCooldown = 900 + Math.random() * 500;
       bossGameText.textContent = "Triple snowball volley!";
-    } else if (r < 0.64) {
+    } else if (r < 0.58) {
       for (let i = 0; i < 6; i++) {
         const ix = 40 + Math.random() * (canvas.width - 80);
         spawnIcicle(ix);
       }
       boss.attackCooldown = 1100 + Math.random() * 700;
       bossGameText.textContent = "Icicle rain!";
-    } else if (r < 0.78) {
+    } else if (r < 0.70) {
       spawnWave();
       boss.attackCooldown = 800 + Math.random() * 600;
       bossGameText.textContent = "Ground shockwave!";
-    } else if (r < 0.88) {
+    } else if (r < ramThreshold) {
       startRamAttack();
     } else if (r < 0.96) {
       spawnSkeletons();
@@ -1482,6 +1578,47 @@ function updateTutorialStep(dt) {
       }
     }
 
+    // Handle forcefield mechanics
+    if (boss.forcefieldActive && forcefieldPlatform) {
+      const bossCenter = { x: boss.x + boss.w / 2, y: boss.y + boss.h / 2 };
+      const playerCenter = { x: player.x + player.w / 2, y: player.y + player.h / 2 };
+      const distToBoss = Math.sqrt(
+        Math.pow(playerCenter.x - bossCenter.x, 2) + 
+        Math.pow(playerCenter.y - bossCenter.y, 2)
+      );
+
+      // Push player back if they touch the forcefield
+      if (distToBoss < boss.forcefieldRadius && contactCooldown <= 0) {
+        const angle = Math.atan2(playerCenter.y - bossCenter.y, playerCenter.x - bossCenter.x);
+        player.vx += Math.cos(angle) * 5;
+        player.vy = -4;
+        contactCooldown = 500;
+        bossGameText.textContent = "Forcefield zaps you back! Disable it from the platform!";
+      }
+
+      // Check if player is on platform
+      const onPlat = player.onGround && 
+                     player.x + player.w > forcefieldPlatform.x &&
+                     player.x < forcefieldPlatform.x + forcefieldPlatform.w &&
+                     Math.abs((player.y + player.h) - forcefieldPlatform.y) < 5;
+      
+      playerOnPlatform = onPlat;
+
+      // Hold E on platform to disable forcefield
+      if (onPlat && keys["e"]) {
+        forcefieldPlatform.buttonHoldTime += dt;
+        if (forcefieldPlatform.buttonHoldTime >= 2000) {
+          boss.forcefieldActive = false;
+          forcefieldPlatform = null;
+          playerOnPlatform = false;
+          boss.attackCooldown = 800;
+          bossGameText.textContent = "Forcefield disabled! Now you can damage the boss!";
+        }
+      } else {
+        forcefieldPlatform.buttonHoldTime = 0;
+      }
+    }
+
     const eDown = !!keys["e"];
     const ePressed = eDown && !prevE;
     prevE = eDown;
@@ -1574,7 +1711,8 @@ function updateTutorialStep(dt) {
       spawnArrow();
       player.bowCooldown = 420;
     }
-    if (!player.carryingHail && keys["l"] && player.maceCooldown <= 0) {
+    // Mace disabled in hard mode
+    if (!player.carryingHail && keys["l"] && player.maceCooldown <= 0 && currentDifficulty !== "hard") {
       player.maceTimer = 200;
       player.maceCooldown = 550;
       player.maceDidHit = false;
@@ -1590,7 +1728,17 @@ function updateTutorialStep(dt) {
     player.vy += 0.35;
     player.y += player.vy;
 
-    if (player.y + player.h >= groundY) {
+    // Check platform collision first
+    if (forcefieldPlatform && 
+        player.x + player.w > forcefieldPlatform.x &&
+        player.x < forcefieldPlatform.x + forcefieldPlatform.w &&
+        player.y + player.h >= forcefieldPlatform.y &&
+        player.y + player.h <= forcefieldPlatform.y + forcefieldPlatform.h + 10 &&
+        player.vy >= 0) {
+      player.y = forcefieldPlatform.y - player.h;
+      player.vy = 0;
+      player.onGround = true;
+    } else if (player.y + player.h >= groundY) {
       player.y = groundY - player.h;
       player.vy = 0;
       player.onGround = true;
@@ -1628,6 +1776,15 @@ function updateTutorialStep(dt) {
       } else if (!tutorialMode) {
         boss.attackCooldown -= dt;
         if (boss.attackCooldown <= 0) performBossAttack();
+      }
+    }
+
+    // Spawn extra icicles when forcefield is active
+    if (boss.forcefieldActive && Math.random() < 0.02) {
+      const count = 2 + Math.floor(Math.random() * 3); // 2-4 icicles
+      for (let i = 0; i < count; i++) {
+        const ix = 40 + Math.random() * (canvas.width - 80);
+        spawnIcicle(ix);
       }
     }
 
@@ -1673,10 +1830,18 @@ function updateTutorialStep(dt) {
       if (boss.alive && boss.hp > 0 && rectsOverlap(a, boss)) {
         hitSomething = true;
         if (!tutorialMode) {
-          boss.hp = Math.max(0, boss.hp - 3);
-          bossGameText.textContent =
-            boss.hp === 0 ? randomFrom(winLines) : randomFrom(hitBossLines);
-          if (boss.hp === 0) boss.alive = false;
+          // 80% block chance if forcefield is active
+          if (boss.forcefieldActive && Math.random() < 0.8) {
+            bossGameText.textContent = "Forcefield blocks your arrow! Disable it from the platform!";
+          } else {
+            boss.hp = Math.max(0, boss.hp - 3);
+            bossGameText.textContent =
+              boss.hp === 0 ? randomFrom(winLines) : randomFrom(hitBossLines);
+            if (boss.hp === 0) {
+              boss.alive = false;
+              unlockHardMode();
+            }
+          }
         } else {
           tutorialArrowHit = true;
         }
@@ -1893,10 +2058,18 @@ function updateTutorialStep(dt) {
       if (rectsOverlap(swordRect, boss)) {
         player.swordDidHit = true;
         if (!tutorialMode) {
-          boss.hp = Math.max(0, boss.hp - 4);
-          bossGameText.textContent =
-            boss.hp === 0 ? randomFrom(winLines) : randomFrom(hitBossLines);
-          if (boss.hp === 0) boss.alive = false;
+          // 80% block chance if forcefield is active
+          if (boss.forcefieldActive && Math.random() < 0.8) {
+            bossGameText.textContent = "Forcefield blocks your sword! Disable it from the platform!";
+          } else {
+            boss.hp = Math.max(0, boss.hp - 4);
+            bossGameText.textContent =
+              boss.hp === 0 ? randomFrom(winLines) : randomFrom(hitBossLines);
+            if (boss.hp === 0) {
+              boss.alive = false;
+              unlockHardMode();
+            }
+          }
         } else if (tutorialStep === 1) {
           tutorialSwordHit = true;
           bossGameText.textContent =
@@ -1923,12 +2096,20 @@ function updateTutorialStep(dt) {
         const dmg = isCrit ? 7 : 1;
         player.maceDidHit = true;
         if (!tutorialMode) {
-          boss.hp = Math.max(0, boss.hp - dmg);
-          bossGameText.textContent =
-            boss.hp === 0
-              ? randomFrom(winLines)
-              : (isCrit ? randomFrom(maceCritLines) : randomFrom(hitBossLines));
-          if (boss.hp === 0) boss.alive = false;
+          // 80% block chance if forcefield is active
+          if (boss.forcefieldActive && Math.random() < 0.8) {
+            bossGameText.textContent = "Forcefield blocks your mace! Disable it from the platform!";
+          } else {
+            boss.hp = Math.max(0, boss.hp - dmg);
+            bossGameText.textContent =
+              boss.hp === 0
+                ? randomFrom(winLines)
+                : (isCrit ? randomFrom(maceCritLines) : randomFrom(hitBossLines));
+            if (boss.hp === 0) {
+              boss.alive = false;
+              unlockHardMode();
+            }
+          }
         } else {
           if (isCrit && tutorialStep === 3) {
             tutorialMaceCrit = true;
@@ -1976,6 +2157,18 @@ function updateTutorialStep(dt) {
     ctx.fillStyle = "#0c1f3a";
     ctx.fillRect(0, groundY, canvas.width, canvas.height - groundY);
 
+    if (showElfRolled) {
+      ctx.fillStyle = "rgba(15,23,42,0.95)";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = "#facc15";
+      ctx.font = "bold 24px system-ui";
+      ctx.textAlign = "center";
+      ctx.fillText("LMAO get elf rolled lol 🎅", canvas.width / 2, canvas.height / 2);
+      ctx.textAlign = "left";
+      ctx.restore();
+      return;
+    }
+
     if (!gameActive || (tutorialMode && tutorialStep === 7)) {
       ctx.fillStyle = "rgba(15,23,42,0.9)";
       ctx.fillRect(40, 40, canvas.width - 80, canvas.height - 80);
@@ -1985,8 +2178,8 @@ function updateTutorialStep(dt) {
       ctx.font = "14px system-ui";
       ctx.fillText("Christmas Boss Battle", 80, 80);
       ctx.font = "11px system-ui";
-      ctx.fillText("Press “Play Boss Battle” to start.", 80, 100);
-      ctx.fillText("If Tutorial is ON, you’ll learn moves & attacks first.", 80, 116);
+      ctx.fillText("Choose a difficulty to start:", 80, 100);
+      ctx.fillText("Easy (lol), Normal (with tutorial), or Hard (beat Normal first).", 80, 116);
       ctx.restore();
       return;
     }
@@ -2139,9 +2332,61 @@ function updateTutorialStep(dt) {
         }
         ctx.restore();
       }
+      
+      // Draw forcefield
+      if (boss.forcefieldActive) {
+        const cx = boss.x + boss.w / 2;
+        const cy = boss.y + boss.h / 2;
+        ctx.save();
+        ctx.strokeStyle = "#60a5fa";
+        ctx.lineWidth = 3;
+        ctx.globalAlpha = 0.6;
+        for (let i = 0; i < 3; i++) {
+          ctx.beginPath();
+          const radius = boss.forcefieldRadius - (i * 8);
+          ctx.arc(cx, cy, radius + Math.sin(totalTime * 0.003 + i) * 4, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+        ctx.globalAlpha = 1;
+        ctx.restore();
+      }
     } else {
       ctx.fillStyle = "#9ca3af";
       ctx.fillRect(boss.x, boss.y + boss.h - 20, boss.w, 20);
+    }
+
+    // Draw forcefield platform if active
+    if (forcefieldPlatform) {
+      ctx.fillStyle = "#3b82f6";
+      ctx.fillRect(forcefieldPlatform.x, forcefieldPlatform.y, forcefieldPlatform.w, forcefieldPlatform.h);
+      
+      // Draw button
+      const buttonW = 24;
+      const buttonH = 16;
+      const buttonX = forcefieldPlatform.x + forcefieldPlatform.w / 2 - buttonW / 2;
+      const buttonY = forcefieldPlatform.y - buttonH;
+      
+      ctx.fillStyle = playerOnPlatform && keys["e"] ? "#22c55e" : "#ef4444";
+      ctx.fillRect(buttonX, buttonY, buttonW, buttonH);
+      ctx.strokeStyle = "#ffffff";
+      ctx.lineWidth = 2;
+      ctx.strokeRect(buttonX, buttonY, buttonW, buttonH);
+      
+      // Draw progress bar
+      if (forcefieldPlatform.buttonHoldTime > 0) {
+        const progress = Math.min(1, forcefieldPlatform.buttonHoldTime / 2000);
+        ctx.fillStyle = "#facc15";
+        ctx.fillRect(buttonX + 2, buttonY + 2, (buttonW - 4) * progress, buttonH - 4);
+      }
+      
+      // Draw E prompt
+      if (playerOnPlatform) {
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "bold 10px system-ui";
+        ctx.textAlign = "center";
+        ctx.fillText("HOLD E", buttonX + buttonW / 2, buttonY - 4);
+        ctx.textAlign = "left";
+      }
     }
 
     snowballs.forEach(s => {
@@ -2218,7 +2463,7 @@ function updateTutorialStep(dt) {
   });
 
   bossGameText.textContent =
-    "Boss battle idle. Press “Play Boss Battle” if you want to fight. Tutorial explains every move & attack.";
+    "Boss battle idle. Choose a difficulty: Easy (lol), Normal, or Hard (beat Normal to unlock).";
 
   requestAnimationFrame(gameLoop);
 </script>
