@@ -1,0 +1,1906 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Street Runner - Endless Adventure</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Arial', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+    
+    #gameContainer {
+      position: relative;
+      background: #fff;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      overflow: hidden;
+    }
+    
+    #gameCanvas {
+      display: block;
+      background: #87CEEB;
+    }
+    
+    #ui {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      padding: 20px;
+      color: white;
+      font-weight: bold;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+      pointer-events: none;
+    }
+    
+    #score, #coins, #distance {
+      font-size: 24px;
+      margin-bottom: 10px;
+    }
+    
+    #menu {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0,0,0,0.9);
+      padding: 40px;
+      border-radius: 20px;
+      text-align: center;
+      color: white;
+      min-width: 400px;
+    }
+    
+    #menu h1 {
+      font-size: 48px;
+      margin-bottom: 20px;
+      color: #FFD700;
+    }
+    
+    .btn {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      padding: 15px 30px;
+      margin: 10px;
+      border-radius: 10px;
+      font-size: 18px;
+      cursor: pointer;
+      transition: transform 0.2s;
+      pointer-events: all;
+    }
+    
+    .btn:hover {
+      transform: scale(1.05);
+    }
+    
+    .btn:active {
+      transform: scale(0.95);
+    }
+    
+    #shop, #customize, #settings {
+      display: none;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.95);
+      overflow-y: auto;
+      padding: 20px;
+      color: white;
+    }
+    
+    .shopItem, .customizeItem {
+      background: rgba(255,255,255,0.1);
+      margin: 10px 0;
+      padding: 20px;
+      border-radius: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .shopItem.owned {
+      background: rgba(76, 175, 80, 0.3);
+    }
+    
+    .shopItem.equipped {
+      background: rgba(255, 215, 0, 0.3);
+      border: 2px solid #FFD700;
+    }
+    
+    .closeBtn {
+      position: sticky;
+      top: 10px;
+      right: 10px;
+      float: right;
+      background: #f44336;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 16px;
+      margin-bottom: 20px;
+    }
+    
+    h2 {
+      clear: both;
+      padding-top: 20px;
+      color: #FFD700;
+    }
+    
+    .itemPreview {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 15px;
+    }
+    
+    #pauseBtn {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: rgba(0,0,0,0.5);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 18px;
+      pointer-events: all;
+    }
+    
+    #mobileControls {
+      display: none;
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      pointer-events: all;
+      z-index: 1000;
+    }
+    
+    .mobileBtn {
+      background: rgba(0,0,0,0.6);
+      color: white;
+      border: 3px solid rgba(255,255,255,0.8);
+      padding: 20px;
+      margin: 5px;
+      border-radius: 15px;
+      font-size: 32px;
+      cursor: pointer;
+      user-select: none;
+      touch-action: manipulation;
+      min-width: 70px;
+      min-height: 70px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .mobileBtn:active {
+      background: rgba(255,255,255,0.3);
+    }
+  </style>
+</head>
+<body>
+  <div id="gameContainer">
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    
+    <div id="ui">
+      <div id="score">Score: 0</div>
+      <div id="coins">💰 Coins: 0</div>
+      <div id="distance">📏 Distance: 0m</div>
+      <button id="pauseBtn">⏸ Pause</button>
+    </div>
+    
+    <div id="menu">
+      <h1>🚇 Subway Runner</h1>
+      <p style="margin: 15px 0; font-size: 16px;"><strong>Controls:</strong></p>
+      <p style="margin: 5px 0;">⬅️ ➡️ Switch Lanes | ⬆️ Jump | ⬇️ Slide</p>
+      <p style="margin: 5px 0; font-size: 14px;">(or use WASD)</p>
+      <p style="margin: 20px 0;">💰 Total Coins: <span id="totalCoins">0</span></p>
+      <button class="btn" id="startBtn">🎮 Start Game</button>
+      <button class="btn" id="shopBtn">🛒 Shop</button>
+      <button class="btn" id="customizeBtn">👤 Customize</button>
+      <button class="btn" id="settingsBtn">⚙️ Settings</button>
+    </div>
+    
+    <div id="shop">
+      <button class="closeBtn" id="closeShop">✖ Close</button>
+      <h2>💰 Upgrade Shop</h2>
+      <div id="upgradesList"></div>
+      <h2>🎨 Cosmetics Shop</h2>
+      <div id="cosmeticsList"></div>
+    </div>
+    
+    <div id="customize">
+      <button class="closeBtn" id="closeCustomize">✖ Close</button>
+      <h2>👤 Character Customization</h2>
+      <div id="customizeList"></div>
+    </div>
+    
+    <div id="settings">
+      <button class="closeBtn" id="closeSettings">✖ Close</button>
+      <h2>⚙️ Settings</h2>
+      
+      <div style="max-width: 600px; margin: 0 auto;">
+        <div class="shopItem" style="display: block; margin: 20px 0;">
+          <h3 style="color: #FFD700; margin-bottom: 10px;">🔊 Sound</h3>
+          <label style="display: flex; align-items: center; cursor: pointer;">
+            <input type="checkbox" id="soundToggle" checked style="width: 20px; height: 20px; margin-right: 10px; cursor: pointer;">
+            <span>Enable Sound Effects</span>
+          </label>
+        </div>
+        
+        <div class="shopItem" style="display: block; margin: 20px 0;">
+          <h3 style="color: #FFD700; margin-bottom: 10px;">📱 Mobile Controls</h3>
+          <label style="display: flex; align-items: center; cursor: pointer;">
+            <input type="checkbox" id="mobileControlsToggle" style="width: 20px; height: 20px; margin-right: 10px; cursor: pointer;">
+            <span>Enable On-Screen Touch Controls</span>
+          </label>
+          <p style="font-size: 14px; color: #999; margin-top: 5px;">Shows arrow buttons for touchscreen devices</p>
+        </div>
+        
+        <div class="shopItem" style="display: block; margin: 20px 0;">
+          <h3 style="color: #FFD700; margin-bottom: 10px;">🎮 Controls</h3>
+          <div style="line-height: 1.8;">
+            <p><strong>⬅️ ➡️ or A/D:</strong> Switch lanes</p>
+            <p><strong>⬆️ or W:</strong> Jump over barriers</p>
+            <p><strong>⬇️ or S:</strong> Slide under tunnels</p>
+          </div>
+        </div>
+        
+        <div class="shopItem" style="display: block; margin: 20px 0;">
+          <h3 style="color: #FFD700; margin-bottom: 10px;">📊 Spawn Rates 🔒</h3>
+          
+          <div id="passwordPrompt" style="margin-bottom: 20px;">
+            <p style="color: #FFD700;">Enter password to adjust spawn rates:</p>
+            <input type="password" id="spawnPassword" placeholder="Enter password" style="padding: 10px; font-size: 16px; border-radius: 5px; border: 2px solid #FFD700; background: #333; color: white; width: 200px;">
+            <button class="btn" onclick="checkSpawnPassword()" style="margin-left: 10px; padding: 10px 20px;">Unlock</button>
+            <p id="passwordError" style="color: #FF3333; margin-top: 10px; display: none;">Incorrect password!</p>
+          </div>
+          
+          <div id="spawnRatesControls" style="display: none; line-height: 2;">
+            <p style="color: #4CAF50; margin-bottom: 15px;">✓ Unlocked!</p>
+            <label style="display: block;">
+              <strong>Obstacles:</strong>
+              <input type="range" id="obstacleRate" min="5" max="50" value="25" style="width: 200px; margin-left: 10px;">
+              <span id="obstacleValue">25</span>
+            </label>
+            <label style="display: block; margin-top: 10px;">
+              <strong>Coins:</strong>
+              <input type="range" id="coinRate" min="2" max="30" value="8" style="width: 200px; margin-left: 10px;">
+              <span id="coinValue">8</span>
+            </label>
+            <label style="display: block; margin-top: 10px;">
+              <strong>Power-ups:</strong>
+              <input type="range" id="powerupRate" min="1" max="15" value="6" style="width: 200px; margin-left: 10px;">
+              <span id="powerupValue">6</span>
+            </label>
+          </div>
+        </div>
+        
+        <div class="shopItem" style="display: block; margin: 20px 0; border: 2px solid #FF6B6B;">
+          <h3 style="color: #FF6B6B; margin-bottom: 10px;">💀 Developer Options</h3>
+          <label style="display: flex; align-items: center; cursor: pointer;">
+            <input type="checkbox" id="hackzToggle" style="width: 20px; height: 20px; margin-right: 10px; cursor: pointer;">
+            <span style="color: #FF6B6B; font-weight: bold;">Use Hackz?</span>
+          </label>
+          <p style="font-size: 12px; color: #999; margin-top: 5px;">⚠️ Warning: Enable at your own risk</p>
+        </div>
+        
+        <div class="shopItem" style="display: block; margin: 20px 0;">
+          <h3 style="color: #FFD700; margin-bottom: 10px;">ℹ️ Game Info</h3>
+          <p style="line-height: 1.8;">
+            <strong>Obstacles:</strong><br>
+            🚂 Trains - Long moving obstacles, dodge or jump<br>
+            🚧 Barriers - Jump over them<br>
+            🌉 Tunnels - Slide under them<br><br>
+            <strong>Power-ups:</strong><br>
+            🛡️ Shield - Protects from crashes<br>
+            🧲 Magnet - Attracts coins to you<br>
+            💎 Double Coins - 2x coin value<br>
+            🚀 Jetpack - Fly above obstacles<br>
+            🛹 Hoverboard - Survive 2 crashes
+          </p>
+        </div>
+      </div>
+    </div>
+    
+    <div id="mobileControls">
+      <div style="text-align: center; margin-bottom: 10px;">
+        <button class="mobileBtn" id="upBtn">⬆️</button>
+      </div>
+      <div style="text-align: center;">
+        <button class="mobileBtn" id="leftBtn">⬅️</button>
+        <button class="mobileBtn" id="downBtn">⬇️</button>
+        <button class="mobileBtn" id="rightBtn">➡️</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Game state
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    
+    let gameState = {
+      running: false,
+      paused: false,
+      score: 0,
+      coins: 0,
+      totalCoins: 0,
+      distance: 0,
+      speed: 5,
+      gameSpeed: 5
+    };
+    
+    // Settings
+    let settings = {
+      sound: true,
+      obstacleRate: 25,
+      coinRate: 8,
+      powerupRate: 6,
+      spawnRatesUnlocked: false,
+      mobileControls: false
+    };
+    
+    // Player (Subway Surfers style - 3 lanes)
+    const player = {
+      lane: 1, // 0=left, 1=middle, 2=right
+      x: 400,
+      y: canvas.height - 100, // Near bottom of screen
+      width: 40,
+      height: 60,
+      jumping: false,
+      sliding: false,
+      jumpSpeed: 0,
+      jumpHeight: 0,
+      maxJumpHeight: 120,
+      gravity: 0.6,
+      groundY: canvas.height - 100,
+      equipped: {
+        color: '#FF6B6B',
+        hat: null,
+        shoes: null
+      }
+    };
+    
+    // Lane positions (3D perspective)
+    const lanes = [300, 400, 500];
+    
+    // Game objects
+    let obstacles = [];
+    let coins = [];
+    let powerups = [];
+    let roadOffset = 0; // For scrolling road animation
+    
+    // Upgrades system
+    const upgrades = {
+      coinMultiplier: { level: 0, maxLevel: 10, cost: 100, multiplier: 1 },
+      magnetRange: { level: 0, maxLevel: 10, cost: 150, range: 0 },
+      shieldDuration: { level: 0, maxLevel: 10, cost: 200, duration: 0 },
+      jetpackPower: { level: 0, maxLevel: 10, cost: 250, power: 0 },
+      superSneakers: { level: 0, maxLevel: 10, cost: 180, jumpBoost: 0 },
+      coinValue: { level: 0, maxLevel: 10, cost: 120, value: 1 },
+      scoreMultiplier: { level: 0, maxLevel: 10, cost: 300, multiplier: 1 },
+      startingSpeed: { level: 0, maxLevel: 5, cost: 400, boost: 0 },
+      hoverboard: { level: 0, maxLevel: 10, cost: 500, duration: 0 }
+    };
+    
+    // Cosmetics system
+    const cosmetics = {
+      colors: [
+        { id: 'red', name: 'Classic Red', color: '#FF6B6B', cost: 0, owned: true },
+        { id: 'blue', name: 'Ocean Blue', color: '#4ECDC4', cost: 500, owned: false },
+        { id: 'purple', name: 'Royal Purple', color: '#9B59B6', cost: 500, owned: false },
+        { id: 'green', name: 'Forest Green', color: '#2ECC71', cost: 500, owned: false },
+        { id: 'gold', name: 'Golden Legend', color: '#FFD700', cost: 2000, owned: false },
+        { id: 'rainbow', name: 'Rainbow Rush', color: 'rainbow', cost: 5000, owned: false }
+      ],
+      hats: [
+        { id: 'none', name: 'No Hat', emoji: '', cost: 0, owned: true },
+        { id: 'cap', name: 'Baseball Cap', emoji: '🧢', cost: 300, owned: false },
+        { id: 'crown', name: 'Crown', emoji: '👑', cost: 1000, owned: false },
+        { id: 'tophat', name: 'Top Hat', emoji: '🎩', cost: 800, owned: false },
+        { id: 'cowboy', name: 'Cowboy Hat', emoji: '🤠', cost: 600, owned: false },
+        { id: 'wizard', name: 'Wizard Hat', emoji: '🧙', cost: 1500, owned: false },
+        { id: 'party', name: 'Party Hat', emoji: '🎉', cost: 400, owned: false }
+      ],
+      shoes: [
+        { id: 'none', name: 'Barefoot', emoji: '', cost: 0, owned: true },
+        { id: 'sneakers', name: 'Sneakers', emoji: '👟', cost: 400, owned: false },
+        { id: 'boots', name: 'Boots', emoji: '🥾', cost: 500, owned: false },
+        { id: 'fire', name: 'Fire Shoes', emoji: '🔥', cost: 1200, owned: false },
+        { id: 'lightning', name: 'Lightning Feet', emoji: '⚡', cost: 1500, owned: false },
+        { id: 'rocket', name: 'Rocket Boots', emoji: '🚀', cost: 2000, owned: false }
+      ]
+    };
+    
+    // Power-ups
+    let activePowerups = {
+      shield: 0,
+      magnet: 0,
+      doubleCoins: 0,
+      jetpack: 0,
+      hoverboard: 0,
+      hoverboardHits: 0
+    };
+    
+    // Load saved data
+    function loadGame() {
+      const saved = localStorage.getItem('streetRunnerSave');
+      if (saved) {
+        const data = JSON.parse(saved);
+        gameState.totalCoins = data.totalCoins || 0;
+        Object.assign(upgrades, data.upgrades || {});
+        Object.assign(cosmetics, data.cosmetics || cosmetics);
+        player.equipped = data.equipped || player.equipped;
+        if (data.settings) {
+          Object.assign(settings, data.settings);
+        }
+      }
+      updateTotalCoinsDisplay();
+      updateSettingsUI();
+    }
+    
+    // Save game
+    function saveGame() {
+      const data = {
+        totalCoins: gameState.totalCoins,
+        upgrades: upgrades,
+        cosmetics: cosmetics,
+        equipped: player.equipped,
+        settings: settings
+      };
+      localStorage.setItem('streetRunnerSave', JSON.stringify(data));
+    }
+    
+    // Update settings UI
+    function updateSettingsUI() {
+      // Check if elements exist before accessing them
+      const soundToggle = document.getElementById('soundToggle');
+      const mobileToggle = document.getElementById('mobileControlsToggle');
+      const obstacleRate = document.getElementById('obstacleRate');
+      const obstacleValue = document.getElementById('obstacleValue');
+      const coinRate = document.getElementById('coinRate');
+      const coinValue = document.getElementById('coinValue');
+      const powerupRate = document.getElementById('powerupRate');
+      const powerupValue = document.getElementById('powerupValue');
+      const passwordPrompt = document.getElementById('passwordPrompt');
+      const spawnRatesControls = document.getElementById('spawnRatesControls');
+      
+      if (soundToggle) soundToggle.checked = settings.sound;
+      if (mobileToggle) mobileToggle.checked = settings.mobileControls;
+      if (obstacleRate) obstacleRate.value = settings.obstacleRate;
+      if (obstacleValue) obstacleValue.textContent = settings.obstacleRate;
+      if (coinRate) coinRate.value = settings.coinRate;
+      if (coinValue) coinValue.textContent = settings.coinRate;
+      if (powerupRate) powerupRate.value = settings.powerupRate;
+      if (powerupValue) powerupValue.textContent = settings.powerupRate;
+      
+      // Update password UI
+      if (passwordPrompt && spawnRatesControls) {
+        if (settings.spawnRatesUnlocked) {
+          passwordPrompt.style.display = 'none';
+          spawnRatesControls.style.display = 'block';
+        } else {
+          passwordPrompt.style.display = 'block';
+          spawnRatesControls.style.display = 'none';
+        }
+      }
+      
+      // Update mobile controls visibility
+      updateMobileControls();
+    }
+    
+    // Update mobile controls visibility
+    function updateMobileControls() {
+      const mobileControls = document.getElementById('mobileControls');
+      if (mobileControls) {
+        if (settings.mobileControls && gameState.running) {
+          mobileControls.style.display = 'block';
+        } else {
+          mobileControls.style.display = 'none';
+        }
+      }
+    }
+    
+    // Check password for spawn rates
+    window.checkSpawnPassword = function() {
+      const password = document.getElementById('spawnPassword').value;
+      if (password === '67671') {
+        settings.spawnRatesUnlocked = true;
+        document.getElementById('passwordPrompt').style.display = 'none';
+        document.getElementById('spawnRatesControls').style.display = 'block';
+        document.getElementById('passwordError').style.display = 'none';
+        document.getElementById('spawnPassword').value = '';
+        saveGame();
+      } else {
+        document.getElementById('passwordError').style.display = 'block';
+        document.getElementById('spawnPassword').value = '';
+      }
+    }
+    
+    // Initialize
+    loadGame();
+    
+    // Helper function for 3D perspective (not used in new system)
+    // Kept for compatibility
+    function get3DScale(z) {
+      return Math.max(0.2, z / 900);
+    }
+    
+    // Draw subway tracks with 3D perspective (Subway Surfers style)
+    function drawRoad() {
+      const centerX = canvas.width / 2;
+      const horizonY = canvas.height * 0.35; // Horizon at 35% from top
+      const roadEndY = canvas.height; // Road ends at bottom of screen
+      
+      // Sky gradient (above horizon)
+      const skyGrad = ctx.createLinearGradient(0, 0, 0, horizonY);
+      skyGrad.addColorStop(0, '#87CEEB');
+      skyGrad.addColorStop(1, '#B0E0E6');
+      ctx.fillStyle = skyGrad;
+      ctx.fillRect(0, 0, canvas.width, horizonY);
+      
+      // Ground sides (visible on left and right of road)
+      ctx.fillStyle = '#4a4a4a';
+      ctx.fillRect(0, horizonY, canvas.width, roadEndY - horizonY);
+      
+      // Draw tracks with perspective (from horizon to bottom)
+      for (let i = 0; i < 30; i++) {
+        const z = (i * 30 + roadOffset) % 900;
+        const scale = z / 900; // 0 (far/horizon) to 1 (near/bottom)
+        const y = horizonY + scale * (roadEndY - horizonY);
+        const width = 50 + scale * 350;
+        
+        if (y >= horizonY && y <= roadEndY) {
+          // Track background
+          ctx.fillStyle = '#555';
+          ctx.fillRect(centerX - width/2, y, width, 8 + scale * 15);
+          
+          // Lane dividers
+          const laneW = width / 3;
+          ctx.fillStyle = '#FFD700';
+          const markerH = 3 + scale * 8;
+          
+          // Only draw markers every few segments
+          if (Math.floor((i * 30 + roadOffset) / 60) % 2 === 0) {
+            ctx.fillRect(centerX - laneW/2 - 2, y + 2, 4, markerH);
+            ctx.fillRect(centerX + laneW/2 - 2, y + 2, 4, markerH);
+          }
+          
+          // Side rails
+          ctx.fillStyle = '#888';
+          const railH = 2 + scale * 5;
+          ctx.fillRect(centerX - width/2 - 5, y + 3, 5, railH);
+          ctx.fillRect(centerX + width/2, y + 3, 5, railH);
+        }
+      }
+    }
+    
+    // Draw player (Subway Surfers style - running character)
+    function drawPlayer() {
+      const drawY = player.y - player.jumpHeight;
+      const drawHeight = player.sliding ? player.height * 0.5 : player.height;
+      
+      // Shadow on ground
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+      ctx.beginPath();
+      ctx.ellipse(player.x, player.groundY + 25, player.width * 0.8, 8, 0, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Hoverboard under player
+      if (activePowerups.hoverboard > 0) {
+        ctx.fillStyle = '#FF6B9D';
+        ctx.fillRect(player.x - player.width * 0.7, drawY + 10, player.width * 1.4, 8);
+        // Wheels
+        ctx.fillStyle = '#333';
+        ctx.beginPath();
+        ctx.arc(player.x - player.width * 0.5, drawY + 14, 5, 0, Math.PI * 2);
+        ctx.arc(player.x + player.width * 0.5, drawY + 14, 5, 0, Math.PI * 2);
+        ctx.fill();
+        // Hearts remaining indicator
+        ctx.font = '20px Arial';
+        ctx.textAlign = 'center';
+        for (let i = 0; i < activePowerups.hoverboardHits; i++) {
+          ctx.fillText('💖', player.x - 15 + i * 30, drawY - drawHeight - 25);
+        }
+      }
+      
+      // Jetpack flames
+      if (activePowerups.jetpack > 0) {
+        ctx.font = '30px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('🔥', player.x - 15, drawY + 15);
+        ctx.fillText('🔥', player.x + 15, drawY + 15);
+      }
+      
+      // Shield effect
+      if (activePowerups.shield > 0) {
+        ctx.strokeStyle = '#00D4FF';
+        ctx.lineWidth = 4;
+        ctx.setLineDash([5, 5]);
+        ctx.strokeRect(player.x - player.width/2 - 5, drawY - drawHeight - 5, player.width + 10, drawHeight + 10);
+        ctx.setLineDash([]);
+      }
+      
+      // Body color
+      let color = player.equipped.color;
+      if (color === 'rainbow') {
+        const gradient = ctx.createLinearGradient(player.x, drawY - drawHeight, player.x, drawY);
+        gradient.addColorStop(0, '#FF6B6B');
+        gradient.addColorStop(0.25, '#FFD93D');
+        gradient.addColorStop(0.5, '#6BCF7F');
+        gradient.addColorStop(0.75, '#4D96FF');
+        gradient.addColorStop(1, '#9B59B6');
+        ctx.fillStyle = gradient;
+      } else if (color === 'galaxy') {
+        const gradient = ctx.createLinearGradient(player.x, drawY - drawHeight, player.x, drawY);
+        gradient.addColorStop(0, '#000033');
+        gradient.addColorStop(0.3, '#6B0080');
+        gradient.addColorStop(0.6, '#4B0082');
+        gradient.addColorStop(1, '#000066');
+        ctx.fillStyle = gradient;
+        // Add stars
+        ctx.fillStyle = '#FFF';
+        for (let i = 0; i < 5; i++) {
+          ctx.fillRect(player.x - player.width/2 + Math.random() * player.width, drawY - drawHeight + Math.random() * drawHeight, 2, 2);
+        }
+        ctx.fillStyle = gradient;
+      } else if (color === 'fire') {
+        const gradient = ctx.createLinearGradient(player.x, drawY - drawHeight, player.x, drawY);
+        gradient.addColorStop(0, '#FFD700');
+        gradient.addColorStop(0.3, '#FF8C00');
+        gradient.addColorStop(0.6, '#FF4500');
+        gradient.addColorStop(1, '#8B0000');
+        ctx.fillStyle = gradient;
+      } else if (color === 'ice') {
+        const gradient = ctx.createLinearGradient(player.x, drawY - drawHeight, player.x, drawY);
+        gradient.addColorStop(0, '#E0FFFF');
+        gradient.addColorStop(0.5, '#87CEEB');
+        gradient.addColorStop(1, '#4682B4');
+        ctx.fillStyle = gradient;
+      } else {
+        ctx.fillStyle = color;
+      }
+      
+      // Body (rectangle for simplicity)
+      ctx.fillRect(player.x - player.width/2, drawY - drawHeight, player.width, drawHeight);
+      
+      // Head
+      ctx.fillStyle = '#FFD4A3';
+      ctx.beginPath();
+      ctx.arc(player.x, drawY - drawHeight - 15, 18, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Hat
+      if (player.equipped.hat) {
+        ctx.font = '28px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText(player.equipped.hat, player.x, drawY - drawHeight - 10);
+      }
+      
+      // Legs/Shoes
+      if (!player.sliding) {
+        ctx.fillStyle = color;
+        ctx.fillRect(player.x - player.width/2, drawY, player.width/2 - 3, 15);
+        ctx.fillRect(player.x + 3, drawY, player.width/2 - 3, 15);
+      }
+      
+      if (player.equipped.shoes) {
+        ctx.font = '20px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText(player.equipped.shoes, player.x, drawY + 30);
+      }
+    }
+    
+    // Draw obstacles (Subway Surfers style - coming from distance)
+    function drawObstacles() {
+      obstacles.forEach(obs => {
+        const scale = obs.z / 900;
+        const y = canvas.height / 2 + scale * 250;
+        const size = obs.baseSize * (0.3 + scale * 0.7);
+        const laneX = lanes[obs.lane];
+        
+        if (y > canvas.height / 2 && y < canvas.height) {
+          // Shadow
+          ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+          ctx.beginPath();
+          ctx.ellipse(laneX, y + size, size * 0.8, size * 0.15, 0, 0, Math.PI * 2);
+          ctx.fill();
+          
+          if (obs.type === 'train') {
+            // Train car
+            ctx.fillStyle = '#8B4513';
+            ctx.fillRect(laneX - size/2, y - size * 1.5, size, size * 1.5);
+            
+            // Windows
+            ctx.fillStyle = '#4A90E2';
+            const windowSize = size * 0.3;
+            ctx.fillRect(laneX - windowSize/2, y - size * 1.2, windowSize, windowSize);
+            
+            // Details
+            ctx.fillStyle = '#654321';
+            ctx.fillRect(laneX - size/2, y - size * 0.3, size, size * 0.3);
+          } else if (obs.type === 'barrier') {
+            // Low barrier (need to jump)
+            ctx.fillStyle = '#E74C3C';
+            ctx.fillRect(laneX - size * 0.8, y - size * 0.6, size * 1.6, size * 0.6);
+            
+            // Stripes
+            ctx.fillStyle = '#FFF';
+            for (let i = 0; i < 3; i++) {
+              ctx.fillRect(laneX - size * 0.8 + i * size * 0.6, y - size * 0.5, size * 0.2, size * 0.4);
+            }
+          } else if (obs.type === 'tunnel') {
+            // High tunnel (need to slide)
+            ctx.fillStyle = '#555';
+            ctx.fillRect(laneX - size, y - size * 2, size * 2, size * 0.5);
+            ctx.fillRect(laneX - size, y - size * 0.5, size * 2, size * 2);
+          }
+        }
+      });
+    }
+    
+    // Draw coins (on the tracks, 3D perspective)
+    function drawCoins() {
+      coins.forEach(coin => {
+        const scale = coin.z / 900;
+        const y = canvas.height / 2 + scale * 250;
+        const radius = coin.baseRadius * (0.3 + scale * 0.7);
+        const laneX = lanes[coin.lane];
+        
+        if (y > canvas.height / 2 && y < canvas.height) {
+          // Coin with glow
+          ctx.shadowColor = '#FFD700';
+          ctx.shadowBlur = 10 * scale;
+          ctx.fillStyle = '#FFD700';
+          ctx.beginPath();
+          ctx.arc(laneX, y - radius * 2, radius, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.shadowBlur = 0;
+          
+          // Inner circle
+          ctx.fillStyle = '#FFA500';
+          ctx.beginPath();
+          ctx.arc(laneX, y - radius * 2, radius * 0.6, 0, Math.PI * 2);
+          ctx.fill();
+          
+          // Shine
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+          ctx.beginPath();
+          ctx.arc(laneX - radius * 0.3, y - radius * 2.3, radius * 0.3, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      });
+    }
+    
+    // Draw powerups (on the tracks, 3D perspective)
+    function drawPowerups() {
+      powerups.forEach(pu => {
+        const scale = pu.z / 900;
+        const y = canvas.height / 2 + scale * 250;
+        const size = 20 + scale * 20;
+        const laneX = lanes[pu.lane];
+        
+        if (y > canvas.height / 2 && y < canvas.height) {
+          // Glow effect
+          ctx.shadowColor = '#FFD700';
+          ctx.shadowBlur = 15 * scale;
+          ctx.font = `${size}px Arial`;
+          ctx.textAlign = 'center';
+          ctx.fillText(pu.emoji, laneX, y);
+          ctx.shadowBlur = 0;
+        }
+      });
+    }
+    
+    // Track active trains by lane
+    let activeTrainLanes = new Set();
+    
+    // Spawn obstacle (from far distance)
+    function spawnObstacle() {
+      if (Math.random() < (settings.obstacleRate / 1000)) { // Use settings
+        const types = ['train', 'barrier', 'tunnel'];
+        const type = types[Math.floor(Math.random() * types.length)];
+        
+        // Special handling for trains
+        if (type === 'train') {
+          // Don't spawn if less frequent check fails
+          if (Math.random() > 0.3) return; // Only 30% chance when obstacle spawns
+          
+          // Get available lanes (lanes without trains)
+          const availableLanes = [0, 1, 2].filter(lane => !activeTrainLanes.has(lane));
+          
+          // Must have at least one lane free
+          if (availableLanes.length === 0) return;
+          
+          // Pick random available lane
+          const lane = availableLanes[Math.floor(Math.random() * availableLanes.length)];
+          
+          // Mark lane as occupied
+          activeTrainLanes.add(lane);
+          
+          obstacles.push({
+            z: 0,
+            lane: lane,
+            baseSize: 40,
+            type: type,
+            length: 400 // Long train
+          });
+        } else {
+          // Regular obstacles
+          const lane = Math.floor(Math.random() * 3);
+          obstacles.push({
+            z: 0,
+            lane: lane,
+            baseSize: 40,
+            type: type,
+            length: 0
+          });
+        }
+      }
+    }
+    
+    // Spawn coins (from far distance, in patterns)
+    function spawnCoins() {
+      if (Math.random() < (settings.coinRate / 1000)) { // Use settings
+        const pattern = Math.random();
+        
+        if (pattern < 0.3) {
+          // Single lane trail
+          const lane = Math.floor(Math.random() * 3);
+          for (let i = 0; i < 8; i++) {
+            coins.push({
+              z: i * 40,
+              lane: lane,
+              baseRadius: 12
+            });
+          }
+        } else if (pattern < 0.6) {
+          // Zigzag pattern
+          for (let i = 0; i < 6; i++) {
+            coins.push({
+              z: i * 50,
+              lane: i % 3,
+              baseRadius: 12
+            });
+          }
+        } else {
+          // All lanes (need to stay in middle)
+          const z = 0;
+          for (let lane = 0; lane < 3; lane++) {
+            coins.push({
+              z: z,
+              lane: lane,
+              baseRadius: 12
+            });
+          }
+        }
+      }
+    }
+    
+    // Spawn powerups (from far distance)
+    function spawnPowerups() {
+      if (Math.random() < (settings.powerupRate / 1000)) { // Use settings
+        const types = [
+          { type: 'shield', emoji: '🛡️' },
+          { type: 'magnet', emoji: '🧲' },
+          { type: 'doubleCoins', emoji: '💎' },
+          { type: 'jetpack', emoji: '🚀' },
+          { type: 'hoverboard', emoji: '🛹' }
+        ];
+        const powerup = types[Math.floor(Math.random() * types.length)];
+        const lane = Math.floor(Math.random() * 3);
+        
+        powerups.push({
+          z: 0,
+          lane: lane,
+          type: powerup.type,
+          emoji: powerup.emoji
+        });
+      }
+    }
+    
+    // Update game (Subway Surfers mechanics)
+    function update() {
+      if (!gameState.running || gameState.paused) return;
+      
+      // Update distance and score
+      gameState.distance += gameState.speed * 0.1;
+      gameState.score += Math.floor(gameState.speed * upgrades.scoreMultiplier.multiplier);
+      
+      // Increase speed over time (auto-runner)
+      gameState.speed = 5 + upgrades.startingSpeed.boost + Math.floor(gameState.distance / 500);
+      
+      // Animate scrolling road
+      roadOffset += gameState.speed * 1.5;
+      if (roadOffset >= 900) roadOffset = 0;
+      
+      // Smooth lane switching
+      const targetX = lanes[player.lane];
+      if (player.x < targetX) {
+        player.x = Math.min(player.x + 12, targetX);
+      } else if (player.x > targetX) {
+        player.x = Math.max(player.x - 12, targetX);
+      }
+      
+      // Handle jumping
+      if (player.jumping) {
+        // Jetpack overrides normal jumping
+        if (activePowerups.jetpack > 0) {
+          player.jumpHeight = 100; // Keep player floating
+        } else {
+          player.jumpSpeed -= player.gravity;
+          player.jumpHeight += player.jumpSpeed;
+          
+          if (player.jumpHeight <= 0) {
+            player.jumpHeight = 0;
+            player.jumping = false;
+            player.jumpSpeed = 0;
+          }
+        }
+      } else if (activePowerups.jetpack > 0) {
+        // Activate jetpack if not jumping
+        player.jumping = true;
+        player.jumpHeight = 100;
+      }
+      
+      // Handle sliding (auto-ends after duration)
+      if (player.sliding) {
+        // Slide ends automatically in controls
+      }
+      
+      // Update obstacles (coming from distance)
+      obstacles = obstacles.filter(obs => {
+        obs.z += gameState.speed * 1.5;
+        
+        // Collision detection for trains (check entire length)
+        if (obs.type === 'train' && !activePowerups.shield && !activePowerups.jetpack) {
+          const trainStart = obs.z;
+          const trainEnd = obs.z + (obs.length || 400);
+          
+          // Check if player is within train's length
+          if (trainStart < 900 && trainEnd > 850 && obs.lane === player.lane) {
+            if (!player.jumping && !player.sliding) {
+              if (activePowerups.hoverboard > 0 && activePowerups.hoverboardHits > 0) {
+                // Hoverboard absorbs hit
+                activePowerups.hoverboardHits--;
+                if (activePowerups.hoverboardHits === 0) {
+                  activePowerups.hoverboard = 0; // Break hoverboard
+                }
+                return false; // Remove obstacle after hit
+              } else {
+                gameOver();
+                return false;
+              }
+            }
+          }
+        }
+        
+        // Collision detection for other obstacles (when obstacle reaches player at bottom)
+        if (!activePowerups.shield && !activePowerups.jetpack && obs.z > 850 && obs.z < 900) {
+          if (obs.lane === player.lane) {
+            if (obs.type === 'barrier' && player.jumpHeight < 60) {
+              if (activePowerups.hoverboard > 0 && activePowerups.hoverboardHits > 0) {
+                // Hoverboard absorbs hit
+                activePowerups.hoverboardHits--;
+                if (activePowerups.hoverboardHits === 0) {
+                  activePowerups.hoverboard = 0; // Break hoverboard
+                }
+                return false; // Remove obstacle after hit
+              } else {
+                gameOver();
+                return false;
+              }
+            }
+            if (obs.type === 'tunnel' && !player.sliding && player.jumpHeight === 0) {
+              if (activePowerups.hoverboard > 0 && activePowerups.hoverboardHits > 0) {
+                // Hoverboard absorbs hit
+                activePowerups.hoverboardHits--;
+                if (activePowerups.hoverboardHits === 0) {
+                  activePowerups.hoverboard = 0; // Break hoverboard
+                }
+                return false; // Remove obstacle after hit
+              } else {
+                gameOver();
+                return false;
+              }
+            }
+          }
+        }
+        
+        // Remove obstacle if passed
+        const shouldRemove = obs.z > 950;
+        
+        // Free up train lane when train passes
+        if (shouldRemove && obs.type === 'train') {
+          activeTrainLanes.delete(obs.lane);
+        }
+        
+        return !shouldRemove;
+      });
+      
+      // Update coins
+      const magnetRange = 1; // Magnet makes coins move to adjacent lanes
+      coins = coins.filter(coin => {
+        coin.z += gameState.speed * 1.5;
+        
+        // Magnet effect (pulls coins to player's lane)
+        if (activePowerups.magnet > 0 && coin.z > 600 && coin.z < 900) {
+          if (Math.abs(coin.lane - player.lane) <= magnetRange) {
+            coin.lane = player.lane;
+          }
+        }
+        
+        // Collision detection (when coin reaches player)
+        if (coin.z > 850 && coin.z < 900 && coin.lane === player.lane) {
+          const coinVal = upgrades.coinValue.value * (activePowerups.doubleCoins > 0 ? 2 : 1) * upgrades.coinMultiplier.multiplier;
+          gameState.coins += coinVal;
+          gameState.totalCoins += coinVal;
+          return false;
+        }
+        
+        return coin.z < 950;
+      });
+      
+      // Update powerups
+      powerups = powerups.filter(pu => {
+        pu.z += gameState.speed * 1.5;
+        
+        // Collision detection (when powerup reaches player)
+        if (pu.z > 850 && pu.z < 900 && pu.lane === player.lane) {
+          activatePowerup(pu.type);
+          return false;
+        }
+        
+        return pu.z < 950;
+      });
+      
+      // Update active powerups
+      Object.keys(activePowerups).forEach(key => {
+        if (activePowerups[key] > 0) {
+          activePowerups[key]--;
+          
+          // When jetpack runs out, start falling
+          if (key === 'jetpack' && activePowerups[key] === 0 && player.jumping) {
+            player.jumpSpeed = -5; // Start falling down
+          }
+        }
+      });
+      
+      // Spawn new objects
+      spawnObstacle();
+      spawnCoins();
+      spawnPowerups();
+      
+      // Update UI
+      document.getElementById('score').textContent = `Score: ${Math.floor(gameState.score)}`;
+      document.getElementById('coins').textContent = `💰 Coins: ${Math.floor(gameState.coins)}`;
+      document.getElementById('distance').textContent = `📏 Distance: ${Math.floor(gameState.distance)}m`;
+    }
+    
+    // Activate powerup
+    function activatePowerup(type) {
+      switch(type) {
+        case 'shield':
+          activePowerups.shield = 300 + upgrades.shieldDuration.duration;
+          break;
+        case 'magnet':
+          activePowerups.magnet = 400 + upgrades.magnetRange.range;
+          break;
+        case 'doubleCoins':
+          activePowerups.doubleCoins = 350;
+          break;
+        case 'jetpack':
+          activePowerups.jetpack = 250 + upgrades.jetpackPower.power;
+          player.jumping = true;
+          player.jumpHeight = 100;
+          break;
+        case 'hoverboard':
+          activePowerups.hoverboard = 600 + upgrades.hoverboard.duration;
+          activePowerups.hoverboardHits = 2; // Can survive 2 crashes
+          break;
+      }
+    }
+    
+    // Draw everything (Subway Surfers perspective)
+    function draw() {
+      // Clear canvas
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      // Constants for perspective
+      const horizonY = canvas.height * 0.35;
+      const roadEndY = canvas.height;
+      
+      // Draw road/tracks first
+      drawRoad();
+      
+      // Collect all objects with z-values and sort (far to near)
+      const allObjects = [];
+      
+      obstacles.forEach(o => allObjects.push({ type: 'obstacle', obj: o, z: o.z }));
+      coins.forEach(c => allObjects.push({ type: 'coin', obj: c, z: c.z }));
+      powerups.forEach(p => allObjects.push({ type: 'powerup', obj: p, z: p.z }));
+      
+      // Sort by z (render far objects first)
+      allObjects.sort((a, b) => a.z - b.z);
+      
+      // Draw objects in z-order with perspective diagonal movement
+      allObjects.forEach(item => {
+        const scale = item.z / 900; // 0 at horizon (small), 1 at bottom (large)
+        const y = horizonY + scale * (roadEndY - horizonY);
+        
+        // Calculate x position with diagonal perspective
+        // Objects far away converge toward center, close objects spread out
+        const centerX = canvas.width / 2;
+        const targetLaneX = lanes[item.obj.lane];
+        const horizonConverge = 0.3; // How much lanes converge at horizon (0.3 = 30% toward center)
+        const laneOffset = targetLaneX - centerX;
+        const perspectiveX = centerX + laneOffset * (horizonConverge + scale * (1 - horizonConverge));
+        
+        if (item.type === 'obstacle') {
+          const size = item.obj.baseSize * (0.1 + scale * 0.9); // Start very small
+          
+          if (y >= horizonY && y <= roadEndY) {
+            if (item.obj.type === 'train') {
+              // Draw long blocky train
+              const trainLength = item.obj.length || 400;
+              
+              // Calculate where train ends (behind the front)
+              const trainEndZ = item.z + trainLength;
+              const endScale = Math.min(trainEndZ / 900, 1);
+              const endY = horizonY + endScale * (roadEndY - horizonY);
+              
+              // Calculate diagonal perspective for train end
+              const centerX = canvas.width / 2;
+              const targetLaneX = lanes[item.obj.lane];
+              const horizonConverge = 0.3;
+              const laneOffset = targetLaneX - centerX;
+              const endPerspectiveX = centerX + laneOffset * (horizonConverge + endScale * (1 - horizonConverge));
+              
+              const trainWidth = size * 0.9;
+              const trainHeight = size * 1.8;
+              
+              // Shadow
+              ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+              ctx.fillRect(perspectiveX - trainWidth/2, y, trainWidth, size * 0.3);
+              
+              // Draw train as simple rectangles (blocky/bricky style)
+              // Main body - dark brown/red
+              ctx.fillStyle = '#8B4513';
+              ctx.fillRect(perspectiveX - trainWidth/2, y - trainHeight, trainWidth, trainHeight);
+              
+              // Darker stripes (brick pattern)
+              ctx.fillStyle = '#654321';
+              for (let i = 0; i < 5; i++) {
+                ctx.fillRect(perspectiveX - trainWidth/2, y - trainHeight + i * (trainHeight/5), trainWidth, trainHeight/10);
+              }
+              
+              // Window row
+              ctx.fillStyle = '#87CEEB';
+              const windowCount = 3;
+              const windowWidth = trainWidth / (windowCount * 2);
+              const windowHeight = size * 0.3;
+              for (let i = 0; i < windowCount; i++) {
+                ctx.fillRect(
+                  perspectiveX - trainWidth/2 + (i * 2 + 0.5) * windowWidth,
+                  y - trainHeight + size * 0.3,
+                  windowWidth,
+                  windowHeight
+                );
+              }
+              
+              // Yellow warning stripe at bottom
+              ctx.fillStyle = '#FFD700';
+              ctx.fillRect(perspectiveX - trainWidth/2, y - size * 0.3, trainWidth, size * 0.2);
+              
+              // Black outline
+              ctx.strokeStyle = '#000';
+              ctx.lineWidth = 2;
+              ctx.strokeRect(perspectiveX - trainWidth/2, y - trainHeight, trainWidth, trainHeight);
+              
+            } else if (item.obj.type === 'barrier') {
+              const barrierHeight = size * 0.8;
+              const barrierWidth = size * 1.8;
+              
+              // Shadow on road
+              ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+              ctx.fillRect(perspectiveX - barrierWidth/2, y, barrierWidth, size * 0.2);
+              
+              // Red barrier (bright and visible)
+              ctx.fillStyle = '#FF3333';
+              ctx.fillRect(perspectiveX - barrierWidth/2, y - barrierHeight, barrierWidth, barrierHeight);
+              
+              // White diagonal stripes
+              ctx.fillStyle = '#FFFFFF';
+              const stripeCount = 5;
+              for (let i = 0; i < stripeCount; i++) {
+                ctx.fillRect(
+                  perspectiveX - barrierWidth/2 + i * (barrierWidth/stripeCount),
+                  y - barrierHeight,
+                  barrierWidth/(stripeCount * 2),
+                  barrierHeight
+                );
+              }
+              
+              // Black outline
+              ctx.strokeStyle = '#000';
+              ctx.lineWidth = 2;
+              ctx.strokeRect(perspectiveX - barrierWidth/2, y - barrierHeight, barrierWidth, barrierHeight);
+              
+            } else if (item.obj.type === 'tunnel') {
+              const tunnelWidth = size * 2.2;
+              const tunnelHeight = size * 2.5;
+              const tunnelThickness = size * 0.6;
+              
+              // Shadow on road
+              ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+              ctx.fillRect(perspectiveX - tunnelWidth/2, y, tunnelWidth, size * 0.2);
+              
+              // Dark gray tunnel bar (you slide under this)
+              ctx.fillStyle = '#444';
+              ctx.fillRect(perspectiveX - tunnelWidth/2, y - tunnelHeight, tunnelWidth, tunnelThickness);
+              
+              // Yellow warning stripes on tunnel
+              ctx.fillStyle = '#FFD700';
+              const stripeWidth = tunnelWidth / 8;
+              for (let i = 0; i < 4; i++) {
+                ctx.fillRect(
+                  perspectiveX - tunnelWidth/2 + i * 2 * stripeWidth,
+                  y - tunnelHeight,
+                  stripeWidth,
+                  tunnelThickness
+                );
+              }
+              
+              // Black outline
+              ctx.strokeStyle = '#000';
+              ctx.lineWidth = 2;
+              ctx.strokeRect(perspectiveX - tunnelWidth/2, y - tunnelHeight, tunnelWidth, tunnelThickness);
+              
+              // Support poles on sides
+              ctx.fillStyle = '#666';
+              ctx.fillRect(perspectiveX - tunnelWidth/2, y - tunnelHeight, size * 0.3, tunnelHeight);
+              ctx.fillRect(perspectiveX + tunnelWidth/2 - size * 0.3, y - tunnelHeight, size * 0.3, tunnelHeight);
+            }
+          }
+        } else if (item.type === 'coin') {
+          const radius = item.obj.baseRadius * (0.1 + scale * 0.9); // Start very small
+          
+          if (y >= horizonY && y <= roadEndY) {
+            ctx.shadowColor = '#FFD700';
+            ctx.shadowBlur = 10 * scale;
+            ctx.fillStyle = '#FFD700';
+            ctx.beginPath();
+            ctx.arc(perspectiveX, y - radius * 1.5, radius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+            ctx.fillStyle = '#FFA500';
+            ctx.beginPath();
+            ctx.arc(perspectiveX, y - radius * 1.5, radius * 0.6, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+            ctx.beginPath();
+            ctx.arc(perspectiveX - radius * 0.3, y - radius * 1.8, radius * 0.3, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        } else if (item.type === 'powerup') {
+          const size = 10 + scale * 30; // Start smaller
+          
+          if (y >= horizonY && y <= roadEndY) {
+            ctx.shadowColor = '#FFD700';
+            ctx.shadowBlur = 15 * scale;
+            ctx.font = `${size}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.fillText(item.obj.emoji, perspectiveX, y - size * 0.5);
+            ctx.shadowBlur = 0;
+          }
+        }
+      });
+      
+      // Draw player last (on top)
+      drawPlayer();
+      
+      // Draw active powerup indicators
+      let puY = 100;
+      ctx.textAlign = 'left';
+      if (activePowerups.shield > 0) {
+        ctx.font = '20px Arial';
+        ctx.fillStyle = 'white';
+        ctx.strokeStyle = 'black';
+        ctx.lineWidth = 3;
+        ctx.strokeText(`🛡️ ${Math.ceil(activePowerups.shield/60)}s`, canvas.width - 120, puY);
+        ctx.fillText(`🛡️ ${Math.ceil(activePowerups.shield/60)}s`, canvas.width - 120, puY);
+        puY += 30;
+      }
+      if (activePowerups.magnet > 0) {
+        ctx.font = '20px Arial';
+        ctx.fillStyle = 'white';
+        ctx.strokeStyle = 'black';
+        ctx.lineWidth = 3;
+        ctx.strokeText(`🧲 ${Math.ceil(activePowerups.magnet/60)}s`, canvas.width - 120, puY);
+        ctx.fillText(`🧲 ${Math.ceil(activePowerups.magnet/60)}s`, canvas.width - 120, puY);
+        puY += 30;
+      }
+      if (activePowerups.doubleCoins > 0) {
+        ctx.font = '20px Arial';
+        ctx.fillStyle = 'white';
+        ctx.strokeStyle = 'black';
+        ctx.lineWidth = 3;
+        ctx.strokeText(`💎 ${Math.ceil(activePowerups.doubleCoins/60)}s`, canvas.width - 120, puY);
+        ctx.fillText(`💎 ${Math.ceil(activePowerups.doubleCoins/60)}s`, canvas.width - 120, puY);
+        puY += 30;
+      }
+      if (activePowerups.jetpack > 0) {
+        ctx.font = '20px Arial';
+        ctx.fillStyle = 'white';
+        ctx.strokeStyle = 'black';
+        ctx.lineWidth = 3;
+        ctx.strokeText(`🚀 ${Math.ceil(activePowerups.jetpack/60)}s`, canvas.width - 120, puY);
+        ctx.fillText(`🚀 ${Math.ceil(activePowerups.jetpack/60)}s`, canvas.width - 120, puY);
+        puY += 30;
+      }
+      if (activePowerups.hoverboard > 0) {
+        ctx.font = '20px Arial';
+        ctx.fillStyle = 'white';
+        ctx.strokeStyle = 'black';
+        ctx.lineWidth = 3;
+        ctx.strokeText(`🛹 ${activePowerups.hoverboardHits} hits`, canvas.width - 120, puY);
+        ctx.fillText(`🛹 ${activePowerups.hoverboardHits} hits`, canvas.width - 120, puY);
+      }
+    }
+    
+    // Game loop
+    function gameLoop() {
+      update();
+      draw();
+      requestAnimationFrame(gameLoop);
+    }
+    
+    // Start game
+    function startGame() {
+      gameState.running = true;
+      gameState.paused = false;
+      gameState.score = 0;
+      gameState.coins = 0;
+      gameState.distance = 0;
+      gameState.speed = 5 + upgrades.startingSpeed.boost;
+      
+      player.lane = 1;
+      player.x = lanes[1];
+      player.y = player.groundY;
+      player.jumping = false;
+      player.sliding = false;
+      player.jumpHeight = 0;
+      player.jumpSpeed = 0;
+      roadOffset = 0;
+      
+      obstacles = [];
+      coins = [];
+      powerups = [];
+      activeTrainLanes = new Set(); // Clear train lanes
+      activePowerups = { shield: 0, magnet: 0, doubleCoins: 0, jetpack: 0, hoverboard: 0, hoverboardHits: 0 };
+      
+      document.getElementById('menu').style.display = 'none';
+      updateMobileControls(); // Show mobile controls if enabled
+    }
+    
+    // Game over
+    function gameOver() {
+      gameState.running = false;
+      gameState.totalCoins += Math.floor(gameState.coins);
+      updateMobileControls(); // Hide mobile controls
+      saveGame();
+      updateTotalCoinsDisplay();
+      
+      document.getElementById('menu').innerHTML = `
+        <h1>Game Over!</h1>
+        <p style="font-size: 24px; margin: 20px 0;">Score: ${Math.floor(gameState.score)}</p>
+        <p style="font-size: 20px; margin: 20px 0;">Distance: ${Math.floor(gameState.distance)}m</p>
+        <p style="font-size: 20px; margin: 20px 0;">Coins Earned: ${Math.floor(gameState.coins)}</p>
+        <p style="margin: 20px 0;">💰 Total Coins: <span id="totalCoins">${Math.floor(gameState.totalCoins)}</span></p>
+        <button class="btn" id="restartBtn">Play Again</button>
+        <button class="btn" id="shopBtn2">🛒 Shop</button>
+        <button class="btn" id="customizeBtn2">👤 Customize</button>
+        <button class="btn" id="settingsBtn2">⚙️ Settings</button>
+      `;
+      document.getElementById('menu').style.display = 'block';
+      
+      document.getElementById('restartBtn').onclick = startGame;
+      document.getElementById('shopBtn2').onclick = openShop;
+      document.getElementById('customizeBtn2').onclick = openCustomize;
+      document.getElementById('settingsBtn2').onclick = openSettings;
+    }
+    
+    // Controls (Subway Surfers style)
+    document.addEventListener('keydown', (e) => {
+      if (!gameState.running || gameState.paused) return;
+      
+      // Prevent default arrow key scrolling
+      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+        e.preventDefault();
+      }
+      
+      // Left - switch to left lane
+      if ((e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') && player.lane > 0) {
+        player.lane--;
+      }
+      
+      // Right - switch to right lane
+      if ((e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') && player.lane < 2) {
+        player.lane++;
+      }
+      
+      // Up - jump
+      if ((e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') && !player.jumping && !player.sliding) {
+        player.jumping = true;
+        player.jumpSpeed = 12 + upgrades.superSneakers.jumpBoost * 0.5;
+      }
+      
+      // Down - slide
+      if ((e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') && !player.jumping && !player.sliding) {
+        player.sliding = true;
+        setTimeout(() => {
+          player.sliding = false;
+        }, 500);
+      }
+    });
+    
+    // Settings system
+    function openSettings() {
+      updateSettingsUI();
+      document.getElementById('settings').style.display = 'block';
+      
+      // Set up settings controls when opening (not on page load)
+      const soundToggleEl = document.getElementById('soundToggle');
+      if (soundToggleEl) {
+        soundToggleEl.onchange = (e) => {
+          settings.sound = e.target.checked;
+          saveGame();
+        };
+      }
+      
+      const mobileToggleEl = document.getElementById('mobileControlsToggle');
+      if (mobileToggleEl) {
+        mobileToggleEl.onchange = (e) => {
+          settings.mobileControls = e.target.checked;
+          updateMobileControls();
+          saveGame();
+        };
+      }
+
+      const obstacleRateEl = document.getElementById('obstacleRate');
+      if (obstacleRateEl) {
+        obstacleRateEl.oninput = (e) => {
+          settings.obstacleRate = parseInt(e.target.value);
+          const obstacleValueEl = document.getElementById('obstacleValue');
+          if (obstacleValueEl) obstacleValueEl.textContent = settings.obstacleRate;
+          saveGame();
+        };
+      }
+      
+      const coinRateEl = document.getElementById('coinRate');
+      if (coinRateEl) {
+        coinRateEl.oninput = (e) => {
+          settings.coinRate = parseInt(e.target.value);
+          const coinValueEl = document.getElementById('coinValue');
+          if (coinValueEl) coinValueEl.textContent = settings.coinRate;
+          saveGame();
+        };
+      }
+      
+      const powerupRateEl = document.getElementById('powerupRate');
+      if (powerupRateEl) {
+        powerupRateEl.oninput = (e) => {
+          settings.powerupRate = parseInt(e.target.value);
+          const powerupValueEl = document.getElementById('powerupValue');
+          if (powerupValueEl) powerupValueEl.textContent = settings.powerupRate;
+          saveGame();
+        };
+      }
+      
+      // Hackz toggle
+      const hackzToggleEl = document.getElementById('hackzToggle');
+      if (hackzToggleEl) {
+        hackzToggleEl.onchange = (e) => {
+          if (e.target.checked) {
+            window.open('https://www.youtube.com/watch?v=dQw4w9WgXcQ', '_blank');
+            
+            document.body.innerHTML = `
+              <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; display: flex; justify-content: center; align-items: center; flex-direction: column; font-family: 'Courier New';">
+                <h1 style="color: #00FF00; font-size: 48px; margin-bottom: 30px; animation: flicker 0.1s infinite;">INITIALIZING HACKZ...</h1>
+                <div style="color: #00FF00; font-size: 18px; text-align: left; max-width: 600px; line-height: 1.8;">
+                  <p id="hackText"></p>
+                </div>
+                <div style="margin-top: 30px; width: 400px; height: 30px; background: #333; border: 2px solid #00FF00; border-radius: 5px; overflow: hidden;">
+                  <div id="progressBar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #00FF00, #00AA00); transition: width 0.5s;"></div>
+                </div>
+                <p id="progressText" style="color: #00FF00; margin-top: 10px; font-size: 20px;">0%</p>
+                <style>
+                  @keyframes flicker {
+                    0%, 100% { opacity: 1; }
+                    50% { opacity: 0.8; }
+                  }
+                </style>
+              </div>
+            `;
+            
+            const hackMessages = [
+              'Bypassing firewall...',
+              'Injecting malicious code...',
+              'Accessing mainframe...',
+              'Downloading database...',
+              'Decrypting files...',
+              'Stealing credentials...',
+              'Installing backdoor...',
+              'Covering tracks...',
+              'Almost done...',
+              'Preparing surprise...'
+            ];
+            
+            let messageIndex = 0;
+            let progress = 0;
+            
+            const hackInterval = setInterval(() => {
+              if (messageIndex < hackMessages.length) {
+                const hackTextEl = document.getElementById('hackText');
+                if (hackTextEl) {
+                  hackTextEl.innerHTML += hackMessages[messageIndex] + '<br>';
+                  hackTextEl.scrollIntoView({ behavior: 'smooth', block: 'end' });
+                }
+                messageIndex++;
+                progress += 10;
+                const progressBarEl = document.getElementById('progressBar');
+                const progressTextEl = document.getElementById('progressText');
+                if (progressBarEl) progressBarEl.style.width = progress + '%';
+                if (progressTextEl) progressTextEl.textContent = progress + '%';
+              } else {
+                clearInterval(hackInterval);
+                
+                setTimeout(() => {
+                  document.body.innerHTML = `
+                    <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; display: flex; justify-content: center; align-items: center; flex-direction: column;">
+                      <img src="https://i.imgur.com/7pQUNYp.jpeg" style="max-width: 90%; max-height: 90%; image-rendering: pixelated; animation: glitch 0.3s infinite;" />
+                      <style>
+                        @keyframes glitch {
+                          0% { filter: hue-rotate(0deg) saturate(3); transform: translate(0, 0); }
+                          25% { filter: hue-rotate(90deg) saturate(5); transform: translate(-5px, 5px); }
+                          50% { filter: hue-rotate(180deg) saturate(3); transform: translate(5px, -5px); }
+                          75% { filter: hue-rotate(270deg) saturate(5); transform: translate(-5px, -5px); }
+                          100% { filter: hue-rotate(360deg) saturate(3); transform: translate(0, 0); }
+                        }
+                      </style>
+                      <p style="color: red; font-size: 48px; font-family: 'Courier New'; margin-top: 20px; text-shadow: 3px 3px 0 #000; animation: blink 0.5s infinite;">YOU'VE BEEN CURSED</p>
+                      <p style="color: #FF6666; font-size: 24px; font-family: 'Courier New'; margin-top: 10px;">Hope you enjoyed the other tab... 😈</p>
+                      <style>
+                        @keyframes blink {
+                          0%, 49% { opacity: 1; }
+                          50%, 100% { opacity: 0; }
+                        }
+                      </style>
+                      <a href="https://www.youtube.com/watch?v=dQw4w9WgXcQ" target="_blank" style="margin-top: 30px; padding: 15px 30px; font-size: 20px; background: #8B0000; color: white; border: 3px solid red; cursor: pointer; font-family: 'Courier New'; text-decoration: none; display: inline-block;">ESCAPE IF YOU DARE...</a>
+                    </div>
+                  `;
+                }, 1000);
+              }
+            }, 600);
+          }
+        };
+      }
+    }
+    
+    // Allow Enter key to submit password
+    const spawnPasswordEl = document.getElementById('spawnPassword');
+    if (spawnPasswordEl) {
+      spawnPasswordEl.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          window.checkSpawnPassword();
+        }
+      });
+    }
+    
+    // Mobile controls button handlers
+    const leftBtn = document.getElementById('leftBtn');
+    if (leftBtn) {
+      leftBtn.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        if (gameState.running && !gameState.paused && player.lane > 0) {
+          player.lane--;
+        }
+      });
+      leftBtn.addEventListener('click', (e) => {
+        if (gameState.running && !gameState.paused && player.lane > 0) {
+          player.lane--;
+        }
+      });
+    }
+    
+    const rightBtn = document.getElementById('rightBtn');
+    if (rightBtn) {
+      rightBtn.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        if (gameState.running && !gameState.paused && player.lane < 2) {
+          player.lane++;
+        }
+      });
+      rightBtn.addEventListener('click', (e) => {
+        if (gameState.running && !gameState.paused && player.lane < 2) {
+          player.lane++;
+        }
+      });
+    }
+    
+    const upBtn = document.getElementById('upBtn');
+    if (upBtn) {
+      upBtn.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        if (gameState.running && !gameState.paused && !player.jumping && !player.sliding) {
+          player.jumping = true;
+          player.jumpSpeed = 12 + upgrades.superSneakers.jumpBoost * 0.5;
+        }
+      });
+      upBtn.addEventListener('click', (e) => {
+        if (gameState.running && !gameState.paused && !player.jumping && !player.sliding) {
+          player.jumping = true;
+          player.jumpSpeed = 12 + upgrades.superSneakers.jumpBoost * 0.5;
+        }
+      });
+    }
+    
+    const downBtn = document.getElementById('downBtn');
+    if (downBtn) {
+      downBtn.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        if (gameState.running && !gameState.paused && !player.jumping && !player.sliding) {
+          player.sliding = true;
+          setTimeout(() => {
+            player.sliding = false;
+          }, 500);
+        }
+      });
+      downBtn.addEventListener('click', (e) => {
+        if (gameState.running && !gameState.paused && !player.jumping && !player.sliding) {
+          player.sliding = true;
+          setTimeout(() => {
+            player.sliding = false;
+          }, 500);
+        }
+      });
+    }
+    
+    // Shop system
+    function openShop() {
+      const upgradesList = document.getElementById('upgradesList');
+      const cosmeticsList = document.getElementById('cosmeticsList');
+      
+      upgradesList.innerHTML = '';
+      cosmeticsList.innerHTML = '';
+      
+      // Upgrades
+      Object.keys(upgrades).forEach(key => {
+        const upg = upgrades[key];
+        const cost = Math.floor(upg.cost * Math.pow(1.5, upg.level));
+        const isMaxed = upg.level >= upg.maxLevel;
+        
+        const div = document.createElement('div');
+        div.className = 'shopItem' + (isMaxed ? ' owned' : '');
+        div.innerHTML = `
+          <div>
+            <strong>${key.replace(/([A-Z])/g, ' $1').toUpperCase()}</strong><br>
+            Level: ${upg.level}/${upg.maxLevel}
+          </div>
+          <button class="btn" ${isMaxed || gameState.totalCoins < cost ? 'disabled' : ''}>
+            ${isMaxed ? 'MAXED' : `Buy (${cost} 💰)`}
+          </button>
+        `;
+        
+        if (!isMaxed) {
+          div.querySelector('button').onclick = () => {
+            if (gameState.totalCoins >= cost) {
+              gameState.totalCoins -= cost;
+              upg.level++;
+              
+              // Apply upgrade effects
+              switch(key) {
+                case 'coinMultiplier':
+                  upg.multiplier = 1 + upg.level * 0.1;
+                  break;
+                case 'magnetRange':
+                  upg.range = upg.level * 20;
+                  break;
+                case 'shieldDuration':
+                  upg.duration = upg.level * 60;
+                  break;
+                case 'jetpackPower':
+                  upg.power = upg.level * 30;
+                  break;
+                case 'superSneakers':
+                  upg.jumpBoost = upg.level * 15;
+                  break;
+                case 'coinValue':
+                  upg.value = 1 + upg.level * 0.5;
+                  break;
+                case 'scoreMultiplier':
+                  upg.multiplier = 1 + upg.level * 0.2;
+                  break;
+                case 'startingSpeed':
+                  upg.boost = upg.level * 0.5;
+                  break;
+                case 'hoverboard':
+                  upg.duration = upg.level * 50;
+                  break;
+              }
+              
+              saveGame();
+              updateTotalCoinsDisplay();
+              openShop();
+            }
+          };
+        }
+        
+        upgradesList.appendChild(div);
+      });
+      
+      // Cosmetics
+      ['colors', 'hats', 'shoes'].forEach(category => {
+        cosmetics[category].forEach(item => {
+          const div = document.createElement('div');
+          div.className = 'shopItem' + (item.owned ? ' owned' : '');
+          
+          let preview = '';
+          if (category === 'colors') {
+            let bgStyle = item.color;
+            if (item.color === 'rainbow') {
+              bgStyle = 'linear-gradient(90deg, #FF6B6B, #FFD93D, #6BCF7F, #4D96FF, #9B59B6)';
+            }
+            preview = `<div class="itemPreview" style="background: ${bgStyle}"></div>`;
+          } else {
+            preview = `<span style="font-size: 30px; margin-right: 15px;">${item.emoji}</span>`;
+          }
+          
+          div.innerHTML = `
+            <div>
+              ${preview}
+              <strong>${item.name}</strong>
+            </div>
+            <button class="btn" ${item.owned || gameState.totalCoins < item.cost ? 'disabled' : ''}>
+              ${item.owned ? 'OWNED' : `Buy (${item.cost} 💰)`}
+            </button>
+          `;
+          
+          if (!item.owned) {
+            div.querySelector('button').onclick = () => {
+              if (gameState.totalCoins >= item.cost) {
+                gameState.totalCoins -= item.cost;
+                item.owned = true;
+                saveGame();
+                updateTotalCoinsDisplay();
+                openShop();
+              }
+            };
+          }
+          
+          cosmeticsList.appendChild(div);
+        });
+      });
+      
+      document.getElementById('shop').style.display = 'block';
+    }
+    
+    // Customize system
+    function openCustomize() {
+      const customizeList = document.getElementById('customizeList');
+      customizeList.innerHTML = '';
+      
+      ['colors', 'hats', 'shoes'].forEach(category => {
+        const h3 = document.createElement('h3');
+        h3.textContent = category.toUpperCase();
+        h3.style.color = '#FFD700';
+        h3.style.marginTop = '20px';
+        customizeList.appendChild(h3);
+        
+        cosmetics[category].forEach(item => {
+          if (!item.owned) return;
+          
+          const categoryKey = category.slice(0, -1); // Remove 's'
+          const isEquipped = category === 'colors' 
+            ? player.equipped.color === item.color
+            : player.equipped[categoryKey] === item.emoji;
+          
+          const div = document.createElement('div');
+          div.className = 'customizeItem' + (isEquipped ? ' equipped' : '');
+          
+          let preview = '';
+          if (category === 'colors') {
+            let bgStyle = item.color;
+            if (item.color === 'rainbow') {
+              bgStyle = 'linear-gradient(90deg, #FF6B6B, #FFD93D, #6BCF7F, #4D96FF, #9B59B6)';
+            } else if (item.color === 'galaxy') {
+              bgStyle = 'linear-gradient(135deg, #000033, #6B0080, #4B0082, #000066)';
+            } else if (item.color === 'fire') {
+              bgStyle = 'linear-gradient(135deg, #FFD700, #FF8C00, #FF4500, #8B0000)';
+            } else if (item.color === 'ice') {
+              bgStyle = 'linear-gradient(135deg, #E0FFFF, #87CEEB, #4682B4)';
+            }
+            preview = `<div class="itemPreview" style="background: ${bgStyle}"></div>`;
+          } else {
+            preview = `<span style="font-size: 30px; margin-right: 15px;">${item.emoji}</span>`;
+          }
+          
+          div.innerHTML = `
+            <div>
+              ${preview}
+              <strong>${item.name}</strong>
+            </div>
+            <button class="btn">${isEquipped ? '✓ EQUIPPED' : 'Equip'}</button>
+          `;
+          
+          div.querySelector('button').onclick = () => {
+            if (category === 'colors') {
+              player.equipped.color = item.color;
+            } else {
+              player.equipped[categoryKey] = item.emoji;
+            }
+            saveGame();
+            openCustomize();
+          };
+          
+          customizeList.appendChild(div);
+        });
+      });
+      
+      document.getElementById('customize').style.display = 'block';
+    }
+    
+    function updateTotalCoinsDisplay() {
+      const el = document.getElementById('totalCoins');
+      if (el) el.textContent = Math.floor(gameState.totalCoins);
+    }
+    
+    // UI Controls - Set up AFTER all functions are defined
+    document.getElementById('startBtn').onclick = startGame;
+    document.getElementById('shopBtn').onclick = openShop;
+    document.getElementById('customizeBtn').onclick = openCustomize;
+    document.getElementById('settingsBtn').onclick = openSettings;
+    document.getElementById('closeShop').onclick = () => {
+      document.getElementById('shop').style.display = 'none';
+    };
+    document.getElementById('closeCustomize').onclick = () => {
+      document.getElementById('customize').style.display = 'none';
+    };
+    document.getElementById('closeSettings').onclick = () => {
+      document.getElementById('settings').style.display = 'none';
+      saveGame();
+    };
+    document.getElementById('pauseBtn').onclick = () => {
+      if (gameState.running) {
+        gameState.paused = !gameState.paused;
+        document.getElementById('pauseBtn').textContent = gameState.paused ? '▶ Resume' : '⏸ Pause';
+      }
+    };
+    
+    // Start game loop
+    gameLoop();
+  </script>
+</body>
+</html>
