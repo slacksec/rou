@@ -41,32 +41,243 @@
       user-select: none;
       opacity: 0;
     }
+    /* 🏃 Runner button top-left */
+    #runner {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      font-size: 2.5rem;
+      z-index: 999;
+      cursor: pointer;
+      user-select: none;
+    }
+    /* ⚙️ Settings button bottom-left */
+    #settingsBtn {
+      position: fixed;
+      bottom: 10px;
+      left: 10px;
+      font-size: 2rem;
+      z-index: 10;
+      cursor: pointer;
+      background: none;
+      border: none;
+      padding: 5px;
+    }
+    /* Settings modal */
+    #settingsModal {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: white;
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 0 50px rgba(0,0,0,0.5);
+      z-index: 1000;
+      min-width: 300px;
+    }
+    #settingsModal h2 {
+      margin-top: 0;
+      text-align: center;
+    }
+    #settingsModal button {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      font-size: 1rem;
+      cursor: pointer;
+      border: none;
+      border-radius: 8px;
+      background: #2196F3;
+      color: white;
+    }
+    #settingsModal button:hover {
+      background: #1976D2;
+    }
+    #settingsModal input {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      font-size: 1rem;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      box-sizing: border-box;
+    }
+    .closeSettings {
+      background: #f44336 !important;
+    }
+    .closeSettings:hover {
+      background: #d32f2f !important;
+    }
+    #overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.7);
+      z-index: 999;
+    }
   </style>
 </head>
 <body>
   <div id="tree">🎄</div>
+  <div id="runner">🏃</div>
   <div id="hi">Hi</div>
 
   <button id="nextBtn" onclick="location.href='next.html'">N ⏩</button>
+  <button id="settingsBtn">⚙️</button>
+
+  <div id="overlay"></div>
+  <div id="settingsModal">
+    <h2>⚙️ Settings</h2>
+    <button id="uiSizeBtn">📏 UI Size</button>
+    <button id="uselessBtn">🗑️ Useless Button</button>
+    <button id="themeBtn">Extra stylish. ooh</button>
+    <button id="soundBtn">🔊 Sound</button>
+    <input type="password" id="ogPassword" placeholder="Enter OG Password">
+    <button id="submitPassword">🔓 Unlock OG Mode</button>
+    <button id="revertBtn" style="display: none; background: #FF9800;">🔄 Revert to Normal</button>
+    <button class="closeSettings">❌ Close</button>
+  </div>
 
   <footer style="position: fixed; bottom: 10px; width: 100%; text-align: center; font-size: 1rem;">
     Made with ❤️ by Calvin © 2025
   </footer>
 
   <script>
-    // Rickroll on "Hi"
-    document.getElementById('hi').onclick = () => {
+    // Load OG mode state
+    let isOGMode = localStorage.getItem('ogMode') === 'true';
+
+    // Apply OG mode if enabled
+    if (isOGMode) {
+      document.getElementById('hi').textContent = 'Welcome, OG user!';
+      updateRevertButton();
+    }
+
+    // Original rickroll function
+    function originalHiClick() {
       document.body.innerHTML =
         '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1" allow="autoplay"></iframe>';
-    };
+    }
+
+    // Set Hi button behavior
+    document.getElementById('hi').onclick = originalHiClick;
 
     // 🎄 Go to christmas.html on click
     document.getElementById('tree').onclick = () => {
       location.href = 'christmas.html';
     };
+
+    // 🏃 Go to runner.html on click
+    document.getElementById('runner').onclick = () => {
+      location.href = 'runner.html';
+    };
+
+    // Settings button - open modal
+    document.getElementById('settingsBtn').onclick = () => {
+      document.getElementById('overlay').style.display = 'block';
+      document.getElementById('settingsModal').style.display = 'block';
+    };
+
+    // Close settings modal
+    document.querySelector('.closeSettings').onclick = () => {
+      document.getElementById('overlay').style.display = 'none';
+      document.getElementById('settingsModal').style.display = 'none';
+    };
+
+    // Overlay click to close
+    document.getElementById('overlay').onclick = () => {
+      document.getElementById('overlay').style.display = 'none';
+      document.getElementById('settingsModal').style.display = 'none';
+    };
+
+    // UI Size button - pretends to adjust UI
+    document.getElementById('uiSizeBtn').onclick = () => {
+      alert('🤔 This feature is coming soon... maybe!');
+    };
+
+    // Useless button - rickroll
+    document.getElementById('uselessBtn').onclick = () => {
+      window.open('https://www.youtube.com/watch?v=dQw4w9WgXcQ', '_blank');
+    };
+
+    // Theme button
+    document.getElementById('themeBtn').onclick = () => {
+      const body = document.body;
+      const currentBg = body.style.background;
+      
+      if (!currentBg || currentBg === '' || currentBg.includes('255, 255, 255')) {
+        body.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+        body.style.color = 'white';
+      } else {
+        body.style.background = '';
+        body.style.color = '';
+      }
+      alert('🎨 Theme toggled!');
+    };
+
+    // Sound button
+    document.getElementById('soundBtn').onclick = () => {
+      alert('🔊 Sound effects coming soon! (Just kidding, there are none 😄)');
+    };
+
+    // Update revert button visibility
+    function updateRevertButton() {
+      const revertBtn = document.getElementById('revertBtn');
+      if (isOGMode) {
+        revertBtn.style.display = 'block';
+      } else {
+        revertBtn.style.display = 'none';
+      }
+    }
+
+    // Password submit - Unlock OG Mode
+    document.getElementById('submitPassword').onclick = () => {
+      const password = document.getElementById('ogPassword').value;
+      if (password === 'BANANA') {
+        isOGMode = true;
+        localStorage.setItem('ogMode', 'true');
+        
+        // Change Hi to Welcome, OG user!
+        document.getElementById('hi').textContent = 'Welcome, OG user!';
+        updateRevertButton();
+        
+        // Close modal
+        document.getElementById('overlay').style.display = 'none';
+        document.getElementById('settingsModal').style.display = 'none';
+        
+        alert('🎉 OG Mode Activated! The text will stay as "Welcome, OG user!" every time you visit!');
+      } else {
+        alert('❌ Wrong Password!');
+      }
+      document.getElementById('ogPassword').value = '';
+    };
+
+    // Allow Enter key to submit password
+    document.getElementById('ogPassword').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        document.getElementById('submitPassword').click();
+      }
+    });
+
+    // Revert button - back to "Hi"
+    document.getElementById('revertBtn').onclick = () => {
+      isOGMode = false;
+      localStorage.setItem('ogMode', 'false');
+      
+      // Revert text to Hi
+      document.getElementById('hi').textContent = 'Hi';
+      updateRevertButton();
+      
+      // Close modal
+      document.getElementById('overlay').style.display = 'none';
+      document.getElementById('settingsModal').style.display = 'none';
+      
+      alert('🔄 Reverted to normal "Hi" text!');
+    };
   </script>
 </body>
 </html>
-
-</html>
-
