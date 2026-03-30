@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Geometry Dash</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #000; display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
+    canvas { display: block; cursor: pointer; }
+  </style>
+</head>
+<body>
+<canvas id="game"></canvas>
+<script>
+const canvas = document.getElementById('game');
+const ctx    = canvas.getContext('2d');
+canvas.width  = 900;
+canvas.height = 500;
+
+// ─── Constants ────────────────────────────────────────────────────────────────
+const GND        = canvas.height - 90;   // ground y
+const GRAVITY    = 0.65;
+const JUMP_FORCE = -14.5;
+const P_SIZE     = 42;
+const P_X        = 130;   // fixed screen x of player
+const ORB_R      = 22;
+const LEVEL_LEN  = 8000;  // world units per level
+
+// ─── Persistence ─────────────────────────────────────────────────────────────
+const sv = (k,v) => localStorage.setItem('gd2_'+k, JSON.stringify(v));
+const ld = (k,d) => { try { return JSON.parse(localStorage.getItem('gd2_'+k)) ?? d; } catch { return d; } };
+
+let mana     = ld('mana', 0);
+let unlocked = ld('unlocked', [1]);
+let owned    = ld('owned', []);
+let equipped = ld('equipped', {});
+
+const saveMana = () => sv('mana', mana);
+const saveProg = () => { sv('unlocked', unlocked); sv('owned', owned); sv('equipped', equipped); };
+
+// ─── Shop catalogue ───────────────────────────────────────────────────────────
+const SHOP = [
+  { id:'trail_fire',   name:'Fire Trail',    desc:'Blazing trail',          cost:120, icon:'🔥', type:'trail'   },
+  { id:'trail_ice',    name:'Ice Trail',     desc:'Icy cool trail',         cost:100, icon:'❄️', type:'trail'   },
+  { id:'trail_rainbow',name:'Rainbow Trail', desc:'All the colors!',        cost:250, icon:'🌈', type:'trail'   },
+  { id:'trail_ghost',  name:'Ghost Trail',   desc:'Spooky purple trail',    cost:160, icon:'👻', type:'trail'   },
+  { id:'shield',       name:'Shield',        desc:'Survive 1 hit/level',    cost:200, icon:'🛡️', type:'passive' },
+  { id:'mana_boost',   name:'Mana Crystal',  desc:'Earn 1.5× mana',        cost:180, icon:'💎', type:'passive' },
+  { id:'mini',         name:'Mini Mode',     desc:'Smaller hitbox',         cost:300, icon:'🔽', type:'passive' },
+  { id:'double_jump',  name:'Double Jump',   desc:'Second jump in air',     cost:400, icon:'⏫', type:'passive' },
+];
+
+// ─── Level definitions ────────────────────────────────────────────────────────
+// Shorthand builders
+const Sp  = (x)      => ({ type:'spike', wx:x, wy:GND,     w:40, h:40 });
+const Sp2 = (x)      => [Sp(x), Sp(x+42)];
+const Sp3 = (x)      => [Sp(x), Sp(x+42), Sp(x+84)];
+const Bl  = (x,s=1)  => ({ type:'block', wx:x, wy:GND-(s*42), w:42, h:s*42 });
+const Orb = (x,y,b)  => ({ type:'orb', wx:x, wy:y??GND-110, boost:b??-16 });
+
+function buildLevel(id) {
+  const o = [];
+  if (id === 1) {
+    // ── Stereo Madness ── simple spikes, one orb tease at the end
+    [500,800,1050,1350,1600,1900,2200,2500,2800,3100,3400,3700,4000,4300].forEach(x=>o.push(Sp(x)));
+    Sp2(4600).forEach(s=>o.push(s)); Sp2(5000).forEach(s=>o.push(s));
+    [5300,5600,5900,6200,6500].forEach(x=>o.push(Sp(x)));
+    o.push(Bl(6800)); Sp2(7100).forEach(s=>o.push(s));
+    o.push(Orb(7500,GND-130,-15));   // surprise orb near the end
+    o.push(Sp(7750));
+  } else if (id === 2) {
+    // ── Back On Track ── intro orbs, platforms
+    Sp2(400).forEach(s=>o.push(s)); [700,950].forEach(x=>o.push(Sp(x)));
+    o.push(Bl(1200)); o.push(Bl(1242)); o.push(Sp(1400));
+    Sp2(1650).forEach(s=>o.push(s));
+    o.push(Orb(2100,GND-130));           // first orb
+    [2450,2650].forEach(x=>o.push(Sp(x)));
+    Sp3(2900).forEach(s=>o.push(s));
+    o.push(Orb(3300,GND-160));
+    o.push(Bl(3650,2)); o.push(Sp(3800));
+    o.push(Orb(4200,GND-150)); o.push(Orb(4600,GND-170));
+    [5000,5250,5500].forEach(x=>o.push(Sp(x)));
+    Sp2(5800).forEach(s=>o.push(s)); Sp3(6100).forEach(s=>o.push(s));
+    o.push(Orb(6600,GND-140)); [6900,7100,7400,7700].forEach(x=>o.push(Sp(x)));
+  } else if (id === 3) {
+    // ── Polargeist ── orbs are the core mechanic, chain combos
+    Sp2(300).forEach(s=>o.push(s)); Sp3(600).forEach(s=>o.push(s));
+    o.push(Orb(1000,GND-160,-16));
+    o.push(Sp(1300)); Sp2(1500).forEach(s=>o.push(s));
+    o.push(Orb(1900,GND-190,-17)); o.push(Orb(2300,GND-220,-17));
+    Sp3(2700).forEach(s=>o.push(s));
+    o.push(Bl(3000,2)); o.push(Bl(3042,2));
+    o.push(Orb(3400,GND-160)); o.push(Orb(3800,GND-180));
+    Sp3(4200).forEach(s=>o.push(s)); o.push(Sp(4390));
+    o.push(Orb(4700,GND-200,-18)); o.push(Orb(5100,GND-170,-16));
+    [5500,5700].forEach(x=>o.push(Sp(x))); Sp3(5950).forEach(s=>o.push(s));
+    o.push(Orb(6400,GND-190)); o.push(Orb(6800,GND-160));
+    Sp2(7200).forEach(s=>o.push(s)); o.push(Bl(7500,2));
+    o.push(Orb(7750,GND-150)); o.push(Sp(7900));
+  } else if (id === 4) {
+    // ── Dry Out ── fast, tricky orb chains, tall blocks
+    Sp2(200).forEach(s=>o.push(s)); o.push(Bl(500,3)); o.push(Sp(620));
+    Sp3(800).forEach(s=>o.push(s));
+    o.push(Orb(1200,GND-210,-18));
+    o.push(Bl(1500,3)); o.push(Orb(1850,GND-240,-19));
+    Sp2(2200).forEach(s=>o.push(s)); o.push(Bl(2500,2)); Sp2(2650).forEach(s=>o.push(s));
+    o.push(Orb(3000,GND-200,-17)); Sp3(3300).forEach(s=>o.push(s)); o.push(Sp(3490));
+    o.push(Orb(3800,GND-220,-18)); o.push(Orb(4200,GND-190,-17));
+    Sp3(4600).forEach(s=>o.push(s)); o.push(Bl(4900,3)); o.push(Sp(5020));
+    o.push(Orb(5300,GND-230,-19));
+    Sp3(5650).forEach(s=>o.push(s)); Sp2(5850).forEach(s=>o.push(s));
+    o.push(Orb(6200,GND-210,-18)); o.push(Orb(6600,GND-190,-17));
+    Sp3(7000).forEach(s=>o.push(s)); o.push(Bl(7300,2)); Sp2(7500).forEach(s=>o.push(s));
+    o.push(Orb(7750,GND-220,-19)); o.push(Sp(7900));
+  } else if (id === 5) {
+    // ── Base After Base ── relentless, high-boost orb chains
+    Sp3(100).forEach(s=>o.push(s)); Sp2(340).forEach(s=>o.push(s));
+    o.push(Bl(600,3)); o.push(Bl(642,3));
+    o.push(Orb(950,GND-220,-19));
+    Sp3(1200).forEach(s=>o.push(s)); o.push(Sp(1390));
+    o.push(Orb(1650,GND-260,-21));
+    o.push(Bl(1950,3)); o.push(Bl(1992,3));
+    o.push(Orb(2300,GND-250,-20));
+    Sp3(2600).forEach(s=>o.push(s)); Sp2(2800).forEach(s=>o.push(s)); o.push(Sp(2900));
+    o.push(Orb(3150,GND-220,-19)); o.push(Orb(3500,GND-240,-20));
+    Sp3(3800).forEach(s=>o.push(s)); o.push(Bl(4100,3)); o.push(Bl(4143,3));
+    o.push(Orb(4450,GND-260,-21));
+    Sp3(4750).forEach(s=>o.push(s)); Sp3(4990).forEach(s=>o.push(s));
+    o.push(Orb(5300,GND-230,-19)); o.push(Orb(5650,GND-260,-21));
+    o.push(Bl(6000,3)); o.push(Bl(6042,3));
+    Sp2(6300).forEach(s=>o.push(s)); Sp3(6500).forEach(s=>o.push(s));
+    o.push(Orb(6900,GND-240,-20)); o.push(Orb(7200,GND-260,-22));
+    Sp3(7500).forEach(s=>o.push(s)); Sp2(7700).forEach(s=>o.push(s));
+    o.push(Sp(7900));
+  }
+  return o;
+}
+
+const CONFIGS = [
+  { id:1, name:'Stereo Madness', sub:'The Beginning',   clr:'#ffcc00', bg:['#08082a','#14145a'], gClr:'#1e3d5c', gLine:'#55aadd', speed:5.2, manaR:50,  hasStar:true  },
+  { id:2, name:'Back On Track',  sub:'Finding Rhythm',  clr:'#ff8800', bg:['#180600','#381200'], gClr:'#2a1000', gLine:'#ff6600', speed:6.5, manaR:90,  hasStar:false },
+  { id:3, name:'Polargeist',     sub:'Orb Mastery',     clr:'#00ddff', bg:['#001828','#003050'], gClr:'#002a40', gLine:'#00ccff', speed:7.5, manaR:140, hasStar:true  },
+  { id:4, name:'Dry Out',        sub:'No Mercy',        clr:'#ff3344', bg:['#180005','#300010'], gClr:'#200008', gLine:'#ff2244', speed:8.8, manaR:210, hasStar:false },
+  { id:5, name:'Base After Base',sub:'Insane',          clr:'#aa44ff', bg:['#0c001e','#180038'], gClr:'#12002a', gLine:'#aa44ff', speed:10,  manaR:320, hasStar:true  },
+];
+
+// ─── State ────────────────────────────────────────────────────────────────────
+let state  = 'menu';   // menu | shop | playing | dead | complete
+let cfg    = null;     // current level config
+let lvlObjs = [];      // world objects for current level
+let worldX = 0;
+let attempts = 0;
+let frame  = 0;
+let bgOff  = 0;
+let stars  = [];
+let parts  = [];       // particles
+let shieldHP = 0;
+let djUsed = false;
+let orbOver = null;    // orb player is touching
+
+const player = { x:P_X, y:GND-P_SIZE, vy:0, rot:0, onGround:true, trail:[] };
+
+function initStars(n=110) {
+  stars = Array.from({length:n}, () => ({
+    x: Math.random()*canvas.width, y: Math.random()*GND,
+    r: Math.random()*1.8+0.3, t: Math.random()*Math.PI*2
+  }));
+}
+
+function startLevel(c) {
+  cfg = c;
+  lvlObjs = buildLevel(c.id);
+  worldX = 0; frame = 0; bgOff = 0;
+  Object.assign(player, { y:GND-P_SIZE, vy:0, rot:0, onGround:true, trail:[] });
+  parts = []; orbOver = null;
+  shieldHP = owned.includes('shield') ? 1 : 0;
+  djUsed = false;
+  initStars();
+  state = 'playing';
+}
+
+// ─── Input ────────────────────────────────────────────────────────────────────
+function onJump() {
+  if (state === 'complete') { state = 'menu'; return; }
+  if (state === 'dead')     { startLevel(cfg); return; }
+  if (state !== 'playing')  return;
+
+  if (orbOver) {
+    player.vy = orbOver.boost;
+    player.onGround = false;
+    orbOver.used = true;
+    burstOrb(orbOver._sx, orbOver.wy);
+    orbOver = null;
+    djUsed = false;
+    return;
+  }
+  if (player.onGround) {
+    player.vy = JUMP_FORCE; player.onGround = false; djUsed = false;
+  } else if (owned.includes('double_jump') && !djUsed) {
+    player.vy = JUMP_FORCE * 0.85; djUsed = true;
+  }
+}
+
+document.addEventListener('keydown', e => {
+  if (e.code === 'Space') { e.preventDefault(); onJump(); }
+  if (e.code === 'Escape' && (state==='playing'||state==='dead'||state==='complete')) state='menu';
+});
+canvas.addEventListener('click', e => {
+  if (state === 'menu') { handleMenuClick(e); return; }
+  if (state === 'shop') { handleShopClick(e); return; }
+  onJump();
+});
+canvas.addEventListener('mousemove', e => {
+  const {mx,my} = canvasMouse(e);
+  mHover = -1;
+  if (state === 'menu') {
+    CONFIGS.forEach((_,i) => { const r=cardRect(i); if (inRect(mx,my,r)) mHover=i; });
+    if (inRect(mx,my,shopBtnR())) mHover = 99;
+  } else if (state === 'shop') {
+    SHOP.forEach((_,i) => { if (inRect(mx,my,shopItemR(i))) mHover=i; });
+    if (inRect(mx,my,backBtnR())) mHover=99;
+  }
+});
+
+// ─── Particles ────────────────────────────────────────────────────────────────
+function explode(x,y) {
+  for (let i=0;i<22;i++) {
+    const a=(Math.PI*2*i/22)+Math.random()*0.3, sp=Math.random()*8+2;
+    parts.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-3,life:1,sz:Math.random()*6+2,
+      clr:`hsl(${Math.random()*60+10},100%,65%)`,orb:false});
+  }
+}
+function burstOrb(x,y) {
+  for (let i=0;i<20;i++) {
+    const a=Math.PI*2*i/20, sp=Math.random()*6+3;
+    parts.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,life:1,sz:4,clr:'#ffff44',orb:true});
+  }
+  // ring flash
+  for (let i=0;i<8;i++) {
+    const a=Math.PI*2*i/8, sp=10;
+    parts.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,life:0.5,sz:6,clr:'#ffffff',orb:true});
+  }
+}
+
+// ─── Trail colour ─────────────────────────────────────────────────────────────
+function trailClr(t) {
+  const tr = equipped.trail;
+  if (tr==='trail_fire')    return `hsl(${20+t*60},100%,60%)`;
+  if (tr==='trail_ice')     return `hsl(${190+t*20},90%,70%)`;
+  if (tr==='trail_rainbow') return `hsl(${(Date.now()/8+t*30)%360},100%,65%)`;
+  if (tr==='trail_ghost')   return `hsl(${270+t*15},80%,65%)`;
+  return '#ffaa00';
+}
+
+// ─── World → screen ───────────────────────────────────────────────────────────
+const wx2sx = obj => obj.wx - worldX + P_X;
+
+// ─── Collision ────────────────────────────────────────────────────────────────
+function hits(obj) {
+  const m = owned.includes('mini') ? 10 : 5;
+  const px=player.x+m, py=player.y+m, pw=P_SIZE-m*2, ph=P_SIZE-m*2;
+  const sx = wx2sx(obj);
+  if (obj.type==='spike') {
+    const hx=sx+7, hy=obj.wy-obj.h+5, hw=obj.w-14, hh=obj.h-5;
+    return px<hx+hw && px+pw>hx && py<hy+hh && py+ph>hy;
+  }
+  return px<sx+obj.w && px+pw>sx && py<obj.wy+obj.h && py+ph>obj.wy;
+}
+
+// ─── Update ───────────────────────────────────────────────────────────────────
+function update() {
+  if (state !== 'playing') return;
+  frame++;
+  const spd = cfg.speed + frame*0.0015;
+  worldX += spd;
+  bgOff   = (bgOff + spd*0.5) % 44;
+
+  // stars drift
+  stars.forEach(s => { s.x -= spd*0.2; s.t += 0.04; if (s.x<-2) { s.x=canvas.width+2; s.y=Math.random()*GND; } });
+
+  // physics
+  player.vy += GRAVITY;
+  player.y  += player.vy;
+  if (player.y >= GND-P_SIZE) {
+    player.y = GND-P_SIZE; player.vy=0; player.onGround=true; djUsed=false;
+    player.rot = Math.round(player.rot/90)*90;
+  } else { player.onGround=false; player.rot+=5.5; }
+
+  // trail
+  player.trail.unshift({x:player.x,y:player.y});
+  if (player.trail.length>10) player.trail.pop();
+
+  // orb proximity
+  const orbRange = ORB_R + P_SIZE/2 + (owned.includes('orb_magnet') ? 18 : 0); // removed orb_magnet item but keep guard
+  orbOver = null;
+  for (const obj of lvlObjs) {
+    if (obj.type!=='orb'||obj.used) continue;
+    const sx=wx2sx(obj);
+    if (Math.hypot(player.x+P_SIZE/2-sx, player.y+P_SIZE/2-obj.wy) < orbRange) {
+      obj._sx=sx; orbOver=obj; break;
+    }
+  }
+
+  // collision
+  for (const obj of lvlObjs) {
+    if (obj.type==='orb') continue;
+    const sx=wx2sx(obj);
+    if (sx+150<0||sx>canvas.width+50) continue;
+    if (hits(obj)) {
+      if (shieldHP>0) { shieldHP--; burstOrb(player.x+P_SIZE/2, player.y+P_SIZE/2); continue; }
+      explode(player.x+P_SIZE/2, player.y+P_SIZE/2);
+      attempts++; state='dead'; return;
+    }
+  }
+
+  // level end
+  if (worldX > LEVEL_LEN) {
+    let earn = cfg.manaR;
+    if (owned.includes('mana_boost')) earn = Math.floor(earn*1.5);
+    mana += earn; saveMana();
+    if (cfg.id < 5 && !unlocked.includes(cfg.id+1)) { unlocked.push(cfg.id+1); saveProg(); }
+    state = 'complete'; return;
+  }
+
+  // particles
+  parts.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=p.orb?0:0.3;p.life-=0.026;});
+  parts=parts.filter(p=>p.life>0);
+}
+
+// ─── Draw game ────────────────────────────────────────────────────────────────
+function drawBg() {
+  const g=ctx.createLinearGradient(0,0,0,GND);
+  g.addColorStop(0,cfg.bg[0]); g.addColorStop(1,cfg.bg[1]);
+  ctx.fillStyle=g; ctx.fillRect(0,0,canvas.width,GND);
+
+  ctx.strokeStyle='rgba(80,80,200,0.09)'; ctx.lineWidth=1;
+  for(let x=canvas.width-(bgOff%44);x>-44;x-=44){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,GND);ctx.stroke();}
+  for(let y=0;y<GND;y+=44){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(canvas.width,y);ctx.stroke();}
+
+  if (cfg.hasStar) stars.forEach(s=>{
+    ctx.fillStyle=`rgba(255,255,255,${0.25+Math.sin(s.t)*0.25})`;
+    ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fill();
+  });
+}
+function drawGnd() {
+  ctx.fillStyle=cfg.gClr; ctx.fillRect(0,GND,canvas.width,canvas.height-GND);
+  const gl=ctx.createLinearGradient(0,GND,0,GND+6);
+  gl.addColorStop(0,cfg.gLine); gl.addColorStop(1,'transparent');
+  ctx.fillStyle=gl; ctx.fillRect(0,GND,canvas.width,6);
+  ctx.strokeStyle=cfg.gLine+'44'; ctx.lineWidth=1;
+  for(let x=-(bgOff%44);x<canvas.width;x+=44){ctx.beginPath();ctx.moveTo(x,GND);ctx.lineTo(x,canvas.height);ctx.stroke();}
+}
+function drawPlayer() {
+  if (state==='dead') return;
+  const mini=owned.includes('mini'), sz=mini?P_SIZE*0.7:P_SIZE, off=(P_SIZE-sz)/2;
+  // trail
+  player.trail.forEach((t,i)=>{
+    ctx.save(); ctx.globalAlpha=(1-i/player.trail.length)*0.38;
+    ctx.translate(t.x+P_SIZE/2,t.y+P_SIZE/2); ctx.rotate(player.rot*Math.PI/180);
+    ctx.fillStyle=trailClr(i/10);
+    ctx.fillRect(-sz/2+off+2,-sz/2+off+2,sz-4,sz-4);
+    ctx.restore();
+  });
+  ctx.save();
+  ctx.translate(player.x+P_SIZE/2,player.y+P_SIZE/2);
+  ctx.rotate(player.rot*Math.PI/180);
+  ctx.shadowColor=cfg.clr; ctx.shadowBlur=20;
+  ctx.fillStyle=cfg.clr; ctx.fillRect(-sz/2,-sz/2,sz,sz);
+  ctx.shadowBlur=0;
+  ctx.fillStyle=cfg.bg[1]; ctx.fillRect(-sz/2+6,-sz/2+6,sz-12,sz-12);
+  ctx.fillStyle=cfg.clr;
+  ctx.beginPath();ctx.arc(0,0,sz*0.14,0,Math.PI*2);ctx.fill();
+  [[-sz*.28,-sz*.28],[sz*.28,-sz*.28],[-sz*.28,sz*.28],[sz*.28,sz*.28]].forEach(([dx,dy])=>{
+    ctx.beginPath();ctx.arc(dx,dy,sz*.07,0,Math.PI*2);ctx.fill();
+  });
+  if (shieldHP>0) {
+    ctx.strokeStyle='#88ffff'; ctx.lineWidth=2.5;
+    ctx.beginPath();ctx.arc(0,0,sz/2+8,0,Math.PI*2);ctx.stroke();
+  }
+  ctx.restore();
+}
+function drawOrb(obj,sx) {
+  if (obj.used) return;
+  const pulse=0.85+Math.sin(frame*0.1)*0.15;
+  const glow= orbOver===obj;
+  ctx.save();
+  // outer ring
+  ctx.shadowColor='#ffff00'; ctx.shadowBlur=glow?30:15;
+  ctx.strokeStyle=glow?'#ffffff':'#ffff00'; ctx.lineWidth=2.5;
+  ctx.beginPath();ctx.arc(sx,obj.wy,ORB_R*pulse,0,Math.PI*2);ctx.stroke();
+  // inner radial fill
+  const ig=ctx.createRadialGradient(sx,obj.wy,0,sx,obj.wy,ORB_R*0.75);
+  ig.addColorStop(0,'#ffffff'); ig.addColorStop(0.35,'#ffff88'); ig.addColorStop(1,'#ffaa00');
+  ctx.shadowBlur=0; ctx.fillStyle=ig;
+  ctx.beginPath();ctx.arc(sx,obj.wy,ORB_R*0.75*pulse,0,Math.PI*2);ctx.fill();
+  // spinning sparkles
+  for(let i=0;i<6;i++){
+    const a=frame*0.07+i*Math.PI/3, sr=(ORB_R+10)*pulse;
+    ctx.fillStyle=i%2?'#ffff44':'#ffffff';
+    ctx.beginPath();ctx.arc(sx+Math.cos(a)*sr,obj.wy+Math.sin(a)*sr,2,0,Math.PI*2);ctx.fill();
+  }
+  // active dash ring
+  if (glow) {
+    ctx.strokeStyle='#ffffff'; ctx.lineWidth=1.5;
+    ctx.setLineDash([5,5]);
+    ctx.beginPath();ctx.arc(sx,obj.wy,ORB_R+14,0,Math.PI*2);ctx.stroke();
+    ctx.setLineDash([]);
+  }
+  ctx.restore();
+}
+function drawObjs() {
+  lvlObjs.forEach(obj=>{
+    const sx=wx2sx(obj);
+    if (sx+200<0||sx>canvas.width+80) return;
+    if (obj.type==='spike') {
+      ctx.save(); ctx.shadowColor=cfg.clr; ctx.shadowBlur=8;
+      ctx.fillStyle=cfg.gLine;
+      ctx.beginPath();ctx.moveTo(sx,obj.wy);ctx.lineTo(sx+obj.w/2,obj.wy-obj.h);ctx.lineTo(sx+obj.w,obj.wy);ctx.closePath();ctx.fill();
+      ctx.strokeStyle=cfg.clr; ctx.lineWidth=1.5; ctx.stroke();
+      ctx.restore();
+    } else if (obj.type==='block') {
+      ctx.save(); ctx.shadowColor=cfg.clr; ctx.shadowBlur=7;
+      ctx.fillStyle=cfg.gClr; ctx.fillRect(sx,obj.wy,obj.w,obj.h);
+      ctx.shadowBlur=0; ctx.fillStyle=cfg.gLine+'66';
+      for(let ty=obj.wy;ty<obj.wy+obj.h;ty+=42)ctx.fillRect(sx+3,ty+3,obj.w-6,Math.min(36,obj.wy+obj.h-ty-3));
+      ctx.strokeStyle=cfg.gLine; ctx.lineWidth=1; ctx.strokeRect(sx,obj.wy,obj.w,obj.h);
+      ctx.restore();
+    } else if (obj.type==='orb') {
+      drawOrb(obj,sx);
+    }
+  });
+}
+function drawParts() {
+  parts.forEach(p=>{
+    ctx.save(); ctx.globalAlpha=p.life;
+    ctx.shadowColor=p.clr; ctx.shadowBlur=p.orb?14:6;
+    ctx.fillStyle=p.clr; ctx.fillRect(p.x-p.sz/2,p.y-p.sz/2,p.sz,p.sz);
+    ctx.restore();
+  });
+}
+function drawHUD() {
+  const prog=Math.min(worldX/LEVEL_LEN,1);
+  const bx=canvas.width/2-170,by=14,bw=340,bh=13;
+  ctx.fillStyle='rgba(0,0,0,0.45)'; ctx.fillRect(bx,by,bw,bh);
+  const bg=ctx.createLinearGradient(bx,0,bx+bw,0);
+  bg.addColorStop(0,cfg.bg[1]); bg.addColorStop(1,cfg.clr);
+  ctx.fillStyle=bg; ctx.fillRect(bx,by,bw*prog,bh);
+  ctx.strokeStyle='rgba(255,255,255,0.3)'; ctx.lineWidth=1; ctx.strokeRect(bx,by,bw,bh);
+  ctx.fillStyle='#fff'; ctx.font='bold 10px Arial'; ctx.textAlign='center';
+  ctx.fillText(`${Math.floor(prog*100)}%`,canvas.width/2,by+bh-1);
+
+  ctx.shadowColor=cfg.clr; ctx.shadowBlur=6;
+  ctx.fillStyle='#fff'; ctx.font='bold 17px Arial'; ctx.textAlign='left';
+  ctx.fillText(cfg.name,15,43); ctx.shadowBlur=0;
+  ctx.fillStyle='rgba(255,255,255,0.45)'; ctx.font='12px Arial';
+  ctx.fillText(`Attempt ${attempts}`,15,60);
+
+  ctx.textAlign='right'; ctx.fillStyle='#88aaff'; ctx.font='bold 15px Arial';
+  ctx.fillText(`✦ ${mana}`,canvas.width-12,43);
+
+  if (orbOver) {
+    ctx.textAlign='center'; ctx.shadowColor='#ffff00'; ctx.shadowBlur=10;
+    ctx.fillStyle='#ffff88'; ctx.font='bold 13px Arial';
+    ctx.fillText('SPACE / TAP  to activate orb!',canvas.width/2,GND-18);
+    ctx.shadowBlur=0;
+  }
+  ctx.textAlign='right'; ctx.fillStyle='rgba(255,255,255,0.2)'; ctx.font='11px Arial';
+  ctx.fillText('ESC to quit',canvas.width-12,canvas.height-8);
+}
+function drawOverlay(title,tClr,gClr,line1,line2) {
+  ctx.fillStyle='rgba(0,0,0,0.68)'; ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.textAlign='center';
+  ctx.shadowColor=gClr; ctx.shadowBlur=30;
+  ctx.fillStyle=tClr; ctx.font='bold 54px Arial';
+  ctx.fillText(title,canvas.width/2,canvas.height/2-55);
+  ctx.shadowBlur=0;
+  ctx.fillStyle='#fff'; ctx.font='22px Arial';
+  ctx.fillText(line1,canvas.width/2,canvas.height/2+8);
+  ctx.fillStyle='rgba(255,255,255,0.5)'; ctx.font='15px Arial';
+  ctx.fillText(line2,canvas.width/2,canvas.height/2+46);
+}
+
+// ─── Menu drawing ─────────────────────────────────────────────────────────────
+let mHover = -1;
+
+function cardRect(i) {
+  const cw=148,ch=162,gap=11,total=5*cw+4*gap;
+  return { x:(canvas.width-total)/2+i*(cw+gap), y:195, w:cw, h:ch };
+}
+function shopBtnR()  { return {x:canvas.width/2-72,y:408,w:144,h:44}; }
+function shopItemR(i){ const cols=4,iw=194,ih=92,gap=10,total=cols*iw+(cols-1)*gap,sx=(canvas.width-total)/2; return {x:sx+(i%cols)*(iw+gap),y:118+Math.floor(i/cols)*(ih+gap),w:iw,h:ih}; }
+function backBtnR()  { return {x:20,y:canvas.height-52,w:100,h:34}; }
+
+function canvasMouse(e) {
+  const r=canvas.getBoundingClientRect();
+  return { mx:(e.clientX-r.left)*(canvas.width/r.width), my:(e.clientY-r.top)*(canvas.height/r.height) };
+}
+function inRect(mx,my,r) { return mx>r.x&&mx<r.x+r.w&&my>r.y&&my<r.y+r.h; }
+
+function handleMenuClick(e) {
+  const {mx,my}=canvasMouse(e);
+  CONFIGS.forEach((c,i)=>{ if(inRect(mx,my,cardRect(i))&&unlocked.includes(c.id)){ startLevel(c); attempts=0; } });
+  if (inRect(mx,my,shopBtnR())) state='shop';
+}
+function handleShopClick(e) {
+  const {mx,my}=canvasMouse(e);
+  if (inRect(mx,my,backBtnR())) { state='menu'; return; }
+  SHOP.forEach((item,i)=>{
+    if (!inRect(mx,my,shopItemR(i))) return;
+    if (owned.includes(item.id)) {
+      if (item.type==='trail') { equipped.trail = equipped.trail===item.id?null:item.id; saveProg(); }
+      return;
+    }
+    if (mana>=item.cost) { mana-=item.cost; owned.push(item.id); if(item.type==='trail') equipped.trail=item.id; saveMana(); saveProg(); }
+  });
+}
+
+function rr(x,y,w,h,r) { // roundRect path
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+  ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+  ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);
+  ctx.closePath();
+}
+
+function drawMenu() {
+  // bg
+  const bg=ctx.createLinearGradient(0,0,0,canvas.height);
+  bg.addColorStop(0,'#05051a'); bg.addColorStop(1,'#0e0e30');
+  ctx.fillStyle=bg; ctx.fillRect(0,0,canvas.width,canvas.height);
+  stars.forEach(s=>{
+    ctx.fillStyle=`rgba(255,255,255,${0.2+Math.sin(s.t)*0.2})`;
+    ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fill(); s.t+=0.018;
+  });
+
+  // title
+  ctx.textAlign='center'; ctx.shadowColor='#ffcc00'; ctx.shadowBlur=28;
+  ctx.fillStyle='#ffcc00'; ctx.font='bold 46px Arial';
+  ctx.fillText('GEOMETRY DASH',canvas.width/2,75); ctx.shadowBlur=0;
+  ctx.fillStyle='rgba(255,255,255,0.5)'; ctx.font='15px Arial';
+  ctx.fillText('Select a level to play',canvas.width/2,108);
+
+  // mana badge
+  ctx.textAlign='right'; ctx.shadowColor='#4466ff'; ctx.shadowBlur=10;
+  ctx.fillStyle='#88aaff'; ctx.font='bold 17px Arial';
+  ctx.fillText(`✦ ${mana} mana`,canvas.width-18,42); ctx.shadowBlur=0;
+
+  // level cards
+  CONFIGS.forEach((c,i)=>{
+    const card=cardRect(i), locked=!unlocked.includes(c.id), hov=mHover===i;
+    const cy=hov?card.y-6:card.y;
+    ctx.save();
+    ctx.shadowColor=locked?'#222':c.clr; ctx.shadowBlur=hov?22:8;
+    ctx.fillStyle=locked?'#181828':'#08082a'; rr(card.x,cy,card.w,card.h,12); ctx.fill();
+    ctx.fillStyle=locked?'#2a2a3a':c.clr; rr(card.x,cy,card.w,6,12); ctx.fill();
+    ctx.strokeStyle=locked?'#2a2a3a':c.clr+(hov?'':'88'); ctx.lineWidth=hov?2:1.5;
+    rr(card.x,cy,card.w,card.h,12); ctx.stroke();
+    ctx.restore();
+
+    ctx.textAlign='center';
+    ctx.fillStyle=locked?'#444':c.clr; ctx.font='bold 30px Arial';
+    ctx.fillText(c.id,card.x+card.w/2,cy+52);
+
+    ctx.fillStyle=locked?'#444':'#fff'; ctx.font='bold 12px Arial';
+    ctx.fillText(c.name,card.x+card.w/2,cy+76);
+
+    ctx.fillStyle=locked?'#333':'rgba(255,255,255,0.45)'; ctx.font='10px Arial';
+    ctx.fillText(c.sub,card.x+card.w/2,cy+93);
+
+    if (!locked) {
+      ctx.fillStyle='rgba(255,255,255,0.25)'; ctx.font='10px Arial';
+      ctx.fillText(`Speed ${c.speed.toFixed(1)}×`,card.x+card.w/2,cy+112);
+      ctx.fillStyle=c.clr+'bb'; ctx.font='bold 11px Arial';
+      ctx.fillText(`✦ ${c.manaR}`,card.x+card.w/2,cy+130);
+      if (hov) {
+        ctx.fillStyle='rgba(255,255,255,0.6)'; ctx.font='10px Arial';
+        ctx.fillText('Click to play!',card.x+card.w/2,cy+148);
+      }
+    } else {
+      ctx.fillStyle='#444'; ctx.font='24px Arial';
+      ctx.fillText('🔒',card.x+card.w/2,cy+130);
+    }
+  });
+
+  // shop button
+  const sb=shopBtnR(), shov=mHover===99;
+  ctx.save(); ctx.shadowColor='#4466ff'; ctx.shadowBlur=shov?18:8;
+  ctx.fillStyle=shov?'#1a3aaa':'#0e1e66'; rr(sb.x,sb.y,sb.w,sb.h,10); ctx.fill();
+  ctx.strokeStyle='#4466ff'; ctx.lineWidth=1.5; rr(sb.x,sb.y,sb.w,sb.h,10); ctx.stroke();
+  ctx.restore();
+  ctx.textAlign='center'; ctx.fillStyle='#fff'; ctx.font='bold 16px Arial';
+  ctx.fillText('✦  SHOP',sb.x+sb.w/2,sb.y+sb.h/2+6);
+
+  ctx.fillStyle='rgba(255,255,255,0.18)'; ctx.font='11px Arial'; ctx.textAlign='center';
+  ctx.fillText('SPACE / Click to jump  •  ESC to return',canvas.width/2,canvas.height-10);
+}
+
+function drawShop() {
+  const bg=ctx.createLinearGradient(0,0,0,canvas.height);
+  bg.addColorStop(0,'#05051a'); bg.addColorStop(1,'#0e0e30');
+  ctx.fillStyle=bg; ctx.fillRect(0,0,canvas.width,canvas.height);
+
+  ctx.textAlign='center'; ctx.shadowColor='#4466ff'; ctx.shadowBlur=18;
+  ctx.fillStyle='#88aaff'; ctx.font='bold 36px Arial'; ctx.fillText('✦  SHOP',canvas.width/2,55);
+  ctx.shadowBlur=0; ctx.fillStyle='#88aaff'; ctx.font='bold 18px Arial';
+  ctx.fillText(`Your Mana: ✦ ${mana}`,canvas.width/2,88);
+
+  SHOP.forEach((item,i)=>{
+    const r=shopItemR(i), isOwn=owned.includes(item.id), afford=mana>=item.cost;
+    const hov=mHover===i, eq=equipped.trail===item.id;
+    ctx.save();
+    ctx.shadowColor=isOwn?(eq?'#00ffaa':'#4466ff'):(afford?'#445':'#200005'); ctx.shadowBlur=hov?16:6;
+    ctx.fillStyle=isOwn?(eq?'#002818':'#0a1030'):(afford?'#0a0a20':'#100006');
+    rr(r.x,r.y,r.w,r.h,9); ctx.fill();
+    ctx.strokeStyle=isOwn?(eq?'#00ffaa':'#4466ff'):(afford?'#334':'#330008');
+    ctx.lineWidth=hov?2:1; rr(r.x,r.y,r.w,r.h,9); ctx.stroke();
+    ctx.restore();
+
+    ctx.font='24px Arial'; ctx.textAlign='left'; ctx.fillText(item.icon,r.x+10,r.y+32);
+    ctx.fillStyle=isOwn?'#aaddff':(afford?'#fff':'#664455'); ctx.font='bold 12px Arial';
+    ctx.fillText(item.name,r.x+46,r.y+22);
+    ctx.fillStyle='rgba(255,255,255,0.4)'; ctx.font='10px Arial';
+    ctx.fillText(item.desc,r.x+46,r.y+38);
+    if (isOwn) {
+      ctx.fillStyle=eq?'#00ffaa':'#4466ff'; ctx.font='bold 11px Arial';
+      ctx.fillText(eq?'✓ Equipped':(item.type==='trail'?'Tap to equip':'Owned'),r.x+46,r.y+62);
+    } else {
+      ctx.fillStyle=afford?'#ffcc44':'#882244'; ctx.font='bold 13px Arial';
+      ctx.fillText(`✦ ${item.cost}`,r.x+46,r.y+62);
+    }
+  });
+
+  const back=backBtnR(), bhov=mHover===99;
+  ctx.save(); ctx.shadowColor='#ff4455'; ctx.shadowBlur=bhov?14:5;
+  ctx.fillStyle=bhov?'#3a0a10':'#1a0508'; rr(back.x,back.y,back.w,back.h,8); ctx.fill();
+  ctx.strokeStyle='#ff4455'; ctx.lineWidth=1.5; rr(back.x,back.y,back.w,back.h,8); ctx.stroke();
+  ctx.restore();
+  ctx.textAlign='center'; ctx.fillStyle='#fff'; ctx.font='bold 13px Arial';
+  ctx.fillText('← Back',back.x+back.w/2,back.y+back.h/2+5);
+}
+
+// ─── Main loop ────────────────────────────────────────────────────────────────
+function loop() {
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  update();
+
+  if (state==='menu') {
+    drawMenu();
+  } else if (state==='shop') {
+    drawShop();
+  } else {
+    drawBg(); drawGnd(); drawObjs(); drawPlayer(); drawParts(); drawHUD();
+    if (state==='dead') {
+      if (parts.length===0) {
+        let earn = cfg.manaR;
+        if (owned.includes('mana_boost')) earn = Math.floor(earn * 1.5);
+        const partial = Math.floor((worldX / LEVEL_LEN) * earn * 0.3);
+        drawOverlay('YOU DIED','#ff4455','#ff2233',
+          `Attempt ${attempts}  |  ${Math.floor(worldX/LEVEL_LEN*100)}% reached`,
+          `Click or SPACE to retry  •  ESC for menu`);
+      }
+    }
+    if (state==='complete') {
+      let earn=cfg.manaR; if(owned.includes('mana_boost'))earn=Math.floor(earn*1.5);
+      drawOverlay('LEVEL COMPLETE!',cfg.clr,cfg.clr,
+        `+${earn} mana earned${cfg.id<5?' · Level '+(cfg.id+1)+' unlocked!':''}`,
+        'Click or SPACE to return to menu');
+    }
+  }
+
+  requestAnimationFrame(loop);
+}
+
+// ─── Boot ─────────────────────────────────────────────────────────────────────
+initStars();
+loop();
+</script>
+</body>
+</html>
