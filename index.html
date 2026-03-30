@@ -41,6 +41,16 @@
       user-select: none;
       opacity: 0;
     }
+    /* 🎮 Dash button top-left */
+    #dashBtn {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      font-size: 2.5rem;
+      z-index: 999;
+      cursor: pointer;
+      user-select: none;
+    }
     /* ⚙️ Settings button bottom-left */
     #settingsBtn {
       position: fixed;
@@ -114,6 +124,7 @@
 </head>
 <body>
   <div id="tree">🎄</div>
+  <div id="dashBtn">🎮</div>
 <div id="hi">Hi</div>
 
   <button id="nextBtn" onclick="location.href='next.html'">N ⏩</button>
@@ -154,6 +165,11 @@
 
     // Set Hi button behavior
     document.getElementById('hi').onclick = originalHiClick;
+
+    // 🎮 Go to dash.html on click
+    document.getElementById('dashBtn').onclick = () => {
+      location.href = 'dash.html';
+    };
 
     // 🎄 Go to christmas.html on click
     document.getElementById('tree').onclick = () => {
