@@ -41,16 +41,6 @@
       user-select: none;
       opacity: 0;
     }
-    /* 🏃 Runner button top-left */
-    #runner {
-      position: fixed;
-      top: 10px;
-      left: 10px;
-      font-size: 2.5rem;
-      z-index: 999;
-      cursor: pointer;
-      user-select: none;
-    }
     /* ⚙️ Settings button bottom-left */
     #settingsBtn {
       position: fixed;
@@ -124,15 +114,14 @@
 </head>
 <body>
   <div id="tree">🎄</div>
-  <div id="runner">🏃</div>
-  <div id="hi">Hi</div>
+<div id="hi">Hi</div>
 
   <button id="nextBtn" onclick="location.href='next.html'">N ⏩</button>
-  <button id="settingsBtn">⚙️</button>
+  <button id="settingsBtn">&#x2699;</button>
 
   <div id="overlay"></div>
   <div id="settingsModal">
-    <h2>⚙️ Settings</h2>
+    <h2>&#x2699; Settings</h2>
     <button id="uiSizeBtn">📏 UI Size</button>
     <button id="uselessBtn">🗑️ Useless Button</button>
     <button id="themeBtn">Extra stylish. ooh</button>
@@ -169,11 +158,6 @@
     // 🎄 Go to christmas.html on click
     document.getElementById('tree').onclick = () => {
       location.href = 'christmas.html';
-    };
-
-    // 🏃 Go to runner.html on click
-    document.getElementById('runner').onclick = () => {
-      location.href = 'runner.html';
     };
 
     // Settings button - open modal
