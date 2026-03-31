@@ -144,10 +144,48 @@
   </div>
 
   <footer style="position: fixed; bottom: 10px; width: 100%; text-align: center; font-size: 1rem;">
-    Made with ❤️ by Calvin © 2026
+    Made with ❤️ by Calvin © 2025
   </footer>
 
   <script>
+    // 🗿 April Fools moai spam
+    const MOAI_MAX = 200;
+    const BOOM_SRC = 'https://cdn.pixabay.com/download/audio/2025/08/29/audio_437b300d21.mp3?filename=bithuh-vine-boom-392646.mp3';
+    let moaiCount = 0;
+    let moaiInterval = null;
+
+    function spawnMoai() {
+      if (moaiCount >= MOAI_MAX) {
+        clearInterval(moaiInterval);
+        return;
+      }
+      const el = document.createElement('span');
+      el.textContent = '🗿';
+      el.style.cssText = `
+        position: fixed;
+        font-size: ${1.5 + Math.random() * 3.5}rem;
+        left: ${Math.random() * 95}vw;
+        top: ${Math.random() * 90}vh;
+        z-index: ${500 + moaiCount};
+        pointer-events: none;
+        animation: moaiFade 0.3s ease-out;
+      `;
+      document.body.appendChild(el);
+      const boom = new Audio(BOOM_SRC);
+      boom.volume = Math.max(0.05, 0.4 - moaiCount * 0.0015);
+      boom.play().catch(() => {});
+      moaiCount++;
+    }
+
+    // Only run on April 1st
+    const now = new Date();
+    if (now.getMonth() === 3 && now.getDate() === 1) {
+      const style = document.createElement('style');
+      style.textContent = `@keyframes moaiFade { from { transform: scale(0) rotate(-20deg); opacity:0; } to { transform: scale(1) rotate(0deg); opacity:1; } }`;
+      document.head.appendChild(style);
+      moaiInterval = setInterval(spawnMoai, 180);
+    }
+
     // Load OG mode state
     let isOGMode = localStorage.getItem('ogMode') === 'true';
 
