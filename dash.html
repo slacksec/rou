@@ -19,8 +19,8 @@ canvas.height = 500;
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const GND        = canvas.height - 90;   // ground y
-const GRAVITY    = 0.65;
-const JUMP_FORCE = -14.5;
+const GRAVITY    = 1.0;
+const JUMP_FORCE = -20;
 const P_SIZE     = 42;
 const P_X        = 130;   // fixed screen x of player
 const ORB_R      = 22;
@@ -57,6 +57,7 @@ const Sp2 = (x)      => [Sp(x), Sp(x+42)];
 const Sp3 = (x)      => [Sp(x), Sp(x+42), Sp(x+84)];
 const Bl  = (x,s=1)  => ({ type:'block', wx:x, wy:GND-(s*42), w:42, h:s*42 });
 const Orb = (x,y,b)  => ({ type:'orb', wx:x, wy:y??GND-110, boost:b??-16 });
+const Hole = (x,w)   => ({ type:'hole', wx:x, w });
 
 function buildLevel(id) {
   const o = [];
@@ -65,9 +66,10 @@ function buildLevel(id) {
     [500,800,1050,1350,1600,1900,2200,2500,2800,3100,3400,3700,4000,4300].forEach(x=>o.push(Sp(x)));
     Sp2(4600).forEach(s=>o.push(s)); Sp2(5000).forEach(s=>o.push(s));
     [5300,5600,5900,6200,6500].forEach(x=>o.push(Sp(x)));
-    o.push(Bl(6800)); Sp2(7100).forEach(s=>o.push(s));
-    o.push(Orb(7500,GND-130,-15));   // surprise orb near the end
-    o.push(Sp(7750));
+    o.push(Bl(6800));
+    o.push(Hole(7300, 360));           // pit — must use the orb to survive
+    o.push(Orb(7500,GND-50,-15));
+    o.push(Sp(7950));
   } else if (id === 2) {
     // ── Back On Track ── intro orbs, platforms
     Sp2(400).forEach(s=>o.push(s)); [700,950].forEach(x=>o.push(Sp(x)));
@@ -137,11 +139,11 @@ function buildLevel(id) {
 }
 
 const CONFIGS = [
-  { id:1, name:'Stereo Madness', sub:'The Beginning',   clr:'#ffcc00', bg:['#08082a','#14145a'], gClr:'#1e3d5c', gLine:'#55aadd', speed:5.2, manaR:50,  hasStar:true  },
-  { id:2, name:'Back On Track',  sub:'Finding Rhythm',  clr:'#ff8800', bg:['#180600','#381200'], gClr:'#2a1000', gLine:'#ff6600', speed:6.5, manaR:90,  hasStar:false },
-  { id:3, name:'Polargeist',     sub:'Orb Mastery',     clr:'#00ddff', bg:['#001828','#003050'], gClr:'#002a40', gLine:'#00ccff', speed:7.5, manaR:140, hasStar:true  },
-  { id:4, name:'Dry Out',        sub:'No Mercy',        clr:'#ff3344', bg:['#180005','#300010'], gClr:'#200008', gLine:'#ff2244', speed:8.8, manaR:210, hasStar:false },
-  { id:5, name:'Base After Base',sub:'Insane',          clr:'#aa44ff', bg:['#0c001e','#180038'], gClr:'#12002a', gLine:'#aa44ff', speed:10,  manaR:320, hasStar:true  },
+  { id:1, name:'Stereo Madness', sub:'The Beginning',   clr:'#ffcc00', bg:['#08082a','#14145a'], gClr:'#1e3d5c', gLine:'#55aadd', speed:3.5, manaR:50,  hasStar:true  },
+  { id:2, name:'Back On Track',  sub:'Finding Rhythm',  clr:'#ff8800', bg:['#180600','#381200'], gClr:'#2a1000', gLine:'#ff6600', speed:4.5, manaR:90,  hasStar:false },
+  { id:3, name:'Polargeist',     sub:'Orb Mastery',     clr:'#00ddff', bg:['#001828','#003050'], gClr:'#002a40', gLine:'#00ccff', speed:5.5, manaR:140, hasStar:true  },
+  { id:4, name:'Dry Out',        sub:'No Mercy',        clr:'#ff3344', bg:['#180005','#300010'], gClr:'#200008', gLine:'#ff2244', speed:6.8, manaR:210, hasStar:false },
+  { id:5, name:'Base After Base',sub:'Insane',          clr:'#aa44ff', bg:['#0c001e','#180038'], gClr:'#12002a', gLine:'#aa44ff', speed:8.0, manaR:320, hasStar:true  },
 ];
 
 // ─── State ────────────────────────────────────────────────────────────────────
@@ -157,6 +159,8 @@ let parts  = [];       // particles
 let shieldHP = 0;
 let djUsed = false;
 let orbOver = null;    // orb player is touching
+let lastEarned = 0;
+let completeLock = 0;
 
 const player = { x:P_X, y:GND-P_SIZE, vy:0, rot:0, onGround:true, trail:[] };
 
@@ -181,7 +185,7 @@ function startLevel(c) {
 
 // ─── Input ────────────────────────────────────────────────────────────────────
 function onJump() {
-  if (state === 'complete') { state = 'menu'; return; }
+  if (state === 'complete') { if (completeLock > 0) return; state = 'menu'; return; }
   if (state === 'dead')     { startLevel(cfg); return; }
   if (state !== 'playing')  return;
 
@@ -269,6 +273,7 @@ function hits(obj) {
 
 // ─── Update ───────────────────────────────────────────────────────────────────
 function update() {
+  if (completeLock > 0) completeLock--;
   if (state !== 'playing') return;
   frame++;
   const spd = cfg.speed + frame*0.0015;
@@ -281,9 +286,21 @@ function update() {
   // physics
   player.vy += GRAVITY;
   player.y  += player.vy;
-  if (player.y >= GND-P_SIZE) {
+
+  // check if player is over a hole
+  const playerWX = worldX;
+  const overHole = lvlObjs.some(o => o.type==='hole' && playerWX + P_SIZE > o.wx+4 && playerWX < o.wx+o.w-4);
+
+  if (player.y > canvas.height) {
+    // fell into pit
+    explode(player.x+P_SIZE/2, canvas.height-20);
+    attempts++; state='dead'; return;
+  }
+  if (!overHole && player.y >= GND-P_SIZE) {
     player.y = GND-P_SIZE; player.vy=0; player.onGround=true; djUsed=false;
     player.rot = Math.round(player.rot/90)*90;
+  } else if (overHole && player.y >= GND-P_SIZE) {
+    player.onGround=false; player.rot+=5.5;
   } else { player.onGround=false; player.rot+=5.5; }
 
   // trail
@@ -291,7 +308,7 @@ function update() {
   if (player.trail.length>10) player.trail.pop();
 
   // orb proximity
-  const orbRange = ORB_R + P_SIZE/2 + (owned.includes('orb_magnet') ? 18 : 0); // removed orb_magnet item but keep guard
+  const orbRange = ORB_R * 3.5;
   orbOver = null;
   for (const obj of lvlObjs) {
     if (obj.type!=='orb'||obj.used) continue;
@@ -317,7 +334,7 @@ function update() {
   if (worldX > LEVEL_LEN) {
     let earn = cfg.manaR;
     if (owned.includes('mana_boost')) earn = Math.floor(earn*1.5);
-    mana += earn; saveMana();
+    mana += earn; lastEarned = earn; completeLock = 90; saveMana();
     if (cfg.id < 5 && !unlocked.includes(cfg.id+1)) { unlocked.push(cfg.id+1); saveProg(); }
     state = 'complete'; return;
   }
@@ -343,12 +360,32 @@ function drawBg() {
   });
 }
 function drawGnd() {
+  // collect on-screen holes
+  const holes = lvlObjs.filter(o=>o.type==='hole').map(o=>({sx:wx2sx(o),w:o.w}));
+
+  // fill full ground then punch holes with black
   ctx.fillStyle=cfg.gClr; ctx.fillRect(0,GND,canvas.width,canvas.height-GND);
+  holes.forEach(h=>{
+    ctx.fillStyle='#000';
+    ctx.fillRect(h.sx, GND, h.w, canvas.height-GND);
+    // draw pit edge glow
+    ctx.strokeStyle='#ff2244'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(h.sx,GND); ctx.lineTo(h.sx,canvas.height); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(h.sx+h.w,GND); ctx.lineTo(h.sx+h.w,canvas.height); ctx.stroke();
+  });
+
+  // glow line — skip over holes
   const gl=ctx.createLinearGradient(0,GND,0,GND+6);
   gl.addColorStop(0,cfg.gLine); gl.addColorStop(1,'transparent');
   ctx.fillStyle=gl; ctx.fillRect(0,GND,canvas.width,6);
+  holes.forEach(h=>{ ctx.fillStyle='#000'; ctx.fillRect(h.sx,GND,h.w,6); });
+
+  // tile lines
   ctx.strokeStyle=cfg.gLine+'44'; ctx.lineWidth=1;
-  for(let x=-(bgOff%44);x<canvas.width;x+=44){ctx.beginPath();ctx.moveTo(x,GND);ctx.lineTo(x,canvas.height);ctx.stroke();}
+  for(let x=-(bgOff%44);x<canvas.width;x+=44){
+    if (holes.some(h=>x>h.sx-4&&x<h.sx+h.w+4)) continue;
+    ctx.beginPath();ctx.moveTo(x,GND);ctx.lineTo(x,canvas.height);ctx.stroke();
+  }
 }
 function drawPlayer() {
   if (state==='dead') return;
@@ -662,10 +699,45 @@ function loop() {
       }
     }
     if (state==='complete') {
-      let earn=cfg.manaR; if(owned.includes('mana_boost'))earn=Math.floor(earn*1.5);
-      drawOverlay('LEVEL COMPLETE!',cfg.clr,cfg.clr,
-        `+${earn} mana earned${cfg.id<5?' · Level '+(cfg.id+1)+' unlocked!':''}`,
-        'Click or SPACE to return to menu');
+      ctx.fillStyle='rgba(0,0,0,0.75)'; ctx.fillRect(0,0,canvas.width,canvas.height);
+
+      // title
+      ctx.textAlign='center';
+      ctx.shadowColor=cfg.clr; ctx.shadowBlur=35;
+      ctx.fillStyle=cfg.clr; ctx.font='bold 58px Arial';
+      ctx.fillText('LEVEL COMPLETE!', canvas.width/2, canvas.height/2-90);
+      ctx.shadowBlur=0;
+
+      // level name
+      ctx.fillStyle='rgba(255,255,255,0.6)'; ctx.font='18px Arial';
+      ctx.fillText(cfg.name, canvas.width/2, canvas.height/2-52);
+
+      // mana box
+      const bx=canvas.width/2-120, by=canvas.height/2-30, bw=240, bh=70;
+      ctx.fillStyle='rgba(255,255,255,0.07)';
+      rr(bx,by,bw,bh,12); ctx.fill();
+      ctx.strokeStyle=cfg.clr+'88'; ctx.lineWidth=1.5;
+      rr(bx,by,bw,bh,12); ctx.stroke();
+
+      ctx.fillStyle='rgba(255,255,255,0.45)'; ctx.font='13px Arial';
+      ctx.fillText('MANA EARNED', canvas.width/2, by+22);
+      ctx.shadowColor='#88aaff'; ctx.shadowBlur=14;
+      ctx.fillStyle='#88aaff'; ctx.font='bold 32px Arial';
+      ctx.fillText(`✦ +${lastEarned}`, canvas.width/2, by+56);
+      ctx.shadowBlur=0;
+
+      // unlock notice
+      if (cfg.id < 5) {
+        ctx.fillStyle='rgba(255,255,255,0.5)'; ctx.font='14px Arial';
+        ctx.fillText(`Level ${cfg.id+1} — "${CONFIGS[cfg.id].name}" unlocked!`, canvas.width/2, canvas.height/2+60);
+      }
+
+      // attempts
+      ctx.fillStyle='rgba(255,255,255,0.3)'; ctx.font='13px Arial';
+      ctx.fillText(`Completed in ${attempts} attempt${attempts===1?'':'s'}`, canvas.width/2, canvas.height/2+84);
+
+      ctx.fillStyle='rgba(255,255,255,0.45)'; ctx.font='14px Arial';
+      ctx.fillText('Click or SPACE to return to menu', canvas.width/2, canvas.height/2+118);
     }
   }
 
