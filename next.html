@@ -31,6 +31,31 @@
       border: none;
       display: none;
     }
+    .hall-of-fame-link {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      z-index: 999;
+      width: 54px;
+      height: 54px;
+      display: grid;
+      place-items: center;
+      border: 3px solid rgba(255, 255, 255, 0.86);
+      border-radius: 50%;
+      background: rgba(18, 18, 22, 0.68);
+      text-decoration: none;
+      font-size: 1.85rem;
+      line-height: 1;
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.32);
+      backdrop-filter: blur(5px);
+      transition: transform 150ms ease, background 150ms ease;
+    }
+    .hall-of-fame-link:hover,
+    .hall-of-fame-link:focus-visible {
+      background: rgba(18, 18, 22, 0.86);
+      transform: translateY(-3px) scale(1.04);
+      outline: none;
+    }
   </style>
 </head>
 <body>
@@ -38,6 +63,7 @@
   <div id="playerContainer">
     <iframe id="player" allow="autoplay"></iframe>
   </div>
+  <a class="hall-of-fame-link" href="hall of fame.html" aria-label="Open Hall of Fame">🎞️</a>
   <footer style="position: fixed; bottom: 10px; width: 100%; text-align: center; font-size: 1rem;">
     Made with ❤️ by Calvin &copy; 2025
   </footer>

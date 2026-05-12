@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hall of Fame</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --ink: #fff7df;
+      --muted: #d7c49b;
+      --wall: #6c3f27;
+      --wall-dark: #2b1813;
+      --gold: #f6c84f;
+      --red: #a93b35;
+      --floor: #221613;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+    }
+
+    body {
+      font-family: Georgia, "Times New Roman", serif;
+      color: var(--ink);
+      background:
+        linear-gradient(90deg, rgba(0, 0, 0, 0.28), transparent 16%, transparent 84%, rgba(0, 0, 0, 0.28)),
+        repeating-linear-gradient(90deg, rgba(255, 226, 145, 0.08) 0 2px, transparent 2px 110px),
+        linear-gradient(180deg, #4a231c 0%, var(--wall) 48%, var(--floor) 48%, #100c0b 100%);
+      overflow: hidden;
+    }
+
+    .hall {
+      min-height: 100vh;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      position: relative;
+    }
+
+    .hall::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 47vh;
+      height: 11px;
+      background: linear-gradient(90deg, #1d120f, #9a6b32 20%, #f2cf79 50%, #9a6b32 80%, #1d120f);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+      pointer-events: none;
+    }
+
+    header {
+      padding: 34px 28px 12px;
+      text-align: center;
+      text-shadow: 0 3px 0 rgba(0, 0, 0, 0.3);
+      z-index: 1;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2.4rem, 7vw, 5.8rem);
+      line-height: 0.9;
+      letter-spacing: 0;
+    }
+
+    .back {
+      position: fixed;
+      left: 18px;
+      bottom: 18px;
+      z-index: 4;
+      width: 52px;
+      height: 52px;
+      display: grid;
+      place-items: center;
+      border: 3px solid rgba(255, 242, 191, 0.85);
+      border-radius: 50%;
+      background: rgba(18, 12, 10, 0.72);
+      color: var(--ink);
+      text-decoration: none;
+      font-size: 1.55rem;
+      box-shadow: 0 10px 22px rgba(0, 0, 0, 0.38);
+      backdrop-filter: blur(5px);
+    }
+
+    .gallery {
+      z-index: 1;
+      display: flex;
+      gap: clamp(24px, 5vw, 64px);
+      align-items: center;
+      overflow-x: auto;
+      overflow-y: hidden;
+      padding: 26px max(28px, calc((100vw - 1180px) / 2)) 74px;
+      scroll-snap-type: x mandatory;
+      scrollbar-color: var(--gold) rgba(0, 0, 0, 0.25);
+    }
+
+    .gallery::-webkit-scrollbar {
+      height: 14px;
+    }
+
+    .gallery::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.25);
+      border-radius: 999px;
+    }
+
+    .gallery::-webkit-scrollbar-thumb {
+      background: linear-gradient(90deg, #b77a25, var(--gold), #b77a25);
+      border-radius: 999px;
+      border: 3px solid rgba(0, 0, 0, 0.25);
+    }
+
+    figure {
+      margin: 0;
+      flex: 0 0 min(78vw, 430px);
+      scroll-snap-align: center;
+      transform: translateY(var(--lift, 0));
+    }
+
+    .frame {
+      padding: clamp(12px, 2.3vw, 20px);
+      background:
+        linear-gradient(135deg, #8f5f23, #f4d37a 16%, #7f501d 32%, #d59f3a 53%, #fff0a8 68%, #7f501d);
+      border: 5px solid #2a1710;
+      box-shadow:
+        0 28px 42px rgba(0, 0, 0, 0.42),
+        inset 0 0 0 5px rgba(255, 255, 255, 0.17);
+    }
+
+    img {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      display: block;
+      object-fit: contain;
+      image-rendering: pixelated;
+      background: #17110f;
+      border: 4px solid #21130f;
+    }
+
+    figcaption {
+      width: max-content;
+      max-width: 92%;
+      margin: 18px auto 0;
+      padding: 10px 20px;
+      border: 2px solid rgba(255, 234, 170, 0.85);
+      background: rgba(24, 13, 10, 0.76);
+      color: var(--ink);
+      text-align: center;
+      font-size: clamp(1.05rem, 2.8vw, 1.45rem);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.32);
+    }
+
+    .floor {
+      height: 18vh;
+      min-height: 105px;
+      background:
+        linear-gradient(90deg, rgba(255, 255, 255, 0.04), transparent 18%, rgba(0, 0, 0, 0.18) 38%, transparent 56%, rgba(255, 255, 255, 0.04)),
+        repeating-linear-gradient(100deg, #21120f 0 16px, #2b1812 16px 34px);
+      box-shadow: inset 0 18px 36px rgba(0, 0, 0, 0.36);
+    }
+
+    @media (max-width: 620px) {
+      body {
+        overflow: hidden;
+      }
+
+      header {
+        padding-top: 24px;
+      }
+
+      .gallery {
+        padding-bottom: 54px;
+      }
+
+      .back {
+        width: 46px;
+        height: 46px;
+        left: 12px;
+        bottom: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="hall">
+    <a class="back" href="next.html" aria-label="Back to next page">←</a>
+    <header>
+      <h1>Hall of Fame</h1>
+    </header>
+    <section class="gallery" aria-label="Artwork hall of fame">
+      <figure style="--lift: 2px">
+        <div class="frame">
+          <img src="assets/hall-of-fame/evans-art-1.png" alt="Pixel art by Evan">
+        </div>
+        <figcaption>Made by Evan</figcaption>
+      </figure>
+      <figure style="--lift: -20px">
+        <div class="frame">
+          <img src="assets/hall-of-fame/evans-art-2.png" alt="Pixel art by Evan">
+        </div>
+        <figcaption>Made by Evan</figcaption>
+      </figure>
+      <figure style="--lift: 8px">
+        <div class="frame">
+          <img src="assets/hall-of-fame/Hugos-art-1.png" alt="Pixel art by Hugo">
+        </div>
+        <figcaption>Made by Hugo</figcaption>
+      </figure>
+    </section>
+    <div class="floor" aria-hidden="true"></div>
+  </main>
+</body>
+</html>
