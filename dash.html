@@ -19,6 +19,7 @@ canvas.height = 500;
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const GND        = canvas.height - 90;   // ground y
+const CEIL       = 64;
 const GRAVITY    = 1.0;
 const JUMP_FORCE = -20;
 const P_SIZE     = 42;
@@ -30,13 +31,23 @@ const LEVEL_LEN  = 8000;  // world units per level
 const sv = (k,v) => localStorage.setItem('gd2_'+k, JSON.stringify(v));
 const ld = (k,d) => { try { return JSON.parse(localStorage.getItem('gd2_'+k)) ?? d; } catch { return d; } };
 
-let mana     = ld('mana', 0);
-let unlocked = ld('unlocked', [1]);
-let owned    = ld('owned', []);
-let equipped = ld('equipped', {});
+let mana          = ld('mana', 0);
+let unlocked      = ld('unlocked', [1]);
+let owned         = ld('owned', []);
+let equipped      = ld('equipped', {});
+let outfitOwned   = ld('outfitOwned', ['hat_none','base_cube','color_gold','color_deep']);
+let outfitEquip   = ld('outfitEquip', { hat:'hat_none', base:'base_cube', color1:'color_gold', color2:'color_deep' });
+let chestHistory  = ld('chestHistory', { opened:0, stars:{1:0,2:0,3:0,4:0,5:0} });
 
 const saveMana = () => sv('mana', mana);
-const saveProg = () => { sv('unlocked', unlocked); sv('owned', owned); sv('equipped', equipped); };
+const saveProg = () => {
+  sv('unlocked', unlocked);
+  sv('owned', owned);
+  sv('equipped', equipped);
+  sv('outfitOwned', outfitOwned);
+  sv('outfitEquip', outfitEquip);
+  sv('chestHistory', chestHistory);
+};
 
 // ─── Shop catalogue ───────────────────────────────────────────────────────────
 const SHOP = [
@@ -50,6 +61,52 @@ const SHOP = [
   { id:'double_jump',  name:'Double Jump',   desc:'Second jump in air',     cost:400, icon:'⏫', type:'passive' },
 ];
 
+// ─── Outfit catalogue ────────────────────────────────────────────────────────
+const RARITY = {
+  common:    { label:'Common',    clr:'#b7c0cf' },
+  rare:      { label:'Rare',      clr:'#36a3ff' },
+  epic:      { label:'Epic',      clr:'#b05cff' },
+  legendary: { label:'Legendary', clr:'#ffb52e' },
+  mythic:    { label:'Mythic',    clr:'#ff4fd8' },
+};
+
+const OUTFITS = [
+  { id:'hat_none',       name:'No Hat',       type:'hat',   rarity:'common',    icon:'NONE' },
+  { id:'hat_cap',        name:'Dash Cap',     type:'hat',   rarity:'common',    icon:'CAP'  },
+  { id:'hat_beanie',     name:'Beat Beanie',  type:'hat',   rarity:'common',    icon:'BEAN' },
+  { id:'hat_crown',      name:'Neon Crown',   type:'hat',   rarity:'rare',      icon:'CRWN' },
+  { id:'hat_viking',     name:'Viking Horns', type:'hat',   rarity:'rare',      icon:'HORN' },
+  { id:'hat_halo',       name:'Pulse Halo',   type:'hat',   rarity:'epic',      icon:'HALO' },
+  { id:'hat_wizard',     name:'Star Mage',    type:'hat',   rarity:'legendary', icon:'MAGE' },
+  { id:'hat_void',       name:'Void Crown',   type:'hat',   rarity:'mythic',    icon:'VOID' },
+
+  { id:'base_cube',      name:'Classic Cube', type:'base',  rarity:'common',    icon:'CUBE' },
+  { id:'base_round',     name:'Round Core',   type:'base',  rarity:'common',    icon:'CORE' },
+  { id:'base_spike',     name:'Spike Shell',  type:'base',  rarity:'rare',      icon:'SPK'  },
+  { id:'base_tech',      name:'Tech Frame',   type:'base',  rarity:'rare',      icon:'TECH' },
+  { id:'base_crystal',   name:'Crystal Base', type:'base',  rarity:'epic',      icon:'CRYS' },
+  { id:'base_dragon',    name:'Dragon Plate', type:'base',  rarity:'legendary', icon:'DRGN' },
+  { id:'base_cosmic',    name:'Cosmic Core',  type:'base',  rarity:'mythic',    icon:'COSM' },
+
+  { id:'color_gold',     name:'Gold',         type:'color', rarity:'common',    color:'#ffcc00' },
+  { id:'color_deep',     name:'Deep Blue',    type:'color', rarity:'common',    color:'#101447' },
+  { id:'color_lime',     name:'Lime',         type:'color', rarity:'common',    color:'#87ff4a' },
+  { id:'color_coral',    name:'Coral',        type:'color', rarity:'common',    color:'#ff6655' },
+  { id:'color_cyan',     name:'Cyan',         type:'color', rarity:'rare',      color:'#00ddff' },
+  { id:'color_rose',     name:'Rose',         type:'color', rarity:'rare',      color:'#ff4f91' },
+  { id:'color_ember',    name:'Ember',        type:'color', rarity:'rare',      color:'#ff7a18' },
+  { id:'color_violet',   name:'Violet',       type:'color', rarity:'epic',      color:'#9a5cff' },
+  { id:'color_mint',     name:'Star Mint',    type:'color', rarity:'epic',      color:'#5dffc8' },
+  { id:'color_sun',      name:'Solar White',  type:'color', rarity:'legendary', color:'#fff1a8' },
+  { id:'color_shadow',   name:'Shadow',       type:'color', rarity:'legendary', color:'#090914' },
+  { id:'color_galaxy',   name:'Galaxy',       type:'color', rarity:'mythic',    color:'#fb4dff' },
+  { id:'color_aether',   name:'Aether',       type:'color', rarity:'mythic',    color:'#8ffff8' },
+];
+
+const outfitById = id => OUTFITS.find(o => o.id === id) || OUTFITS[0];
+const outfitColor = id => outfitById(id).color || '#ffcc00';
+const outfitList = rarity => OUTFITS.filter(o => o.rarity === rarity && o.id !== 'hat_none');
+
 // ─── Level definitions ────────────────────────────────────────────────────────
 // Shorthand builders
 const Sp  = (x)      => ({ type:'spike', wx:x, wy:GND,     w:40, h:40 });
@@ -58,6 +115,11 @@ const Sp3 = (x)      => [Sp(x), Sp(x+42), Sp(x+84)];
 const Bl  = (x,s=1)  => ({ type:'block', wx:x, wy:GND-(s*42), w:42, h:s*42 });
 const Orb = (x,y,b)  => ({ type:'orb', wx:x, wy:y??GND-110, boost:b??-16 });
 const Hole = (x,w)   => ({ type:'hole', wx:x, w });
+const Por = (x,kind,v) => ({ type:'portal', wx:x, wy:GND-128, w:34, h:96, kind, value:v, used:false });
+const Pad = (x,b=-25)  => ({ type:'pad', wx:x, wy:GND-14, w:50, h:14, boost:b });
+
+function addSpikes(o, x, count=1) { for (let i=0;i<count;i++) o.push(Sp(x+i*42)); }
+function addBlocks(o, x, count=1, tall=1) { for (let i=0;i<count;i++) o.push(Bl(x+i*42, tall)); }
 
 function buildLevel(id) {
   const o = [];
@@ -134,6 +196,106 @@ function buildLevel(id) {
     o.push(Orb(6900,GND-240,-20)); o.push(Orb(7200,GND-260,-22));
     Sp3(7500).forEach(s=>o.push(s)); Sp2(7700).forEach(s=>o.push(s));
     o.push(Sp(7900));
+  } else if (id === 6) {
+    // ── Portal Primer ── first real portal lesson: speed, mini, UFO, cube
+    addSpikes(o, 180, 2); o.push(Por(620,'speed',1.15)); addSpikes(o, 820, 3);
+    o.push(Orb(1180,GND-190,-18)); addBlocks(o, 1450, 2, 2); addSpikes(o, 1640, 2);
+    o.push(Por(2050,'mini',true)); addSpikes(o, 2320, 3); o.push(Orb(2650,GND-150,-15));
+    o.push(Por(3000,'ufo')); o.push(Hole(3220, 340)); addSpikes(o, 3700, 2);
+    o.push(Por(4200,'gravity',-1)); addBlocks(o, 4500, 3, 2); addSpikes(o, 4880, 3);
+    o.push(Por(5250,'gravity',1)); o.push(Por(5550,'cube')); addSpikes(o, 5850, 4);
+    o.push(Pad(6350,-27)); o.push(Hole(6500, 420)); addSpikes(o, 7080, 3);
+    o.push(Por(7480,'normal')); addSpikes(o, 7820, 3);
+  } else if (id === 7) {
+    // ── UFO Alley ── tap timing through pits and sudden portals
+    o.push(Por(260,'ufo')); o.push(Hole(520, 420)); addSpikes(o, 980, 2);
+    o.push(Por(1280,'speed',1.25)); o.push(Hole(1580, 520)); o.push(Orb(1900,GND-230,-10));
+    o.push(Por(2200,'gravity',-1)); addSpikes(o, 2550, 4); o.push(Por(2860,'gravity',1));
+    o.push(Hole(3120, 480)); addSpikes(o, 3650, 3); o.push(Por(4000,'teleport',4400));
+    addSpikes(o, 4450, 2); o.push(Por(4750,'cube')); o.push(Orb(5080,GND-185,-19));
+    addSpikes(o, 5350, 4); o.push(Por(5800,'ufo')); o.push(Hole(6040, 520));
+    o.push(Por(6700,'cube')); o.push(Pad(7040,-28)); addSpikes(o, 7280, 5);
+    o.push(Por(7800,'normal')); addSpikes(o, 8120, 3);
+  } else if (id === 8) {
+    // ── Gravity Switchyard ── alternating ceiling and floor pressure
+    addSpikes(o, 160, 3); o.push(Orb(600,GND-220,-20)); o.push(Por(900,'gravity',-1));
+    addBlocks(o, 1180, 3, 3); addSpikes(o, 1580, 4); o.push(Por(1900,'speed',1.35));
+    o.push(Por(2250,'gravity',1)); o.push(Hole(2500, 390)); o.push(Orb(2730,GND-80,-14));
+    addSpikes(o, 3160, 4); o.push(Por(3600,'ufo')); o.push(Por(3920,'gravity',-1));
+    o.push(Hole(4100, 480)); addSpikes(o, 4680, 4); o.push(Por(5080,'gravity',1));
+    o.push(Por(5400,'cube')); addBlocks(o, 5650, 2, 3); addSpikes(o, 5900, 5);
+    o.push(Por(6450,'mini',true)); o.push(Orb(6740,GND-170,-17)); addSpikes(o, 7030, 4);
+    o.push(Por(7440,'mini',false)); o.push(Por(7820,'normal')); addSpikes(o, 8150, 4);
+  } else if (id === 9) {
+    // ── Teleport Temple ── portals skip traps and punish late reactions
+    addSpikes(o, 120, 3); o.push(Por(520,'speed',1.3)); addSpikes(o, 850, 4);
+    o.push(Por(1220,'teleport',1700)); addSpikes(o, 1320, 8); o.push(Orb(1820,GND-210,-20));
+    addBlocks(o, 2120, 3, 2); addSpikes(o, 2460, 3); o.push(Por(2800,'ufo'));
+    o.push(Hole(3000, 560)); o.push(Por(3650,'gravity',-1)); addSpikes(o, 3900, 4);
+    o.push(Por(4300,'teleport',4720)); addBlocks(o, 4450, 4, 4);
+    o.push(Por(4920,'gravity',1)); o.push(Por(5200,'cube')); addSpikes(o, 5500, 5);
+    o.push(Pad(5980,-30)); o.push(Hole(6130, 500)); addSpikes(o, 6720, 4);
+    o.push(Por(7180,'speed',1.45)); addSpikes(o, 7500, 6); o.push(Orb(8040,GND-235,-22));
+  } else if (id === 10) {
+    // ── Mini Mayhem ── small cube windows and faster obstacle stacks
+    o.push(Por(180,'mini',true)); addSpikes(o, 440, 3); o.push(Orb(760,GND-130,-15));
+    addBlocks(o, 1000, 4, 1); addSpikes(o, 1280, 4); o.push(Por(1620,'speed',1.45));
+    o.push(Pad(1920,-26)); addSpikes(o, 2200, 5); o.push(Por(2650,'ufo'));
+    o.push(Hole(2860, 600)); o.push(Por(3500,'gravity',-1)); addSpikes(o, 3850, 5);
+    o.push(Por(4300,'cube')); o.push(Por(4550,'gravity',1)); o.push(Por(4800,'mini',false));
+    addBlocks(o, 5050, 3, 3); addSpikes(o, 5350, 5); o.push(Orb(5820,GND-230,-22));
+    o.push(Por(6200,'teleport',6600)); addSpikes(o, 6300, 6);
+    addSpikes(o, 6900, 5); o.push(Por(7400,'normal')); addSpikes(o, 7780, 5);
+  } else if (id === 11) {
+    // ── Starfall Circuit ── UFO spam, gravity, then a cube recovery
+    addSpikes(o, 100, 4); o.push(Por(480,'ufo')); o.push(Por(800,'speed',1.5));
+    o.push(Hole(980, 760)); addSpikes(o, 1830, 4); o.push(Por(2200,'gravity',-1));
+    o.push(Hole(2380, 520)); addSpikes(o, 3000, 5); o.push(Por(3450,'gravity',1));
+    o.push(Por(3720,'cube')); o.push(Orb(4020,GND-240,-22)); addSpikes(o, 4340, 5);
+    o.push(Por(4820,'mini',true)); addSpikes(o, 5150, 5); o.push(Orb(5570,GND-145,-16));
+    o.push(Por(5900,'ufo')); o.push(Por(6200,'teleport',6550)); o.push(Hole(6300, 620));
+    addSpikes(o, 6900, 6); o.push(Por(7420,'cube')); o.push(Por(7600,'normal')); addSpikes(o, 7960, 5);
+  } else if (id === 12) {
+    // ── Neon Reactor ── late speed surge and dense orb gates
+    o.push(Por(260,'speed',1.55)); addSpikes(o, 520, 5); o.push(Orb(980,GND-235,-22));
+    addSpikes(o, 1280, 4); o.push(Por(1700,'gravity',-1)); addBlocks(o, 2000, 4, 3);
+    addSpikes(o, 2480, 5); o.push(Por(2900,'gravity',1)); o.push(Por(3180,'ufo'));
+    o.push(Hole(3400, 700)); addSpikes(o, 4200, 5); o.push(Por(4680,'cube'));
+    o.push(Orb(4960,GND-245,-23)); o.push(Orb(5350,GND-220,-21)); addSpikes(o, 5650, 6);
+    o.push(Por(6180,'mini',true)); addSpikes(o, 6500, 6); o.push(Pad(7060,-31));
+    o.push(Hole(7200, 430)); o.push(Por(7740,'normal')); addSpikes(o, 8050, 6);
+  } else if (id === 13) {
+    // ── Void Corridor ── teleport fake-outs and reversed UFO gravity
+    addSpikes(o, 100, 5); o.push(Por(560,'teleport',980)); addSpikes(o, 660, 6);
+    o.push(Por(1200,'ufo')); o.push(Por(1500,'gravity',-1)); o.push(Hole(1650, 740));
+    addSpikes(o, 2500, 6); o.push(Por(3000,'speed',1.65)); o.push(Por(3300,'gravity',1));
+    o.push(Por(3580,'cube')); o.push(Orb(3860,GND-250,-24)); addBlocks(o, 4240, 4, 3);
+    addSpikes(o, 4680, 6); o.push(Por(5200,'mini',true)); o.push(Por(5480,'teleport',5900));
+    addSpikes(o, 5600, 8); o.push(Por(6100,'ufo')); o.push(Hole(6300, 620));
+    o.push(Por(7000,'cube')); o.push(Por(7280,'mini',false)); addSpikes(o, 7550, 7);
+    o.push(Por(8200,'normal')); addSpikes(o, 8500, 5);
+  } else if (id === 14) {
+    // ── Mythic Machine ── long, fast, mixed-mode endurance
+    o.push(Por(180,'speed',1.7)); addSpikes(o, 430, 5); o.push(Orb(850,GND-245,-23));
+    o.push(Por(1160,'mini',true)); addSpikes(o, 1450, 6); o.push(Por(1900,'ufo'));
+    o.push(Hole(2100, 820)); o.push(Por(3000,'gravity',-1)); addSpikes(o, 3300, 6);
+    o.push(Por(3800,'teleport',4230)); addSpikes(o, 3950, 8); o.push(Por(4420,'gravity',1));
+    o.push(Por(4700,'cube')); o.push(Por(4920,'mini',false)); addSpikes(o, 5200, 7);
+    o.push(Orb(5790,GND-255,-25)); addSpikes(o, 6120, 6); o.push(Por(6650,'ufo'));
+    o.push(Hole(6880, 760)); addSpikes(o, 7750, 7); o.push(Por(8350,'cube'));
+    o.push(Pad(8620,-33)); addSpikes(o, 8950, 7); o.push(Por(9550,'normal')); addSpikes(o, 9900, 6);
+  } else if (id === 15) {
+    // ── Lucky Magic Star ── final chest gauntlet: every portal, tiny margins
+    o.push(Por(140,'speed',1.8)); addSpikes(o, 380, 6); o.push(Orb(850,GND-255,-24));
+    o.push(Por(1180,'ufo')); o.push(Hole(1400, 900)); o.push(Por(2380,'gravity',-1));
+    addSpikes(o, 2700, 7); o.push(Por(3260,'teleport',3700)); addSpikes(o, 3400, 9);
+    o.push(Por(3900,'gravity',1)); o.push(Por(4180,'cube')); o.push(Por(4400,'mini',true));
+    addSpikes(o, 4700, 7); o.push(Orb(5280,GND-150,-17)); o.push(Por(5700,'ufo'));
+    o.push(Por(6000,'speed',1.95)); o.push(Hole(6220, 940)); addSpikes(o, 7280, 8);
+    o.push(Por(7900,'gravity',-1)); o.push(Por(8200,'teleport',8650)); addSpikes(o, 8350, 8);
+    o.push(Por(8900,'gravity',1)); o.push(Por(9180,'cube')); o.push(Por(9400,'mini',false));
+    addSpikes(o, 9700, 8); o.push(Pad(10400,-34)); o.push(Hole(10560, 520));
+    addSpikes(o, 11200, 8); o.push(Por(11800,'normal')); addSpikes(o, 12150, 7);
   }
   return o;
 }
@@ -144,10 +306,22 @@ const CONFIGS = [
   { id:3, name:'Polargeist',     sub:'Orb Mastery',     clr:'#00ddff', bg:['#001828','#003050'], gClr:'#002a40', gLine:'#00ccff', speed:5.5, manaR:140, hasStar:true  },
   { id:4, name:'Dry Out',        sub:'No Mercy',        clr:'#ff3344', bg:['#180005','#300010'], gClr:'#200008', gLine:'#ff2244', speed:6.8, manaR:210, hasStar:false },
   { id:5, name:'Base After Base',sub:'Insane',          clr:'#aa44ff', bg:['#0c001e','#180038'], gClr:'#12002a', gLine:'#aa44ff', speed:8.0, manaR:320, hasStar:true  },
+  { id:6, name:'Portal Primer',  sub:'Mode Switching',  clr:'#44ff9a', bg:['#00140d','#00311e'], gClr:'#001d14', gLine:'#44ff9a', speed:8.6, manaR:430, hasStar:true  },
+  { id:7, name:'UFO Alley',      sub:'Tap Control',     clr:'#ffdd55', bg:['#170d00','#3a2600'], gClr:'#221400', gLine:'#ffdd55', speed:9.2, manaR:560, hasStar:false },
+  { id:8, name:'Gravity Switch', sub:'Ceiling Runs',    clr:'#56b7ff', bg:['#001020','#00284b'], gClr:'#001b31', gLine:'#56b7ff', speed:9.8, manaR:720, hasStar:true  },
+  { id:9, name:'Teleport Temple',sub:'Warp Traps',      clr:'#ff66aa', bg:['#180012','#3a0029'], gClr:'#240018', gLine:'#ff66aa', speed:10.4, manaR:900, hasStar:false },
+  { id:10,name:'Mini Mayhem',    sub:'Tiny Windows',    clr:'#aaff44', bg:['#071400','#183300'], gClr:'#0b2100', gLine:'#aaff44', speed:11.0, manaR:1120,hasStar:true  },
+  { id:11,name:'Starfall Circuit',sub:'UFO Chains',     clr:'#ff8844', bg:['#170500','#371000'], gClr:'#220a00', gLine:'#ff8844', speed:11.8, manaR:1360,hasStar:true  },
+  { id:12,name:'Neon Reactor',   sub:'Orb Gates',       clr:'#00ffaa', bg:['#001411','#00332a'], gClr:'#001f1a', gLine:'#00ffaa', speed:12.6, manaR:1640,hasStar:false },
+  { id:13,name:'Void Corridor',  sub:'Portal Tricks',   clr:'#cf79ff', bg:['#090014','#220034'], gClr:'#140021', gLine:'#cf79ff', speed:13.4, manaR:1960,hasStar:true, len:9000 },
+  { id:14,name:'Mythic Machine', sub:'Endurance',       clr:'#ffcc33', bg:['#120d00','#302600'], gClr:'#1c1500', gLine:'#ffcc33', speed:14.2, manaR:2320,hasStar:false, len:10400 },
+  { id:15,name:'Lucky Magic Star',sub:'Final Gauntlet', clr:'#ff4fd8', bg:['#100015','#31003a'], gClr:'#19001f', gLine:'#ff4fd8', speed:15.0, manaR:2750,hasStar:true, len:12600 },
 ];
 
+const levelLen = () => cfg?.len || LEVEL_LEN;
+
 // ─── State ────────────────────────────────────────────────────────────────────
-let state  = 'menu';   // menu | shop | playing | dead | complete
+let state  = 'menu';   // menu | shop | outfits | playing | dead | complete
 let cfg    = null;     // current level config
 let lvlObjs = [];      // world objects for current level
 let worldX = 0;
@@ -161,6 +335,12 @@ let djUsed = false;
 let orbOver = null;    // orb player is touching
 let lastEarned = 0;
 let completeLock = 0;
+let playerMode = 'cube';
+let gravityDir = 1;
+let portalSpeed = 1;
+let portalMini = false;
+let lastChest = null;
+let outfitSlot = 'hat';
 
 const player = { x:P_X, y:GND-P_SIZE, vy:0, rot:0, onGround:true, trail:[] };
 
@@ -177,6 +357,7 @@ function startLevel(c) {
   worldX = 0; frame = 0; bgOff = 0;
   Object.assign(player, { y:GND-P_SIZE, vy:0, rot:0, onGround:true, trail:[] });
   parts = []; orbOver = null;
+  playerMode = 'cube'; gravityDir = 1; portalSpeed = 1; portalMini = false; lastChest = null;
   shieldHP = owned.includes('shield') ? 1 : 0;
   djUsed = false;
   initStars();
@@ -190,7 +371,7 @@ function onJump() {
   if (state !== 'playing')  return;
 
   if (orbOver) {
-    player.vy = orbOver.boost;
+    player.vy = orbOver.boost * gravityDir;
     player.onGround = false;
     orbOver.used = true;
     burstOrb(orbOver._sx, orbOver.wy);
@@ -198,20 +379,27 @@ function onJump() {
     djUsed = false;
     return;
   }
+  if (playerMode === 'ufo') {
+    player.vy = -12.5 * gravityDir;
+    player.onGround = false;
+    djUsed = false;
+    return;
+  }
   if (player.onGround) {
-    player.vy = JUMP_FORCE; player.onGround = false; djUsed = false;
+    player.vy = JUMP_FORCE * gravityDir; player.onGround = false; djUsed = false;
   } else if (owned.includes('double_jump') && !djUsed) {
-    player.vy = JUMP_FORCE * 0.85; djUsed = true;
+    player.vy = JUMP_FORCE * 0.85 * gravityDir; djUsed = true;
   }
 }
 
 document.addEventListener('keydown', e => {
   if (e.code === 'Space') { e.preventDefault(); onJump(); }
-  if (e.code === 'Escape' && (state==='playing'||state==='dead'||state==='complete')) state='menu';
+  if (e.code === 'Escape' && (state==='playing'||state==='dead'||state==='complete'||state==='shop'||state==='outfits')) state='menu';
 });
 canvas.addEventListener('click', e => {
   if (state === 'menu') { handleMenuClick(e); return; }
   if (state === 'shop') { handleShopClick(e); return; }
+  if (state === 'outfits') { handleOutfitClick(e); return; }
   onJump();
 });
 canvas.addEventListener('mousemove', e => {
@@ -220,8 +408,13 @@ canvas.addEventListener('mousemove', e => {
   if (state === 'menu') {
     CONFIGS.forEach((_,i) => { const r=cardRect(i); if (inRect(mx,my,r)) mHover=i; });
     if (inRect(mx,my,shopBtnR())) mHover = 99;
+    if (inRect(mx,my,outfitBtnR())) mHover = 98;
   } else if (state === 'shop') {
     SHOP.forEach((_,i) => { if (inRect(mx,my,shopItemR(i))) mHover=i; });
+    if (inRect(mx,my,backBtnR())) mHover=99;
+  } else if (state === 'outfits') {
+    ['hat','base','color1','color2'].forEach((slot,i) => { if (inRect(mx,my,outfitTabR(i))) { mHover=200+i; outfitSlot=slot; } });
+    outfitItemsForSlot(outfitSlot).forEach((_,i) => { if (inRect(mx,my,outfitItemR(i))) mHover=i; });
     if (inRect(mx,my,backBtnR())) mHover=99;
   }
 });
@@ -256,14 +449,42 @@ function trailClr(t) {
   return '#ffaa00';
 }
 
+// ─── Lucky Magic Star chest rewards ──────────────────────────────────────────
+function pickOutfit(rarity) {
+  const pool = outfitList(rarity);
+  const fresh = pool.filter(o => !outfitOwned.includes(o.id));
+  const item = (fresh.length ? fresh : pool)[Math.floor(Math.random() * pool.length)];
+  if (!item) return { name:'Mana Shards', rarity, duplicate:true, mana:75 };
+  if (!outfitOwned.includes(item.id)) {
+    outfitOwned.push(item.id);
+    return item;
+  }
+  const manaPrize = { common:50, rare:90, epic:150, legendary:250, mythic:400 }[rarity] || 75;
+  mana += manaPrize; saveMana();
+  return { ...item, duplicate:true, mana:manaPrize };
+}
+
+function rollChest() {
+  if (Math.random() >= 0.25) return null;
+  const r = Math.random();
+  const star = r < 0.40 ? 1 : r < 0.70 ? 2 : r < 0.85 ? 3 : r < 0.95 ? 4 : 5;
+  const map = { 1:['common'], 2:['rare'], 3:['epic'], 4:['legendary'], 5:['mythic','legendary','epic'] };
+  const rewards = map[star].map(pickOutfit);
+  chestHistory.opened++;
+  chestHistory.stars[star] = (chestHistory.stars[star] || 0) + 1;
+  saveProg();
+  return { star, rewards };
+}
+
 // ─── World → screen ───────────────────────────────────────────────────────────
 const wx2sx = obj => obj.wx - worldX + P_X;
 
 // ─── Collision ────────────────────────────────────────────────────────────────
 function hits(obj) {
-  const m = owned.includes('mini') ? 10 : 5;
+  const m = (owned.includes('mini') || portalMini) ? 10 : 5;
   const px=player.x+m, py=player.y+m, pw=P_SIZE-m*2, ph=P_SIZE-m*2;
   const sx = wx2sx(obj);
+  if (obj.type==='portal'||obj.type==='pad') return false;
   if (obj.type==='spike') {
     const hx=sx+7, hy=obj.wy-obj.h+5, hw=obj.w-14, hh=obj.h-5;
     return px<hx+hw && px+pw>hx && py<hy+hh && py+ph>hy;
@@ -271,12 +492,33 @@ function hits(obj) {
   return px<sx+obj.w && px+pw>sx && py<obj.wy+obj.h && py+ph>obj.wy;
 }
 
+function playerBox(pad=4) {
+  return { x:player.x+pad, y:player.y+pad, w:P_SIZE-pad*2, h:P_SIZE-pad*2 };
+}
+
+function rectHit(a,b) {
+  return a.x < b.x+b.w && a.x+a.w > b.x && a.y < b.y+b.h && a.y+a.h > b.y;
+}
+
+function triggerPortal(obj) {
+  obj.used = true;
+  if (obj.kind === 'ufo') playerMode = 'ufo';
+  if (obj.kind === 'cube') playerMode = 'cube';
+  if (obj.kind === 'gravity') gravityDir = obj.value;
+  if (obj.kind === 'speed') portalSpeed = obj.value;
+  if (obj.kind === 'mini') portalMini = !!obj.value;
+  if (obj.kind === 'normal') { playerMode = 'cube'; gravityDir = 1; portalSpeed = 1; portalMini = false; }
+  if (obj.kind === 'teleport') worldX = Math.max(worldX, obj.value);
+  player.vy *= 0.25;
+  burstOrb(player.x+P_SIZE/2, player.y+P_SIZE/2);
+}
+
 // ─── Update ───────────────────────────────────────────────────────────────────
 function update() {
   if (completeLock > 0) completeLock--;
   if (state !== 'playing') return;
   frame++;
-  const spd = cfg.speed + frame*0.0015;
+  const spd = (cfg.speed + frame*0.0015) * portalSpeed;
   worldX += spd;
   bgOff   = (bgOff + spd*0.5) % 44;
 
@@ -284,24 +526,32 @@ function update() {
   stars.forEach(s => { s.x -= spd*0.2; s.t += 0.04; if (s.x<-2) { s.x=canvas.width+2; s.y=Math.random()*GND; } });
 
   // physics
-  player.vy += GRAVITY;
+  player.vy += GRAVITY * gravityDir * (playerMode === 'ufo' ? 0.72 : 1);
   player.y  += player.vy;
 
   // check if player is over a hole
   const playerWX = worldX;
   const overHole = lvlObjs.some(o => o.type==='hole' && playerWX + P_SIZE > o.wx+4 && playerWX < o.wx+o.w-4);
+  const floorY = GND-P_SIZE;
+  const ceilY = CEIL;
 
-  if (player.y > canvas.height) {
-    // fell into pit
+  if (player.y > canvas.height || player.y < -P_SIZE*2) {
     explode(player.x+P_SIZE/2, canvas.height-20);
     attempts++; state='dead'; return;
   }
-  if (!overHole && player.y >= GND-P_SIZE) {
-    player.y = GND-P_SIZE; player.vy=0; player.onGround=true; djUsed=false;
-    player.rot = Math.round(player.rot/90)*90;
-  } else if (overHole && player.y >= GND-P_SIZE) {
-    player.onGround=false; player.rot+=5.5;
-  } else { player.onGround=false; player.rot+=5.5; }
+  if (gravityDir > 0) {
+    if (!overHole && player.y >= floorY) {
+      player.y = floorY; player.vy=0; player.onGround=true; djUsed=false;
+      player.rot = Math.round(player.rot/90)*90;
+    } else if (overHole && player.y >= floorY) {
+      player.onGround=false; player.rot+=playerMode==='ufo'?2.2:5.5;
+    } else { player.onGround=false; player.rot+=playerMode==='ufo'?2.2:5.5; }
+  } else {
+    if (player.y <= ceilY) {
+      player.y = ceilY; player.vy=0; player.onGround=true; djUsed=false;
+      player.rot = Math.round(player.rot/90)*90;
+    } else { player.onGround=false; player.rot-=playerMode==='ufo'?2.2:5.5; }
+  }
 
   // trail
   player.trail.unshift({x:player.x,y:player.y});
@@ -318,9 +568,24 @@ function update() {
     }
   }
 
+  // portal and jump pad triggers
+  const pbox = playerBox((owned.includes('mini') || portalMini) ? 10 : 5);
+  for (const obj of lvlObjs) {
+    const sx=wx2sx(obj);
+    if (sx+120<0||sx>canvas.width+80) continue;
+    if (obj.type === 'portal' && !obj.used) {
+      if (rectHit(pbox,{x:sx,y:obj.wy,w:obj.w,h:obj.h})) triggerPortal(obj);
+    } else if (obj.type === 'pad') {
+      if (!obj.used && rectHit(pbox,{x:sx,y:obj.wy,w:obj.w,h:obj.h})) {
+        obj.used = true; player.vy = obj.boost * gravityDir; player.onGround = false; burstOrb(sx+obj.w/2,obj.wy);
+      }
+      if (sx < -80) obj.used = false;
+    }
+  }
+
   // collision
   for (const obj of lvlObjs) {
-    if (obj.type==='orb') continue;
+    if (obj.type==='orb'||obj.type==='portal'||obj.type==='pad') continue;
     const sx=wx2sx(obj);
     if (sx+150<0||sx>canvas.width+50) continue;
     if (hits(obj)) {
@@ -331,11 +596,12 @@ function update() {
   }
 
   // level end
-  if (worldX > LEVEL_LEN) {
+  if (worldX > levelLen()) {
     let earn = cfg.manaR;
     if (owned.includes('mana_boost')) earn = Math.floor(earn*1.5);
     mana += earn; lastEarned = earn; completeLock = 90; saveMana();
-    if (cfg.id < 5 && !unlocked.includes(cfg.id+1)) { unlocked.push(cfg.id+1); saveProg(); }
+    lastChest = rollChest();
+    if (cfg.id < CONFIGS.length && !unlocked.includes(cfg.id+1)) { unlocked.push(cfg.id+1); saveProg(); }
     state = 'complete'; return;
   }
 
@@ -389,7 +655,11 @@ function drawGnd() {
 }
 function drawPlayer() {
   if (state==='dead') return;
-  const mini=owned.includes('mini'), sz=mini?P_SIZE*0.7:P_SIZE, off=(P_SIZE-sz)/2;
+  const mini=owned.includes('mini') || portalMini, sz=mini?P_SIZE*0.7:P_SIZE, off=(P_SIZE-sz)/2;
+  const primary = outfitColor(outfitEquip.color1);
+  const secondary = outfitColor(outfitEquip.color2);
+  const base = outfitEquip.base;
+  const hat = outfitEquip.hat;
   // trail
   player.trail.forEach((t,i)=>{
     ctx.save(); ctx.globalAlpha=(1-i/player.trail.length)*0.38;
@@ -401,15 +671,62 @@ function drawPlayer() {
   ctx.save();
   ctx.translate(player.x+P_SIZE/2,player.y+P_SIZE/2);
   ctx.rotate(player.rot*Math.PI/180);
-  ctx.shadowColor=cfg.clr; ctx.shadowBlur=20;
-  ctx.fillStyle=cfg.clr; ctx.fillRect(-sz/2,-sz/2,sz,sz);
+  ctx.shadowColor=primary; ctx.shadowBlur=20;
+  if (playerMode === 'ufo') {
+    ctx.fillStyle=primary;
+    ctx.beginPath(); ctx.ellipse(0,4,sz*0.55,sz*0.24,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle=secondary;
+    ctx.beginPath(); ctx.ellipse(0,-6,sz*0.32,sz*0.22,0,Math.PI,0); ctx.fill();
+    ctx.strokeStyle=primary; ctx.lineWidth=2; ctx.stroke();
+    ctx.fillStyle='#fff';
+    [-0.25,0,0.25].forEach(dx=>{ctx.beginPath();ctx.arc(dx*sz,6,sz*.045,0,Math.PI*2);ctx.fill();});
+    ctx.restore();
+    return;
+  }
+  ctx.fillStyle=primary; ctx.fillRect(-sz/2,-sz/2,sz,sz);
   ctx.shadowBlur=0;
-  ctx.fillStyle=cfg.bg[1]; ctx.fillRect(-sz/2+6,-sz/2+6,sz-12,sz-12);
-  ctx.fillStyle=cfg.clr;
+  ctx.fillStyle=secondary; ctx.fillRect(-sz/2+6,-sz/2+6,sz-12,sz-12);
+  if (base === 'base_round') {
+    ctx.fillStyle=primary; ctx.beginPath(); ctx.arc(0,0,sz*0.36,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle=secondary; ctx.beginPath(); ctx.arc(0,0,sz*0.22,0,Math.PI*2); ctx.fill();
+  } else if (base === 'base_spike' || base === 'base_dragon') {
+    ctx.fillStyle=primary;
+    for (let i=0;i<4;i++) {
+      ctx.rotate(Math.PI/2);
+      ctx.beginPath(); ctx.moveTo(0,-sz*.66); ctx.lineTo(-sz*.12,-sz*.46); ctx.lineTo(sz*.12,-sz*.46); ctx.closePath(); ctx.fill();
+    }
+  } else if (base === 'base_tech' || base === 'base_cosmic') {
+    ctx.strokeStyle=primary; ctx.lineWidth=3; ctx.strokeRect(-sz/2+10,-sz/2+10,sz-20,sz-20);
+    ctx.strokeStyle=base === 'base_cosmic' ? '#ffffffaa' : secondary; ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.moveTo(-sz*.32,0); ctx.lineTo(sz*.32,0); ctx.moveTo(0,-sz*.32); ctx.lineTo(0,sz*.32); ctx.stroke();
+  } else if (base === 'base_crystal') {
+    ctx.fillStyle=primary+'cc'; ctx.beginPath();
+    ctx.moveTo(0,-sz*.42); ctx.lineTo(sz*.38,0); ctx.lineTo(0,sz*.42); ctx.lineTo(-sz*.38,0); ctx.closePath(); ctx.fill();
+  }
+  ctx.fillStyle=primary;
   ctx.beginPath();ctx.arc(0,0,sz*0.14,0,Math.PI*2);ctx.fill();
   [[-sz*.28,-sz*.28],[sz*.28,-sz*.28],[-sz*.28,sz*.28],[sz*.28,sz*.28]].forEach(([dx,dy])=>{
     ctx.beginPath();ctx.arc(dx,dy,sz*.07,0,Math.PI*2);ctx.fill();
   });
+  if (hat !== 'hat_none') {
+    ctx.fillStyle=primary; ctx.strokeStyle=secondary; ctx.lineWidth=2;
+    if (hat === 'hat_cap' || hat === 'hat_beanie') {
+      ctx.fillRect(-sz*.28,-sz*.69,sz*.56,sz*.16);
+      if (hat === 'hat_cap') ctx.fillRect(sz*.18,-sz*.62,sz*.28,sz*.07);
+    } else if (hat === 'hat_crown' || hat === 'hat_void') {
+      ctx.beginPath();
+      ctx.moveTo(-sz*.34,-sz*.54); ctx.lineTo(-sz*.22,-sz*.78); ctx.lineTo(0,-sz*.58);
+      ctx.lineTo(sz*.22,-sz*.78); ctx.lineTo(sz*.34,-sz*.54); ctx.closePath(); ctx.fill(); ctx.stroke();
+    } else if (hat === 'hat_viking') {
+      ctx.beginPath(); ctx.arc(-sz*.24,-sz*.56,sz*.16,Math.PI*.9,Math.PI*1.9); ctx.stroke();
+      ctx.beginPath(); ctx.arc(sz*.24,-sz*.56,sz*.16,Math.PI*1.1,Math.PI*.1,true); ctx.stroke();
+    } else if (hat === 'hat_halo') {
+      ctx.strokeStyle=primary; ctx.lineWidth=3;
+      ctx.beginPath(); ctx.ellipse(0,-sz*.68,sz*.34,sz*.09,0,0,Math.PI*2); ctx.stroke();
+    } else if (hat === 'hat_wizard') {
+      ctx.beginPath(); ctx.moveTo(-sz*.3,-sz*.53); ctx.lineTo(0,-sz*.92); ctx.lineTo(sz*.3,-sz*.53); ctx.closePath(); ctx.fill(); ctx.stroke();
+    }
+  }
   if (shieldHP>0) {
     ctx.strokeStyle='#88ffff'; ctx.lineWidth=2.5;
     ctx.beginPath();ctx.arc(0,0,sz/2+8,0,Math.PI*2);ctx.stroke();
@@ -445,6 +762,33 @@ function drawOrb(obj,sx) {
   }
   ctx.restore();
 }
+function portalClr(obj) {
+  return {
+    ufo:'#ffdd55', cube:'#44ff9a', gravity:obj.value<0?'#ff66aa':'#56b7ff',
+    speed:'#ff8844', mini:obj.value?'#aaff44':'#ffffff', normal:'#ddddff', teleport:'#cf79ff'
+  }[obj.kind] || '#ffffff';
+}
+function drawPortal(obj,sx) {
+  const c=portalClr(obj), pulse=1+Math.sin(frame*0.12)*0.04;
+  ctx.save();
+  ctx.translate(sx+obj.w/2,obj.wy+obj.h/2);
+  ctx.shadowColor=c; ctx.shadowBlur=24;
+  ctx.strokeStyle=c; ctx.lineWidth=4;
+  ctx.beginPath(); ctx.ellipse(0,0,obj.w*0.55*pulse,obj.h*0.52*pulse,0,0,Math.PI*2); ctx.stroke();
+  ctx.shadowBlur=0; ctx.fillStyle=c+'33';
+  ctx.beginPath(); ctx.ellipse(0,0,obj.w*0.38,obj.h*0.38,0,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#fff'; ctx.font='bold 9px Arial'; ctx.textAlign='center';
+  const label = obj.kind==='gravity' ? (obj.value<0?'GRV':'FLO') : obj.kind.slice(0,3).toUpperCase();
+  ctx.fillText(label,0,3);
+  ctx.restore();
+}
+function drawPad(obj,sx) {
+  const c='#ffff55';
+  ctx.save(); ctx.shadowColor=c; ctx.shadowBlur=12;
+  ctx.fillStyle=obj.used?'#665500':c; ctx.fillRect(sx,obj.wy,obj.w,obj.h);
+  ctx.strokeStyle='#fff6aa'; ctx.lineWidth=2; ctx.strokeRect(sx,obj.wy,obj.w,obj.h);
+  ctx.restore();
+}
 function drawObjs() {
   lvlObjs.forEach(obj=>{
     const sx=wx2sx(obj);
@@ -464,6 +808,10 @@ function drawObjs() {
       ctx.restore();
     } else if (obj.type==='orb') {
       drawOrb(obj,sx);
+    } else if (obj.type==='portal') {
+      drawPortal(obj,sx);
+    } else if (obj.type==='pad') {
+      drawPad(obj,sx);
     }
   });
 }
@@ -476,7 +824,7 @@ function drawParts() {
   });
 }
 function drawHUD() {
-  const prog=Math.min(worldX/LEVEL_LEN,1);
+  const prog=Math.min(worldX/levelLen(),1);
   const bx=canvas.width/2-170,by=14,bw=340,bh=13;
   ctx.fillStyle='rgba(0,0,0,0.45)'; ctx.fillRect(bx,by,bw,bh);
   const bg=ctx.createLinearGradient(bx,0,bx+bw,0);
@@ -490,7 +838,7 @@ function drawHUD() {
   ctx.fillStyle='#fff'; ctx.font='bold 17px Arial'; ctx.textAlign='left';
   ctx.fillText(cfg.name,15,43); ctx.shadowBlur=0;
   ctx.fillStyle='rgba(255,255,255,0.45)'; ctx.font='12px Arial';
-  ctx.fillText(`Attempt ${attempts}`,15,60);
+  ctx.fillText(`Attempt ${attempts}  |  ${playerMode.toUpperCase()}${gravityDir<0?' FLIPPED':''}`,15,60);
 
   ctx.textAlign='right'; ctx.fillStyle='#88aaff'; ctx.font='bold 15px Arial';
   ctx.fillText(`✦ ${mana}`,canvas.width-12,43);
@@ -521,12 +869,20 @@ function drawOverlay(title,tClr,gClr,line1,line2) {
 let mHover = -1;
 
 function cardRect(i) {
-  const cw=148,ch=162,gap=11,total=5*cw+4*gap;
-  return { x:(canvas.width-total)/2+i*(cw+gap), y:195, w:cw, h:ch };
+  const cols=5,cw=154,ch=82,gap=12,total=cols*cw+(cols-1)*gap;
+  return { x:(canvas.width-total)/2+(i%cols)*(cw+gap), y:128+Math.floor(i/cols)*(ch+gap), w:cw, h:ch };
 }
-function shopBtnR()  { return {x:canvas.width/2-72,y:408,w:144,h:44}; }
+function shopBtnR()  { return {x:canvas.width/2-156,y:424,w:144,h:44}; }
+function outfitBtnR(){ return {x:canvas.width/2+12,y:424,w:144,h:44}; }
 function shopItemR(i){ const cols=4,iw=194,ih=92,gap=10,total=cols*iw+(cols-1)*gap,sx=(canvas.width-total)/2; return {x:sx+(i%cols)*(iw+gap),y:118+Math.floor(i/cols)*(ih+gap),w:iw,h:ih}; }
 function backBtnR()  { return {x:20,y:canvas.height-52,w:100,h:34}; }
+function outfitTabR(i){ const w=118,h=34,gap=8,total=4*w+3*gap,sx=(canvas.width-total)/2; return {x:sx+i*(w+gap),y:86,w,h}; }
+function outfitItemR(i){ const cols=4,iw=188,ih=66,gap=10,total=cols*iw+(cols-1)*gap,sx=(canvas.width-total)/2; return {x:sx+(i%cols)*(iw+gap),y:140+Math.floor(i/cols)*(ih+gap),w:iw,h:ih}; }
+function outfitItemsForSlot(slot) {
+  if (slot === 'hat') return OUTFITS.filter(o => o.type === 'hat');
+  if (slot === 'base') return OUTFITS.filter(o => o.type === 'base');
+  return OUTFITS.filter(o => o.type === 'color');
+}
 
 function canvasMouse(e) {
   const r=canvas.getBoundingClientRect();
@@ -538,6 +894,7 @@ function handleMenuClick(e) {
   const {mx,my}=canvasMouse(e);
   CONFIGS.forEach((c,i)=>{ if(inRect(mx,my,cardRect(i))&&unlocked.includes(c.id)){ startLevel(c); attempts=0; } });
   if (inRect(mx,my,shopBtnR())) state='shop';
+  if (inRect(mx,my,outfitBtnR())) state='outfits';
 }
 function handleShopClick(e) {
   const {mx,my}=canvasMouse(e);
@@ -549,6 +906,18 @@ function handleShopClick(e) {
       return;
     }
     if (mana>=item.cost) { mana-=item.cost; owned.push(item.id); if(item.type==='trail') equipped.trail=item.id; saveMana(); saveProg(); }
+  });
+}
+
+function handleOutfitClick(e) {
+  const {mx,my}=canvasMouse(e);
+  if (inRect(mx,my,backBtnR())) { state='menu'; return; }
+  ['hat','base','color1','color2'].forEach((slot,i) => { if (inRect(mx,my,outfitTabR(i))) outfitSlot=slot; });
+  outfitItemsForSlot(outfitSlot).forEach((item,i)=>{
+    if (!inRect(mx,my,outfitItemR(i)) || !outfitOwned.includes(item.id)) return;
+    if (outfitSlot === 'color1' || outfitSlot === 'color2') outfitEquip[outfitSlot] = item.id;
+    else outfitEquip[item.type] = item.id;
+    saveProg();
   });
 }
 
@@ -575,8 +944,8 @@ function drawMenu() {
   ctx.textAlign='center'; ctx.shadowColor='#ffcc00'; ctx.shadowBlur=28;
   ctx.fillStyle='#ffcc00'; ctx.font='bold 46px Arial';
   ctx.fillText('GEOMETRY DASH',canvas.width/2,75); ctx.shadowBlur=0;
-  ctx.fillStyle='rgba(255,255,255,0.5)'; ctx.font='15px Arial';
-  ctx.fillText('Select a level to play',canvas.width/2,108);
+  ctx.fillStyle='rgba(255,255,255,0.5)'; ctx.font='14px Arial';
+  ctx.fillText('Select a level to play',canvas.width/2,104);
 
   // mana badge
   ctx.textAlign='right'; ctx.shadowColor='#4466ff'; ctx.shadowBlur=10;
@@ -596,31 +965,34 @@ function drawMenu() {
     ctx.restore();
 
     ctx.textAlign='center';
-    ctx.fillStyle=locked?'#444':c.clr; ctx.font='bold 30px Arial';
-    ctx.fillText(c.id,card.x+card.w/2,cy+52);
+    ctx.fillStyle=locked?'#444':c.clr; ctx.font='bold 24px Arial';
+    ctx.fillText(c.id,card.x+24,cy+36);
 
-    ctx.fillStyle=locked?'#444':'#fff'; ctx.font='bold 12px Arial';
-    ctx.fillText(c.name,card.x+card.w/2,cy+76);
+    ctx.textAlign='left';
+    ctx.fillStyle=locked?'#444':'#fff'; ctx.font='bold 11px Arial';
+    ctx.fillText(c.name,card.x+46,cy+26);
 
     ctx.fillStyle=locked?'#333':'rgba(255,255,255,0.45)'; ctx.font='10px Arial';
-    ctx.fillText(c.sub,card.x+card.w/2,cy+93);
+    ctx.fillText(c.sub,card.x+46,cy+42);
 
     if (!locked) {
       ctx.fillStyle='rgba(255,255,255,0.25)'; ctx.font='10px Arial';
-      ctx.fillText(`Speed ${c.speed.toFixed(1)}×`,card.x+card.w/2,cy+112);
+      ctx.fillText(`Speed ${c.speed.toFixed(1)}x`,card.x+46,cy+59);
       ctx.fillStyle=c.clr+'bb'; ctx.font='bold 11px Arial';
-      ctx.fillText(`✦ ${c.manaR}`,card.x+card.w/2,cy+130);
+      ctx.fillText(`✦ ${c.manaR}`,card.x+104,cy+59);
       if (hov) {
+        ctx.textAlign='center';
         ctx.fillStyle='rgba(255,255,255,0.6)'; ctx.font='10px Arial';
-        ctx.fillText('Click to play!',card.x+card.w/2,cy+148);
+        ctx.fillText('Click to play',card.x+card.w/2,cy+75);
       }
     } else {
+      ctx.textAlign='center';
       ctx.fillStyle='#444'; ctx.font='24px Arial';
-      ctx.fillText('🔒',card.x+card.w/2,cy+130);
+      ctx.fillText('🔒',card.x+card.w-24,cy+55);
     }
   });
 
-  // shop button
+  // menu buttons
   const sb=shopBtnR(), shov=mHover===99;
   ctx.save(); ctx.shadowColor='#4466ff'; ctx.shadowBlur=shov?18:8;
   ctx.fillStyle=shov?'#1a3aaa':'#0e1e66'; rr(sb.x,sb.y,sb.w,sb.h,10); ctx.fill();
@@ -628,6 +1000,14 @@ function drawMenu() {
   ctx.restore();
   ctx.textAlign='center'; ctx.fillStyle='#fff'; ctx.font='bold 16px Arial';
   ctx.fillText('✦  SHOP',sb.x+sb.w/2,sb.y+sb.h/2+6);
+
+  const ob=outfitBtnR(), ohov=mHover===98;
+  ctx.save(); ctx.shadowColor='#ff4fd8'; ctx.shadowBlur=ohov?18:8;
+  ctx.fillStyle=ohov?'#8a1a70':'#45103c'; rr(ob.x,ob.y,ob.w,ob.h,10); ctx.fill();
+  ctx.strokeStyle='#ff4fd8'; ctx.lineWidth=1.5; rr(ob.x,ob.y,ob.w,ob.h,10); ctx.stroke();
+  ctx.restore();
+  ctx.fillStyle='#fff'; ctx.font='bold 16px Arial';
+  ctx.fillText('OUTFITS',ob.x+ob.w/2,ob.y+ob.h/2+6);
 
   ctx.fillStyle='rgba(255,255,255,0.18)'; ctx.font='11px Arial'; ctx.textAlign='center';
   ctx.fillText('SPACE / Click to jump  •  ESC to return',canvas.width/2,canvas.height-10);
@@ -677,6 +1057,86 @@ function drawShop() {
   ctx.fillText('← Back',back.x+back.w/2,back.y+back.h/2+5);
 }
 
+function drawMiniPreview(x,y,sz=54) {
+  const old = { ...outfitEquip };
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.shadowColor=outfitColor(outfitEquip.color1); ctx.shadowBlur=18;
+  ctx.fillStyle=outfitColor(outfitEquip.color1); ctx.fillRect(-sz/2,-sz/2,sz,sz);
+  ctx.shadowBlur=0; ctx.fillStyle=outfitColor(outfitEquip.color2); ctx.fillRect(-sz/2+8,-sz/2+8,sz-16,sz-16);
+  ctx.fillStyle=outfitColor(outfitEquip.color1);
+  ctx.beginPath();ctx.arc(0,0,sz*.13,0,Math.PI*2);ctx.fill();
+  if (old.hat !== 'hat_none') {
+    ctx.fillStyle=outfitColor(outfitEquip.color1);
+    if (old.hat === 'hat_halo') {
+      ctx.strokeStyle=outfitColor(outfitEquip.color1); ctx.lineWidth=3;
+      ctx.beginPath(); ctx.ellipse(0,-sz*.64,sz*.34,sz*.09,0,0,Math.PI*2); ctx.stroke();
+    } else {
+      ctx.fillRect(-sz*.28,-sz*.68,sz*.56,sz*.16);
+    }
+  }
+  ctx.restore();
+}
+
+function drawOutfits() {
+  const bg=ctx.createLinearGradient(0,0,0,canvas.height);
+  bg.addColorStop(0,'#090015'); bg.addColorStop(1,'#081629');
+  ctx.fillStyle=bg; ctx.fillRect(0,0,canvas.width,canvas.height);
+
+  ctx.textAlign='center'; ctx.shadowColor='#ff4fd8'; ctx.shadowBlur=18;
+  ctx.fillStyle='#ffb6ef'; ctx.font='bold 34px Arial'; ctx.fillText('OUTFITS',canvas.width/2,48);
+  ctx.shadowBlur=0; ctx.fillStyle='rgba(255,255,255,0.55)'; ctx.font='12px Arial';
+  ctx.fillText(`Lucky Magic Star chests opened: ${chestHistory.opened}`,canvas.width/2,68);
+
+  ['hat','base','color1','color2'].forEach((slot,i)=>{
+    const r=outfitTabR(i), active=outfitSlot===slot, hov=mHover===200+i;
+    ctx.save(); ctx.shadowColor=active?'#ff4fd8':'#4466ff'; ctx.shadowBlur=active||hov?14:4;
+    ctx.fillStyle=active?'#64124f':'#0c1640'; rr(r.x,r.y,r.w,r.h,8); ctx.fill();
+    ctx.strokeStyle=active?'#ff4fd8':'#4466ff'; ctx.lineWidth=active?2:1; rr(r.x,r.y,r.w,r.h,8); ctx.stroke();
+    ctx.restore();
+    ctx.fillStyle='#fff'; ctx.font='bold 12px Arial';
+    ctx.fillText(slot==='color1'?'PRIMARY':slot==='color2'?'SECONDARY':slot.toUpperCase(),r.x+r.w/2,r.y+22);
+  });
+
+  const items=outfitItemsForSlot(outfitSlot);
+  items.forEach((item,i)=>{
+    const r=outfitItemR(i), own=outfitOwned.includes(item.id), hov=mHover===i;
+    const equippedNow = outfitSlot==='color1'||outfitSlot==='color2' ? outfitEquip[outfitSlot]===item.id : outfitEquip[item.type]===item.id;
+    const rarity=RARITY[item.rarity];
+    ctx.save();
+    ctx.shadowColor=own?rarity.clr:'#111'; ctx.shadowBlur=hov?16:5;
+    ctx.fillStyle=own?(equippedNow?'#10251f':'#0b1023'):'#090910';
+    rr(r.x,r.y,r.w,r.h,8); ctx.fill();
+    ctx.strokeStyle=own?rarity.clr:'#24242c'; ctx.lineWidth=equippedNow?2:1; rr(r.x,r.y,r.w,r.h,8); ctx.stroke();
+    ctx.restore();
+
+    if (item.type==='color') {
+      ctx.fillStyle=own?item.color:'#1e1e25'; ctx.fillRect(r.x+12,r.y+16,28,28);
+      ctx.strokeStyle=own?'#ffffff55':'#333'; ctx.strokeRect(r.x+12,r.y+16,28,28);
+    } else {
+      ctx.fillStyle=own?rarity.clr:'#333'; ctx.font='bold 13px Arial'; ctx.textAlign='center';
+      ctx.fillText(own?item.icon:'LOCK',r.x+27,r.y+37);
+    }
+    ctx.textAlign='left';
+    ctx.fillStyle=own?'#fff':'#555'; ctx.font='bold 12px Arial'; ctx.fillText(item.name,r.x+52,r.y+23);
+    ctx.fillStyle=own?rarity.clr:'#444'; ctx.font='10px Arial'; ctx.fillText(rarity.label,r.x+52,r.y+39);
+    if (equippedNow) { ctx.fillStyle='#00ffaa'; ctx.font='bold 10px Arial'; ctx.fillText('EQUIPPED',r.x+52,r.y+55); }
+    else if (own) { ctx.fillStyle='rgba(255,255,255,0.4)'; ctx.font='10px Arial'; ctx.fillText('Click to equip',r.x+52,r.y+55); }
+  });
+
+  ctx.textAlign='center'; ctx.fillStyle='rgba(255,255,255,0.35)'; ctx.font='11px Arial';
+  ctx.fillText('Chests can drop after level clears: 25% chance, then 1-5 star rarity roll.',canvas.width/2,canvas.height-16);
+  drawMiniPreview(canvas.width-78,60,42);
+
+  const back=backBtnR(), bhov=mHover===99;
+  ctx.save(); ctx.shadowColor='#ff4455'; ctx.shadowBlur=bhov?14:5;
+  ctx.fillStyle=bhov?'#3a0a10':'#1a0508'; rr(back.x,back.y,back.w,back.h,8); ctx.fill();
+  ctx.strokeStyle='#ff4455'; ctx.lineWidth=1.5; rr(back.x,back.y,back.w,back.h,8); ctx.stroke();
+  ctx.restore();
+  ctx.textAlign='center'; ctx.fillStyle='#fff'; ctx.font='bold 13px Arial';
+  ctx.fillText('← Back',back.x+back.w/2,back.y+back.h/2+5);
+}
+
 // ─── Main loop ────────────────────────────────────────────────────────────────
 function loop() {
   ctx.clearRect(0,0,canvas.width,canvas.height);
@@ -686,15 +1146,17 @@ function loop() {
     drawMenu();
   } else if (state==='shop') {
     drawShop();
+  } else if (state==='outfits') {
+    drawOutfits();
   } else {
     drawBg(); drawGnd(); drawObjs(); drawPlayer(); drawParts(); drawHUD();
     if (state==='dead') {
       if (parts.length===0) {
         let earn = cfg.manaR;
         if (owned.includes('mana_boost')) earn = Math.floor(earn * 1.5);
-        const partial = Math.floor((worldX / LEVEL_LEN) * earn * 0.3);
+        const partial = Math.floor((worldX / levelLen()) * earn * 0.3);
         drawOverlay('YOU DIED','#ff4455','#ff2233',
-          `Attempt ${attempts}  |  ${Math.floor(worldX/LEVEL_LEN*100)}% reached`,
+          `Attempt ${attempts}  |  ${Math.floor(worldX/levelLen()*100)}% reached`,
           `Click or SPACE to retry  •  ESC for menu`);
       }
     }
@@ -726,18 +1188,36 @@ function loop() {
       ctx.fillText(`✦ +${lastEarned}`, canvas.width/2, by+56);
       ctx.shadowBlur=0;
 
+      if (lastChest) {
+        const starText = '★'.repeat(lastChest.star);
+        ctx.shadowColor=RARITY[lastChest.star===5?'mythic':lastChest.star===4?'legendary':lastChest.star===3?'epic':lastChest.star===2?'rare':'common'].clr;
+        ctx.shadowBlur=18;
+        ctx.fillStyle='#fff'; ctx.font='bold 18px Arial';
+        ctx.fillText(`Lucky Magic Star Chest ${starText}`, canvas.width/2, canvas.height/2+66);
+        ctx.shadowBlur=0; ctx.font='12px Arial';
+        lastChest.rewards.forEach((r,i)=>{
+          const y=canvas.height/2+88+i*18;
+          const rarity=RARITY[r.rarity] || RARITY.common;
+          ctx.fillStyle=rarity.clr;
+          ctx.fillText(`${rarity.label}: ${r.name}${r.duplicate?`  (+${r.mana} mana duplicate)`:' outfit unlocked'}`, canvas.width/2, y);
+        });
+      } else {
+        ctx.fillStyle='rgba(255,255,255,0.38)'; ctx.font='13px Arial';
+        ctx.fillText('No Lucky Magic Star Chest dropped this clear.', canvas.width/2, canvas.height/2+66);
+      }
+
       // unlock notice
-      if (cfg.id < 5) {
+      if (cfg.id < CONFIGS.length) {
         ctx.fillStyle='rgba(255,255,255,0.5)'; ctx.font='14px Arial';
-        ctx.fillText(`Level ${cfg.id+1} — "${CONFIGS[cfg.id].name}" unlocked!`, canvas.width/2, canvas.height/2+60);
+        ctx.fillText(`Level ${cfg.id+1} — "${CONFIGS[cfg.id].name}" unlocked!`, canvas.width/2, canvas.height/2+146);
       }
 
       // attempts
       ctx.fillStyle='rgba(255,255,255,0.3)'; ctx.font='13px Arial';
-      ctx.fillText(`Completed in ${attempts} attempt${attempts===1?'':'s'}`, canvas.width/2, canvas.height/2+84);
+      ctx.fillText(`Completed in ${attempts} attempt${attempts===1?'':'s'}`, canvas.width/2, canvas.height/2+170);
 
       ctx.fillStyle='rgba(255,255,255,0.45)'; ctx.font='14px Arial';
-      ctx.fillText('Click or SPACE to return to menu', canvas.width/2, canvas.height/2+118);
+      ctx.fillText('Click or SPACE to return to menu', canvas.width/2, canvas.height/2+202);
     }
   }
 
