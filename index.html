@@ -51,6 +51,29 @@
       cursor: pointer;
       user-select: none;
     }
+    /* ⭐ Matariki button top-middle */
+    #matarikiBtn {
+      position: fixed;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 999;
+      padding: 4px 10px;
+      border: 0;
+      background: none;
+      font-size: 2.5rem;
+      line-height: 1;
+      cursor: pointer;
+      user-select: none;
+      filter: drop-shadow(0 0 8px rgba(255, 201, 61, 0.8));
+      transition: transform 160ms ease, filter 160ms ease;
+    }
+    #matarikiBtn:hover,
+    #matarikiBtn:focus-visible {
+      transform: translateX(-50%) scale(1.18) rotate(8deg);
+      filter: drop-shadow(0 0 14px rgba(255, 201, 61, 1));
+      outline: none;
+    }
     /* ⚙️ Settings button bottom-left */
     #settingsBtn {
       position: fixed;
@@ -125,6 +148,7 @@
 <body>
   <div id="tree">🎄</div>
   <div id="dashBtn">🎮</div>
+  <button id="matarikiBtn" type="button" aria-label="Open the Matariki page" title="Matariki">⭐</button>
 <div id="hi">Hi</div>
 
   <button id="nextBtn" onclick="location.href='next.html'">N ⏩</button>
@@ -207,6 +231,11 @@
     // 🎮 Go to dash.html on click
     document.getElementById('dashBtn').onclick = () => {
       location.href = 'dash.html';
+    };
+
+    // ⭐ Go to matariki.html on click
+    document.getElementById('matarikiBtn').onclick = () => {
+      location.href = 'matariki.html';
     };
 
     // 🎄 Go to christmas.html on click
