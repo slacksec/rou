@@ -672,6 +672,7 @@
   <footer>
     Made with ❤️ by Calvin · © 2025
   </footer>
+<script src="achievements.js"></script>
 <script>
   // Tree
   const tree = document.getElementById("tree");
@@ -738,10 +739,13 @@
     setTimeout(() => snowflake.remove(), 12000);
   }
 
+  let snowToggleClicks = 0;
   snowToggle.addEventListener("click", () => {
     snowEnabled = !snowEnabled;
     snowToggle.textContent = snowEnabled ? "❄ Snow: ON" : "❄ Snow: OFF";
     if (snowEnabled) for (let i = 0; i < 30; i++) createSnowflake();
+    snowToggleClicks++;
+    if (snowToggleClicks >= 10) ROUAchievements.unlock('snowstorm', 'Snowstorm');
   });
 
   for (let i = 0; i < 40; i++) createSnowflake();
@@ -1069,6 +1073,11 @@
   }
 
   function unlockHardMode() {
+    if (currentDifficulty === "normal") {
+      ROUAchievements.unlock('santa-normal', 'Santa Slayer');
+    } else if (currentDifficulty === "hard") {
+      ROUAchievements.unlock('santa-hard', 'Hard Mode Hero');
+    }
     if (currentDifficulty === "normal" && !hardModeUnlocked) {
       hardModeUnlocked = true;
       localStorage.setItem("xmasBossHardUnlocked", "1");
@@ -1082,10 +1091,11 @@
     showElfRolled = true;
     gameActive = false;
     bossGameText.textContent = "LMAO get elf rolled lol 🎅";
+    ROUAchievements.unlock('elf-rolled', 'Elfrolled');
     // Redirect to Rick Roll after a short delay
     setTimeout(() => {
       window.location.href = "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
-    }, 1500);
+    }, 2400);
   });
 
   bossNormalBtn.addEventListener("click", () => {

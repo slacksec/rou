@@ -11,6 +11,7 @@
 </head>
 <body>
 <canvas id="game"></canvas>
+<script src="achievements.js"></script>
 <script>
 const canvas = document.getElementById('game');
 const ctx    = canvas.getContext('2d');
@@ -33,6 +34,7 @@ const ld = (k,d) => { try { return JSON.parse(localStorage.getItem('gd2_'+k)) ??
 
 let mana          = ld('mana', 0);
 let unlocked      = ld('unlocked', [1]);
+let completed     = ld('completed', []);
 let owned         = ld('owned', []);
 let equipped      = ld('equipped', {});
 let outfitOwned   = ld('outfitOwned', ['hat_none','base_cube','color_gold','color_deep']);
@@ -42,6 +44,7 @@ let chestHistory  = ld('chestHistory', { opened:0, stars:{1:0,2:0,3:0,4:0,5:0} }
 const saveMana = () => sv('mana', mana);
 const saveProg = () => {
   sv('unlocked', unlocked);
+  sv('completed', completed);
   sv('owned', owned);
   sv('equipped', equipped);
   sv('outfitOwned', outfitOwned);
@@ -106,6 +109,19 @@ const OUTFITS = [
 const outfitById = id => OUTFITS.find(o => o.id === id) || OUTFITS[0];
 const outfitColor = id => outfitById(id).color || '#ffcc00';
 const outfitList = rarity => OUTFITS.filter(o => o.rarity === rarity && o.id !== 'hat_none');
+
+function checkDashAchievements(completedLevelId) {
+  if (mana >= 10000) ROUAchievements.unlock('dash-mana', 'Mana Hoarder');
+  if (OUTFITS.every(o => outfitOwned.includes(o.id))) {
+    ROUAchievements.unlock('dash-wardrobe', 'Dash Fashion Icon');
+  }
+  const allComplete = CONFIGS && CONFIGS.every(level => completed.includes(level.id));
+  const returningVeteran = completedLevelId === CONFIGS.length &&
+    CONFIGS.every(level => unlocked.includes(level.id));
+  if (allComplete || returningVeteran) {
+    ROUAchievements.unlock('dash-master', 'Dash Completionist');
+  }
+}
 
 // ─── Level definitions ────────────────────────────────────────────────────────
 // Shorthand builders
@@ -318,6 +334,8 @@ const CONFIGS = [
   { id:15,name:'Lucky Magic Star',sub:'Final Gauntlet', clr:'#ff4fd8', bg:['#100015','#31003a'], gClr:'#19001f', gLine:'#ff4fd8', speed:15.0, manaR:2750,hasStar:true, len:12600 },
 ];
 
+checkDashAchievements();
+
 const levelLen = () => cfg?.len || LEVEL_LEN;
 
 // ─── State ────────────────────────────────────────────────────────────────────
@@ -457,6 +475,7 @@ function pickOutfit(rarity) {
   if (!item) return { name:'Mana Shards', rarity, duplicate:true, mana:75 };
   if (!outfitOwned.includes(item.id)) {
     outfitOwned.push(item.id);
+    window.setTimeout(() => checkDashAchievements(), 0);
     return item;
   }
   const manaPrize = { common:50, rare:90, epic:150, legendary:250, mythic:400 }[rarity] || 75;
@@ -602,6 +621,9 @@ function update() {
     mana += earn; lastEarned = earn; completeLock = 90; saveMana();
     lastChest = rollChest();
     if (cfg.id < CONFIGS.length && !unlocked.includes(cfg.id+1)) { unlocked.push(cfg.id+1); saveProg(); }
+    if (!completed.includes(cfg.id)) completed.push(cfg.id);
+    saveProg();
+    checkDashAchievements(cfg.id);
     state = 'complete'; return;
   }
 
