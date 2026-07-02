@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Happy Maori New Year! ⭐</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --gold: #ffd66b;
+      --cream: #fff8dc;
+      --night: #050817;
+      --ocean: #102653;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+    }
+
+    body {
+      min-height: 100vh;
+      overflow-x: hidden;
+      color: var(--cream);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at 18% 22%, rgba(83, 141, 211, 0.22), transparent 25%),
+        radial-gradient(circle at 78% 14%, rgba(66, 172, 176, 0.14), transparent 22%),
+        linear-gradient(180deg, var(--ocean) 0%, var(--night) 58%, #02030b 100%);
+    }
+
+    body::before,
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    body::before {
+      opacity: 0.72;
+      background-image:
+        radial-gradient(circle, #fff 0 1px, transparent 1.5px),
+        radial-gradient(circle, rgba(255, 230, 157, 0.9) 0 1px, transparent 1.6px);
+      background-position: 0 0, 38px 44px;
+      background-size: 91px 91px, 127px 127px;
+    }
+
+    body::after {
+      background: linear-gradient(180deg, transparent 76%, rgba(0, 0, 0, 0.52));
+    }
+
+    .page {
+      position: relative;
+      z-index: 1;
+      width: min(1120px, 100%);
+      min-height: 100vh;
+      margin: 0 auto;
+      padding: 28px 22px 42px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .back {
+      position: fixed;
+      top: 18px;
+      left: 18px;
+      z-index: 20;
+      width: 48px;
+      height: 48px;
+      display: grid;
+      place-items: center;
+      border: 2px solid rgba(255, 248, 220, 0.62);
+      border-radius: 50%;
+      background: rgba(4, 8, 24, 0.72);
+      color: var(--cream);
+      text-decoration: none;
+      font-size: 1.45rem;
+      backdrop-filter: blur(7px);
+      transition: transform 150ms ease, background 150ms ease;
+    }
+
+    .back:hover,
+    .back:focus-visible {
+      transform: translateX(-3px);
+      background: rgba(30, 57, 105, 0.9);
+      outline: 2px solid var(--gold);
+      outline-offset: 3px;
+    }
+
+    header {
+      text-align: center;
+      padding: 4px 70px 12px;
+    }
+
+    h1 {
+      margin: 0;
+      color: var(--gold);
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(2.35rem, 7vw, 5.4rem);
+      line-height: 1;
+      text-shadow: 0 0 12px rgba(255, 194, 59, 0.72), 0 4px 20px rgba(0, 0, 0, 0.7);
+    }
+
+    .greeting {
+      margin: 12px 0 0;
+      font-size: clamp(1rem, 2vw, 1.28rem);
+      letter-spacing: 0.08em;
+      color: #c7ecff;
+    }
+
+    .instructions {
+      margin: 8px 0 14px;
+      text-align: center;
+      color: rgba(255, 248, 220, 0.8);
+      font-size: 0.95rem;
+    }
+
+    .sky {
+      position: relative;
+      width: min(940px, 96vw);
+      aspect-ratio: 16 / 9;
+      min-height: 430px;
+      margin: auto 0;
+      border: 1px solid rgba(183, 225, 255, 0.18);
+      border-radius: 42% 42% 18px 18px / 18% 18% 18px 18px;
+      background:
+        radial-gradient(ellipse at 50% 48%, rgba(92, 139, 196, 0.14), transparent 45%),
+        linear-gradient(180deg, rgba(3, 9, 33, 0.72), rgba(2, 4, 18, 0.42));
+      box-shadow: inset 0 0 70px rgba(0, 0, 0, 0.42), 0 28px 70px rgba(0, 0, 0, 0.34);
+    }
+
+    .sky::after {
+      content: "";
+      position: absolute;
+      left: 5%;
+      right: 5%;
+      bottom: 4%;
+      height: 17%;
+      opacity: 0.42;
+      background: linear-gradient(150deg, transparent 0 18%, #07111c 18% 27%, transparent 27% 38%, #07111c 38% 55%, transparent 55% 68%, #07111c 68%);
+      clip-path: polygon(0 100%, 0 76%, 13% 48%, 25% 68%, 42% 25%, 54% 63%, 69% 38%, 81% 67%, 92% 43%, 100% 72%, 100% 100%);
+    }
+
+    .star {
+      --size: clamp(2.5rem, 5vw, 4.4rem);
+      position: absolute;
+      z-index: 3;
+      left: var(--x);
+      top: var(--y);
+      width: var(--size);
+      height: var(--size);
+      padding: 0;
+      border: 0;
+      border-radius: 50%;
+      background: transparent;
+      color: #fff4b2;
+      cursor: help;
+      transform: translate(-50%, -50%);
+    }
+
+    .star::before {
+      content: "✦";
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      font-size: var(--size);
+      line-height: 1;
+      text-shadow:
+        0 0 5px #fff,
+        0 0 12px #ffd354,
+        0 0 25px rgba(255, 189, 42, 0.92);
+      animation: twinkle 2.8s ease-in-out infinite alternate;
+      animation-delay: var(--delay, 0s);
+      transition: transform 180ms ease, color 180ms ease;
+    }
+
+    .star::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: white;
+      box-shadow: 0 0 18px 7px rgba(255, 215, 103, 0.75);
+      transform: translate(-50%, -50%);
+    }
+
+    .star:hover,
+    .star:focus-visible {
+      z-index: 10;
+      outline: none;
+    }
+
+    .star:hover::before,
+    .star:focus-visible::before {
+      color: #ffffff;
+      transform: scale(1.32) rotate(12deg);
+    }
+
+    .info {
+      position: absolute;
+      left: 50%;
+      bottom: calc(100% + 12px);
+      width: clamp(190px, 24vw, 260px);
+      padding: 12px 14px;
+      border: 1px solid rgba(255, 224, 132, 0.7);
+      border-radius: 14px;
+      background: rgba(4, 10, 29, 0.95);
+      color: var(--cream);
+      box-shadow: 0 16px 38px rgba(0, 0, 0, 0.5), 0 0 18px rgba(255, 202, 76, 0.12);
+      text-align: left;
+      pointer-events: none;
+      opacity: 0;
+      transform: translate(-50%, 8px) scale(0.88);
+      transform-origin: bottom center;
+      transition: opacity 160ms ease, transform 180ms cubic-bezier(.2, .9, .3, 1.2);
+    }
+
+    .star.tooltip-below .info {
+      top: calc(100% + 12px);
+      bottom: auto;
+      transform-origin: top center;
+    }
+
+    .star.tooltip-left .info {
+      left: auto;
+      right: 50%;
+      transform: translate(14px, 8px) scale(0.88);
+      transform-origin: bottom right;
+    }
+
+    .star:hover .info,
+    .star:focus-visible .info {
+      opacity: 1;
+      transform: translate(-50%, 0) scale(1);
+    }
+
+    .star.tooltip-left:hover .info,
+    .star.tooltip-left:focus-visible .info {
+      transform: translate(14px, 0) scale(1);
+    }
+
+    .name {
+      display: block;
+      margin-bottom: 4px;
+      color: var(--gold);
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 1.15rem;
+      line-height: 1.1;
+    }
+
+    .meaning {
+      display: block;
+      font-size: 0.84rem;
+      line-height: 1.4;
+    }
+
+    .note {
+      max-width: 760px;
+      margin: 14px 0 0;
+      text-align: center;
+      color: rgba(199, 236, 255, 0.65);
+      font-size: 0.78rem;
+      line-height: 1.45;
+    }
+
+    @keyframes twinkle {
+      from { opacity: 0.76; transform: scale(0.88); }
+      to { opacity: 1; transform: scale(1.08); }
+    }
+
+    @media (max-width: 650px) {
+      .page {
+        padding: 22px 10px 28px;
+      }
+
+      header {
+        padding: 4px 48px 8px;
+      }
+
+      .back {
+        top: 12px;
+        left: 12px;
+        width: 42px;
+        height: 42px;
+      }
+
+      .sky {
+        width: 100%;
+        min-height: 500px;
+        aspect-ratio: 3 / 4;
+      }
+
+      .info {
+        width: min(210px, 62vw);
+      }
+
+      .note {
+        padding-inline: 12px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .star::before {
+        animation: none;
+      }
+
+      .star,
+      .star::before,
+      .info,
+      .back {
+        transition: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <a class="back" href="index.html" aria-label="Back to home">←</a>
+
+    <header>
+      <h1>Happy Maori New Year!</h1>
+      <p class="greeting">Mānawatia a Matariki</p>
+    </header>
+
+    <p class="instructions">Hover your mouse over each whetū (star) to discover its name and meaning.</p>
+
+    <section class="sky" aria-label="The nine stars of the Matariki cluster">
+      <button class="star tooltip-below" style="--x: 47%; --y: 18%; --delay: -0.8s" type="button" aria-label="Ururangi — the winds">
+        <span class="info"><strong class="name">Ururangi</strong><span class="meaning">Connected to the winds and the way they move through the year.</span></span>
+      </button>
+
+      <button class="star tooltip-below" style="--x: 30%; --y: 32%; --delay: -1.7s" type="button" aria-label="Waipuna-ā-rangi — rainfall">
+        <span class="info"><strong class="name">Waipuna-ā-rangi</strong><span class="meaning">Connected to rainfall in all its forms.</span></span>
+      </button>
+
+      <button class="star" style="--x: 30%; --y: 52%; --delay: -0.2s" type="button" aria-label="Hiwa-i-te-rangi — hopes and wishes">
+        <span class="info"><strong class="name">Hiwa-i-te-rangi</strong><span class="meaning">The wishing star, connected to hopes, dreams and aspirations for the year ahead.</span></span>
+      </button>
+
+      <button class="star" style="--x: 35%; --y: 70%; --delay: -2.1s" type="button" aria-label="Waitā — the ocean and seafood">
+        <span class="info"><strong class="name">Waitā</strong><span class="meaning">Connected to the ocean and the food gathered from salt water.</span></span>
+      </button>
+
+      <button class="star" style="--x: 43%; --y: 55%; --delay: -1.2s" type="button" aria-label="Waitī — freshwater and freshwater food">
+        <span class="info"><strong class="name">Waitī</strong><span class="meaning">Connected to fresh water and the food sources sustained by it.</span></span>
+      </button>
+
+      <button class="star" style="--x: 45%; --y: 80%; --delay: -2.5s" type="button" aria-label="Pōhutukawa — remembrance">
+        <span class="info"><strong class="name">Pōhutukawa</strong><span class="meaning">Connected to loved ones who have passed on and to remembrance.</span></span>
+      </button>
+
+      <button class="star" style="--x: 60%; --y: 32%; --delay: -0.5s" type="button" aria-label="Matariki — wellbeing and togetherness">
+        <span class="info"><strong class="name">Matariki</strong><span class="meaning">Connected to health, wellbeing, reflection, hope and the gathering of people.</span></span>
+      </button>
+
+      <button class="star tooltip-left" style="--x: 80%; --y: 27%; --delay: -1.9s" type="button" aria-label="Tupu-ā-rangi — food from above">
+        <span class="info"><strong class="name">Tupu-ā-rangi</strong><span class="meaning">Connected to food that grows above the ground, including fruit, berries and birds.</span></span>
+      </button>
+
+      <button class="star tooltip-left" style="--x: 77%; --y: 38%; --delay: -1.4s" type="button" aria-label="Tupu-ā-nuku — food from the soil">
+        <span class="info"><strong class="name">Tupu-ā-nuku</strong><span class="meaning">Connected to food grown and harvested from the soil.</span></span>
+      </button>
+    </section>
+
+    <p class="note">This page follows the tradition of nine whetū. Matariki kōrero and the number of stars recognised can vary between iwi, hapū and rohe.</p>
+  </main>
+</body>
+</html>

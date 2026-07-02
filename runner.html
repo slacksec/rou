@@ -336,6 +336,7 @@
     </div>
   </div>
 
+  <script src="achievements.js"></script>
   <script>
     // Game state
     const canvas = document.getElementById('gameCanvas');
@@ -433,6 +434,18 @@
         { id: 'rocket', name: 'Rocket Boots', emoji: '🚀', cost: 2000, owned: false }
       ]
     };
+
+    function checkRunnerAchievements() {
+      if (gameState.totalCoins >= 10000) {
+        ROUAchievements.unlock('runner-rich', 'Runner Tycoon');
+      }
+      const allOutfitsOwned = ['colors', 'hats', 'shoes'].every(category =>
+        cosmetics[category].every(item => item.owned)
+      );
+      if (allOutfitsOwned) {
+        ROUAchievements.unlock('runner-wardrobe', 'Runner Fashion Icon');
+      }
+    }
     
     // Power-ups
     let activePowerups = {
@@ -459,6 +472,8 @@
       }
       updateTotalCoinsDisplay();
       updateSettingsUI();
+      ROUAchievements.unlock('runner-found', 'Secret Runner');
+      checkRunnerAchievements();
     }
     
     // Save game
@@ -1057,6 +1072,7 @@
           const coinVal = upgrades.coinValue.value * (activePowerups.doubleCoins > 0 ? 2 : 1) * upgrades.coinMultiplier.multiplier;
           gameState.coins += coinVal;
           gameState.totalCoins += coinVal;
+          checkRunnerAchievements();
           return false;
         }
         
@@ -1792,9 +1808,10 @@
             div.querySelector('button').onclick = () => {
               if (gameState.totalCoins >= item.cost) {
                 gameState.totalCoins -= item.cost;
-                item.owned = true;
-                saveGame();
-                updateTotalCoinsDisplay();
+              item.owned = true;
+              saveGame();
+              checkRunnerAchievements();
+              updateTotalCoinsDisplay();
                 openShop();
               }
             };

@@ -17,6 +17,203 @@
       padding: 12px 24px;
       z-index: 10;
     }
+    #achievementsBtn {
+      position: fixed;
+      top: 14px;
+      right: 18px;
+      z-index: 20;
+      display: none;
+      width: 58px;
+      height: 58px;
+      border: 2px solid #c58f00;
+      border-radius: 50%;
+      background: linear-gradient(145deg, #fff8d8, #f2c94c);
+      box-shadow: 0 8px 22px rgba(118, 83, 0, 0.25);
+      font-size: 2rem;
+      cursor: pointer;
+      transition: transform 160ms ease, box-shadow 160ms ease;
+    }
+    #achievementsBtn.visible {
+      display: block;
+      animation: trophyArrival 500ms cubic-bezier(.2, .9, .3, 1.25);
+    }
+    #achievementsBtn:hover,
+    #achievementsBtn:focus-visible {
+      transform: scale(1.1) rotate(7deg);
+      box-shadow: 0 10px 30px rgba(118, 83, 0, 0.4);
+      outline: none;
+    }
+    @keyframes trophyArrival {
+      from { opacity: 0; transform: scale(0) rotate(-25deg); }
+      to { opacity: 1; transform: scale(1) rotate(0); }
+    }
+    #achievementsOverlay {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      display: none;
+      place-items: center;
+      padding: 24px;
+      box-sizing: border-box;
+      background: rgba(8, 8, 12, 0.72);
+      backdrop-filter: blur(5px);
+    }
+    #achievementsOverlay.open {
+      display: grid;
+    }
+    #achievementsPanel {
+      width: min(760px, 100%);
+      max-height: 82vh;
+      overflow: auto;
+      box-sizing: border-box;
+      padding: 24px;
+      color: #f8f8f8;
+      background: linear-gradient(155deg, #24242c, #101014);
+      border: 2px solid #d6a91d;
+      border-radius: 20px;
+      box-shadow: 0 20px 70px rgba(0, 0, 0, 0.6);
+    }
+    .achievements-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+    .achievements-heading h1 {
+      margin: 0;
+      color: #f5ce55;
+      font-size: clamp(1.55rem, 4vw, 2.2rem);
+    }
+    #closeAchievements {
+      border: 0;
+      color: white;
+      background: transparent;
+      font-size: 1.6rem;
+      cursor: pointer;
+    }
+    #achievementProgress {
+      margin: -8px 0 20px;
+      color: #c9c9ce;
+    }
+    #achievementsGrid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(205px, 1fr));
+      gap: 14px;
+    }
+    .achievement-card {
+      position: relative;
+      min-height: 142px;
+      padding: 18px;
+      border: 1px solid #665621;
+      border-radius: 14px;
+      color: white;
+      background: linear-gradient(145deg, #3a321d, #202026);
+      text-align: left;
+      cursor: pointer;
+      transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+    }
+    .achievement-card.unlocked:hover,
+    .achievement-card.unlocked:focus-visible {
+      z-index: 2;
+      border-color: #f5ce55;
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.4);
+      transform: translateY(-4px);
+      outline: none;
+    }
+    .achievement-card.locked {
+      border-color: #4b4b50;
+      color: #8d8d92;
+      background: #2b2b30;
+      filter: grayscale(1);
+      cursor: not-allowed;
+    }
+    .achievement-icon {
+      display: block;
+      margin-bottom: 10px;
+      font-size: 2rem;
+    }
+    .achievement-name {
+      display: block;
+      font-size: 1.08rem;
+    }
+    .achievement-how {
+      display: block;
+      max-height: 0;
+      margin-top: 0;
+      overflow: hidden;
+      color: #e4d49a;
+      font-size: 0.88rem;
+      line-height: 1.35;
+      opacity: 0;
+      transition: max-height 180ms ease, margin 180ms ease, opacity 180ms ease;
+    }
+    .achievement-card.unlocked:hover .achievement-how,
+    .achievement-card.unlocked:focus-visible .achievement-how {
+      max-height: 70px;
+      margin-top: 8px;
+      opacity: 1;
+    }
+    .lock-mark {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      font-size: 1.35rem;
+    }
+    #cursorAchievement {
+      position: fixed;
+      z-index: 2000;
+      display: none;
+      padding: 7px 11px;
+      color: #16130a;
+      background: #f5ce55;
+      border: 1px solid #7b5c00;
+      border-radius: 8px;
+      box-shadow: 0 5px 18px rgba(0, 0, 0, 0.35);
+      font-weight: bold;
+      pointer-events: none;
+      transform: translate(-50%, calc(-100% - 14px));
+      white-space: nowrap;
+    }
+    #achievementToast {
+      position: fixed;
+      top: 24px;
+      left: 50%;
+      z-index: 2200;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      min-width: 270px;
+      padding: 14px 20px;
+      color: white;
+      background: linear-gradient(135deg, #28231b, #111);
+      border: 2px solid #f5b700;
+      border-radius: 14px;
+      box-shadow: 0 12px 38px rgba(0, 0, 0, 0.4), 0 0 22px rgba(245, 183, 0, 0.25);
+      opacity: 0;
+      pointer-events: none;
+      transform: translate(-50%, -130%);
+      transition: opacity 220ms ease, transform 350ms cubic-bezier(.2, .9, .3, 1.2);
+    }
+    #achievementToast.show {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+    #achievementToast .trophy {
+      font-size: 2.3rem;
+    }
+    #achievementToast strong,
+    #achievementToast span {
+      display: block;
+    }
+    #achievementToast span {
+      margin-bottom: 2px;
+      color: #f5ce55;
+      font-size: 0.76rem;
+      font-weight: bold;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
     #playerContainer {
       display: flex;
       justify-content: center;
@@ -56,19 +253,224 @@
       transform: translateY(-3px) scale(1.04);
       outline: none;
     }
+    .runner-secret-link {
+      position: fixed;
+      left: 18px;
+      bottom: 18px;
+      z-index: 20;
+      display: grid;
+      place-items: center;
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      color: inherit;
+      background: rgba(30, 30, 36, 0.1);
+      text-decoration: none;
+      font-size: 1.35rem;
+      opacity: 0.18;
+      filter: grayscale(1);
+      transition: opacity 160ms ease, transform 160ms ease, filter 160ms ease;
+    }
+    .runner-secret-link:hover,
+    .runner-secret-link:focus-visible {
+      opacity: 1;
+      filter: none;
+      transform: scale(1.15);
+      outline: 2px solid #f5ce55;
+    }
   </style>
 </head>
 <body>
   <button id="playBtn">▶ Rick Astley Video Tape</button>
+  <button id="achievementsBtn" type="button" aria-label="Open achievements" title="Achievements">🏆</button>
   <div id="playerContainer">
     <iframe id="player" allow="autoplay"></iframe>
   </div>
   <a class="hall-of-fame-link" href="hall of fame.html" aria-label="Open Hall of Fame">🎞️</a>
+  <a class="runner-secret-link" href="runner.html" aria-label="A mysterious running shoe" title="Where does this go?">👟</a>
+  <div id="achievementsOverlay" role="dialog" aria-modal="true" aria-labelledby="achievementsTitle">
+    <section id="achievementsPanel">
+      <div class="achievements-heading">
+        <h1 id="achievementsTitle">🏆 Achievements</h1>
+        <button id="closeAchievements" type="button" aria-label="Close achievements">✕</button>
+      </div>
+      <p id="achievementProgress"></p>
+      <div id="achievementsGrid"></div>
+    </section>
+  </div>
+  <div id="cursorAchievement" aria-hidden="true"></div>
+  <div id="achievementToast" role="status" aria-live="polite">
+    <div class="trophy">🏆</div>
+    <div><span>Achievement unlocked</span><strong id="achievementToastName"></strong></div>
+  </div>
   <footer style="position: fixed; bottom: 10px; width: 100%; text-align: center; font-size: 1rem;">
     Made with ❤️ by Calvin &copy; 2025
   </footer>
 
   <script>
+    const ACHIEVEMENT_KEY = 'rouAchievements';
+    const achievementList = [
+      { id: 'first-click', name: 'First Click', icon: '👆', how: 'You clicked Hi for the very first time.' },
+      { id: 'game-on', name: 'Game On', icon: '🎮', how: 'You discovered the Dash game.' },
+      { id: 'star-gazer', name: 'Star Gazer', icon: '⭐', how: 'You visited the Matariki page.' },
+      { id: 'festive-find', name: 'Festive Find', icon: '🎄', how: 'You found the secret Christmas tree.' },
+      { id: 'secret-identity', name: 'Secret Identity', icon: '🕵️', how: 'You activated OG Mode with the secret password.' },
+      { id: 'press-play', name: 'Press Play', icon: '📼', how: 'You played a Rick Astley video tape.' },
+      { id: 'elf-rolled', name: 'Elfrolled', icon: '🧝', how: 'You chose Easy Mode in Secret Santa and got elfrolled.' },
+      { id: 'santa-normal', name: 'Santa Slayer', icon: '⚔️', how: 'You defeated the Santa boss on Normal difficulty.' },
+      { id: 'santa-hard', name: 'Hard Mode Hero', icon: '🔥', how: 'You defeated the Santa boss on Hard difficulty.' },
+      { id: 'snowstorm', name: 'Snowstorm', icon: '🌨️', how: 'You spammed the snow switch 10 times in Secret Santa.' },
+      { id: 'dash-master', name: 'Dash Completionist', icon: '🏁', how: 'You beat every Geometry Dash level.' },
+      { id: 'dash-mana', name: 'Mana Hoarder', icon: '✦', how: 'You collected at least 10,000 mana in Geometry Dash.' },
+      { id: 'dash-wardrobe', name: 'Dash Fashion Icon', icon: '🎩', how: 'You unlocked every Geometry Dash outfit.' },
+      { id: 'hall-of-famer', name: 'Hall of Famer', icon: '🎞️', how: 'You visited the Hall of Fame.' },
+      { id: 'runner-found', name: 'Secret Runner', icon: '🏃', how: 'You found the hidden Runner game.' },
+      { id: 'runner-rich', name: 'Runner Tycoon', icon: '💰', how: 'You reached $10,000 in the Runner game.' },
+      { id: 'runner-wardrobe', name: 'Runner Fashion Icon', icon: '👟', how: 'You unlocked every Runner outfit.' }
+    ];
+
+    function getAchievements() {
+      try {
+        return JSON.parse(localStorage.getItem(ACHIEVEMENT_KEY)) || {};
+      } catch (error) {
+        return {};
+      }
+    }
+
+    function unlockAchievement(id) {
+      const achievements = getAchievements();
+      if (achievements[id]) return false;
+      achievements[id] = { unlockedAt: new Date().toISOString() };
+      localStorage.setItem(ACHIEVEMENT_KEY, JSON.stringify(achievements));
+      return true;
+    }
+
+    function showAchievementToast(name) {
+      const toast = document.getElementById('achievementToast');
+      document.getElementById('achievementToastName').textContent = name;
+      toast.classList.remove('show');
+      void toast.offsetWidth;
+      toast.classList.add('show');
+      window.setTimeout(() => toast.classList.remove('show'), 2200);
+    }
+
+    function unlockWithPopup(id, name) {
+      const isNew = unlockAchievement(id);
+      if (isNew) showAchievementToast(name);
+      return isNew;
+    }
+
+    const achievementsBtn = document.getElementById('achievementsBtn');
+    const achievementsOverlay = document.getElementById('achievementsOverlay');
+    const cursorAchievement = document.getElementById('cursorAchievement');
+
+    function parseSavedValue(key, fallback) {
+      try {
+        const value = JSON.parse(localStorage.getItem(key));
+        return value == null ? fallback : value;
+      } catch (error) {
+        return fallback;
+      }
+    }
+
+    function syncExistingProgress() {
+      if (localStorage.getItem('xmasBossHardUnlocked') === '1') {
+        unlockWithPopup('santa-normal', 'Santa Slayer');
+      }
+
+      const dashMana = Number(parseSavedValue('gd2_mana', 0));
+      if (dashMana >= 10000) unlockWithPopup('dash-mana', 'Mana Hoarder');
+
+      const dashCompleted = parseSavedValue('gd2_completed', []);
+      if (Array.isArray(dashCompleted) && new Set(dashCompleted).size >= 15) {
+        unlockWithPopup('dash-master', 'Dash Completionist');
+      }
+
+      const dashOutfits = parseSavedValue('gd2_outfitOwned', []);
+      if (Array.isArray(dashOutfits) && new Set(dashOutfits).size >= 29) {
+        unlockWithPopup('dash-wardrobe', 'Dash Fashion Icon');
+      }
+
+      const runnerSave = parseSavedValue('streetRunnerSave', null);
+      if (runnerSave) {
+        unlockWithPopup('runner-found', 'Secret Runner');
+        if (Number(runnerSave.totalCoins) >= 10000) {
+          unlockWithPopup('runner-rich', 'Runner Tycoon');
+        }
+        const runnerCosmetics = runnerSave.cosmetics;
+        const runnerHasAllOutfits = runnerCosmetics && ['colors', 'hats', 'shoes'].every(category =>
+          Array.isArray(runnerCosmetics[category]) && runnerCosmetics[category].every(item => item.owned)
+        );
+        if (runnerHasAllOutfits) unlockWithPopup('runner-wardrobe', 'Runner Fashion Icon');
+      }
+    }
+
+    function renderAchievements() {
+      const unlocked = getAchievements();
+      const unlockedCount = achievementList.filter((achievement) => unlocked[achievement.id]).length;
+      document.getElementById('achievementProgress').textContent =
+        `${unlockedCount} of ${achievementList.length} unlocked`;
+      document.getElementById('achievementsGrid').innerHTML = achievementList.map((achievement) => {
+        const isUnlocked = Boolean(unlocked[achievement.id]);
+        return `
+          <button class="achievement-card ${isUnlocked ? 'unlocked' : 'locked'}"
+            type="button" data-id="${achievement.id}" ${isUnlocked ? '' : 'aria-disabled="true"'}>
+            ${isUnlocked ? '' : '<span class="lock-mark">🔒</span>'}
+            <span class="achievement-icon">${achievement.icon}</span>
+            <strong class="achievement-name">${achievement.name}</strong>
+            ${isUnlocked ? `<span class="achievement-how">${achievement.how}</span>` : ''}
+          </button>`;
+      }).join('');
+
+      document.querySelectorAll('.achievement-card.unlocked').forEach((card) => {
+        card.addEventListener('click', (event) => {
+          const achievement = achievementList.find((item) => item.id === card.dataset.id);
+          showNameAtPointer(achievement.name, event.clientX, event.clientY);
+        });
+      });
+    }
+
+    function showNameAtPointer(name, x, y) {
+      cursorAchievement.textContent = name;
+      cursorAchievement.style.left = `${x}px`;
+      cursorAchievement.style.top = `${y}px`;
+      cursorAchievement.style.display = 'block';
+    }
+
+    document.addEventListener('pointermove', (event) => {
+      if (cursorAchievement.style.display === 'block') {
+        cursorAchievement.style.left = `${event.clientX}px`;
+        cursorAchievement.style.top = `${event.clientY}px`;
+      }
+    });
+
+    syncExistingProgress();
+
+    if (getAchievements()['first-click']) {
+      achievementsBtn.classList.add('visible');
+    }
+
+    achievementsBtn.onclick = () => {
+      renderAchievements();
+      achievementsOverlay.classList.add('open');
+      document.getElementById('closeAchievements').focus();
+    };
+
+    function closeAchievements() {
+      achievementsOverlay.classList.remove('open');
+      achievementsBtn.focus();
+    }
+
+    document.getElementById('closeAchievements').onclick = closeAchievements;
+    achievementsOverlay.addEventListener('click', (event) => {
+      if (event.target === achievementsOverlay) closeAchievements();
+    });
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && achievementsOverlay.classList.contains('open')) {
+        closeAchievements();
+      }
+    });
+
     const playlist = [
       "dQw4w9WgXcQ",
       "yPYZpwSpKmA",
@@ -83,10 +485,12 @@
     ];
 
     document.getElementById('playBtn').onclick = () => {
+      unlockWithPopup('press-play', 'Press Play');
       const randomVideo = playlist[Math.floor(Math.random() * playlist.length)];
       const iframe = document.getElementById('player');
       iframe.src = `https://www.youtube.com/embed/${randomVideo}?autoplay=1`;
       iframe.style.display = 'block';
+      if (achievementsOverlay.classList.contains('open')) renderAchievements();
     };
   </script>
 </body>

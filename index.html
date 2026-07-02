@@ -16,6 +16,50 @@
       cursor: pointer;
       text-decoration: underline;
     }
+    #hi:focus-visible {
+      outline: 3px solid #f5b700;
+      outline-offset: 8px;
+      border-radius: 4px;
+    }
+    #achievementToast {
+      position: fixed;
+      top: 24px;
+      left: 50%;
+      z-index: 2000;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      min-width: 270px;
+      padding: 14px 20px;
+      color: white;
+      background: linear-gradient(135deg, #28231b, #111);
+      border: 2px solid #f5b700;
+      border-radius: 14px;
+      box-shadow: 0 12px 38px rgba(0, 0, 0, 0.4), 0 0 22px rgba(245, 183, 0, 0.25);
+      opacity: 0;
+      pointer-events: none;
+      transform: translate(-50%, -130%);
+      transition: opacity 220ms ease, transform 350ms cubic-bezier(.2, .9, .3, 1.2);
+    }
+    #achievementToast.show {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+    #achievementToast .trophy {
+      font-size: 2.3rem;
+    }
+    #achievementToast strong,
+    #achievementToast span {
+      display: block;
+    }
+    #achievementToast span {
+      margin-bottom: 2px;
+      color: #f5ce55;
+      font-size: 0.76rem;
+      font-weight: bold;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
     iframe {
       width: 100%;
       height: 100%;
@@ -50,6 +94,29 @@
       z-index: 999;
       cursor: pointer;
       user-select: none;
+    }
+    /* ⭐ Matariki button top-middle */
+    #matarikiBtn {
+      position: fixed;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 999;
+      padding: 4px 10px;
+      border: 0;
+      background: none;
+      font-size: 2.5rem;
+      line-height: 1;
+      cursor: pointer;
+      user-select: none;
+      filter: drop-shadow(0 0 8px rgba(255, 201, 61, 0.8));
+      transition: transform 160ms ease, filter 160ms ease;
+    }
+    #matarikiBtn:hover,
+    #matarikiBtn:focus-visible {
+      transform: translateX(-50%) scale(1.18) rotate(8deg);
+      filter: drop-shadow(0 0 14px rgba(255, 201, 61, 1));
+      outline: none;
     }
     /* ⚙️ Settings button bottom-left */
     #settingsBtn {
@@ -125,7 +192,13 @@
 <body>
   <div id="tree">🎄</div>
   <div id="dashBtn">🎮</div>
-<div id="hi">Hi</div>
+  <button id="matarikiBtn" type="button" aria-label="Open the Matariki page" title="Matariki">⭐</button>
+<div id="hi" role="button" tabindex="0">Hi</div>
+
+  <div id="achievementToast" role="status" aria-live="polite">
+    <div class="trophy">🏆</div>
+    <div><span>Achievement unlocked</span><strong id="achievementToastName">First Click</strong></div>
+  </div>
 
   <button id="nextBtn" onclick="location.href='next.html'">N ⏩</button>
   <button id="settingsBtn">&#x2699;</button>
@@ -153,6 +226,39 @@
     const BOOM_SRC = 'https://cdn.pixabay.com/download/audio/2025/08/29/audio_437b300d21.mp3?filename=bithuh-vine-boom-392646.mp3';
     let moaiCount = 0;
     let moaiInterval = null;
+
+    const ACHIEVEMENT_KEY = 'rouAchievements';
+
+    function getAchievements() {
+      try {
+        return JSON.parse(localStorage.getItem(ACHIEVEMENT_KEY)) || {};
+      } catch (error) {
+        return {};
+      }
+    }
+
+    function unlockAchievement(id) {
+      const achievements = getAchievements();
+      if (achievements[id]) return false;
+      achievements[id] = { unlockedAt: new Date().toISOString() };
+      localStorage.setItem(ACHIEVEMENT_KEY, JSON.stringify(achievements));
+      return true;
+    }
+
+    function showAchievementToast(name) {
+      const toast = document.getElementById('achievementToast');
+      document.getElementById('achievementToastName').textContent = name;
+      toast.classList.remove('show');
+      void toast.offsetWidth;
+      toast.classList.add('show');
+      window.setTimeout(() => toast.classList.remove('show'), 2200);
+    }
+
+    function unlockWithPopup(id, name) {
+      const isNew = unlockAchievement(id);
+      if (isNew) showAchievementToast(name);
+      return isNew;
+    }
 
     function spawnMoai() {
       if (moaiCount >= MOAI_MAX) {
@@ -195,23 +301,41 @@
       updateRevertButton();
     }
 
-    // Original rickroll function
+    // Original rickroll function, now delayed long enough to celebrate the unlock.
     function originalHiClick() {
-      document.body.innerHTML =
-        '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1" allow="autoplay"></iframe>';
+      const firstUnlock = unlockWithPopup('first-click', 'First Click');
+
+      window.setTimeout(() => {
+        document.body.innerHTML =
+          '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1" allow="autoplay"></iframe>';
+      }, firstUnlock ? 2500 : 0);
     }
 
     // Set Hi button behavior
     document.getElementById('hi').onclick = originalHiClick;
+    document.getElementById('hi').onkeydown = (event) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        originalHiClick();
+      }
+    };
 
     // 🎮 Go to dash.html on click
     document.getElementById('dashBtn').onclick = () => {
-      location.href = 'dash.html';
+      const isNew = unlockWithPopup('game-on', 'Game On');
+      window.setTimeout(() => { location.href = 'dash.html'; }, isNew ? 2400 : 0);
+    };
+
+    // ⭐ Go to matariki.html on click
+    document.getElementById('matarikiBtn').onclick = () => {
+      const isNew = unlockWithPopup('star-gazer', 'Star Gazer');
+      window.setTimeout(() => { location.href = 'matariki.html'; }, isNew ? 2400 : 0);
     };
 
     // 🎄 Go to christmas.html on click
     document.getElementById('tree').onclick = () => {
-      location.href = 'christmas.html';
+      const isNew = unlockWithPopup('festive-find', 'Festive Find');
+      window.setTimeout(() => { location.href = 'christmas.html'; }, isNew ? 2400 : 0);
     };
 
     // Settings button - open modal
@@ -278,6 +402,7 @@
       if (password === 'BANANA') {
         isOGMode = true;
         localStorage.setItem('ogMode', 'true');
+        const secretUnlocked = unlockWithPopup('secret-identity', 'Secret Identity');
         
         // Change Hi to Welcome, OG user!
         document.getElementById('hi').textContent = 'Welcome, OG user!';
@@ -287,7 +412,9 @@
         document.getElementById('overlay').style.display = 'none';
         document.getElementById('settingsModal').style.display = 'none';
         
-        alert('🎉 OG Mode Activated! The text will stay as "Welcome, OG user!" every time you visit!');
+        window.setTimeout(() => {
+          alert('🎉 OG Mode Activated! The text will stay as "Welcome, OG user!" every time you visit!');
+        }, secretUnlocked ? 2400 : 0);
       } else {
         alert('❌ Wrong Password!');
       }
