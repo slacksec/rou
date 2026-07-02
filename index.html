@@ -332,6 +332,11 @@
       window.setTimeout(() => { location.href = 'matariki.html'; }, isNew ? 2400 : 0);
     };
 
+    // ⭐ Go to matariki.html on click
+    document.getElementById('matarikiBtn').onclick = () => {
+      location.href = 'matariki.html';
+    };
+
     // 🎄 Go to christmas.html on click
     document.getElementById('tree').onclick = () => {
       const isNew = unlockWithPopup('festive-find', 'Festive Find');
