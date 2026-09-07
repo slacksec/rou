@@ -95,8 +95,8 @@
       cursor: pointer;
       user-select: none;
     }
-    /* ⭐ Matariki button top-middle */
-    #matarikiBtn {
+    /* Sans Fight button top-middle */
+    #sansBtn {
       position: fixed;
       top: 10px;
       left: 50%;
@@ -112,8 +112,8 @@
       filter: drop-shadow(0 0 8px rgba(255, 201, 61, 0.8));
       transition: transform 160ms ease, filter 160ms ease;
     }
-    #matarikiBtn:hover,
-    #matarikiBtn:focus-visible {
+    #sansBtn:hover,
+    #sansBtn:focus-visible {
       transform: translateX(-50%) scale(1.18) rotate(8deg);
       filter: drop-shadow(0 0 14px rgba(255, 201, 61, 1));
       outline: none;
@@ -193,7 +193,7 @@
 <body>
   <div id="tree">🎄</div>
   <div id="dashBtn">🎮</div>
-  <button id="matarikiBtn" type="button" aria-label="Open the Matariki page" title="Matariki">⭐</button>
+  <button id="sansBtn" type="button" aria-label="Play Sans Fight" title="Sans Fight"><img src="assets/sans-fight/source/Animations/SansHead/Default/000.png" alt="" width="40" height="40" style="image-rendering:pixelated;vertical-align:middle;background:#000;border-radius:5px;padding:4px"></button>
 <div id="hi" role="button" tabindex="0">Hi</div>
 
   <div id="achievementToast" role="status" aria-live="polite">
@@ -327,10 +327,9 @@
       window.setTimeout(() => { location.href = 'dash.html'; }, isNew ? 2400 : 0);
     };
 
-    // ⭐ Go to matariki.html on click
-    document.getElementById('matarikiBtn').onclick = () => {
-      const isNew = unlockWithPopup('star-gazer', 'Star Gazer');
-      window.setTimeout(() => { location.href = 'matariki.html'; }, isNew ? 2400 : 0);
+    // Open the Sans fight.
+    document.getElementById('sansBtn').onclick = () => {
+      location.href = 'sans_fight.html';
     };
 
     // 🎄 Go to christmas.html on click
