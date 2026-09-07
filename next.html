@@ -22,7 +22,7 @@
       top: 14px;
       right: 18px;
       z-index: 20;
-      display: none;
+      display: block;
       width: 58px;
       height: 58px;
       border: 2px solid #c58f00;
@@ -33,8 +33,7 @@
       cursor: pointer;
       transition: transform 160ms ease, box-shadow 160ms ease;
     }
-    #achievementsBtn.visible {
-      display: block;
+    #achievementsBtn {
       animation: trophyArrival 500ms cubic-bezier(.2, .9, .3, 1.25);
     }
     #achievementsBtn:hover,
@@ -326,6 +325,7 @@
       { id: 'dash-master', name: 'Dash Completionist', icon: '🏁', how: 'You beat every Geometry Dash level.' },
       { id: 'dash-mana', name: 'Mana Hoarder', icon: '✦', how: 'You collected at least 10,000 mana in Geometry Dash.' },
       { id: 'dash-wardrobe', name: 'Dash Fashion Icon', icon: '🎩', how: 'You unlocked every Geometry Dash outfit.' },
+      { id: 'sans-normal', name: "time to go to Grillby's", image: 'assets/sans-fight/source/Animations/SansHead/Default/000.png', how: 'You beat Sans Fight on Normal mode.' },
       { id: 'hall-of-famer', name: 'Hall of Famer', icon: '🎞️', how: 'You visited the Hall of Fame.' },
       { id: 'runner-found', name: 'Secret Runner', icon: '🏃', how: 'You found the hidden Runner game.' },
       { id: 'runner-rich', name: 'Runner Tycoon', icon: '💰', how: 'You reached $10,000 in the Runner game.' },
@@ -419,7 +419,7 @@
           <button class="achievement-card ${isUnlocked ? 'unlocked' : 'locked'}"
             type="button" data-id="${achievement.id}" ${isUnlocked ? '' : 'aria-disabled="true"'}>
             ${isUnlocked ? '' : '<span class="lock-mark">🔒</span>'}
-            <span class="achievement-icon">${achievement.icon}</span>
+            <span class="achievement-icon">${achievement.image ? `<img src="${achievement.image}" alt="Sans" style="width:48px;height:48px;object-fit:contain;image-rendering:pixelated">` : achievement.icon}</span>
             <strong class="achievement-name">${achievement.name}</strong>
             ${isUnlocked ? `<span class="achievement-how">${achievement.how}</span>` : ''}
           </button>`;
@@ -448,10 +448,6 @@
     });
 
     syncExistingProgress();
-
-    if (getAchievements()['first-click']) {
-      achievementsBtn.classList.add('visible');
-    }
 
     achievementsBtn.onclick = () => {
       renderAchievements();

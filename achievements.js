@@ -49,17 +49,28 @@
     return toast;
   }
 
-  function show(name) {
-    toastQueue.push(name);
+  function show(name, image) {
+    toastQueue.push({ name, image });
     showNextToast();
   }
 
   function showNextToast() {
     if (toastShowing || !toastQueue.length) return;
     toastShowing = true;
-    const name = toastQueue.shift();
+    const { name, image } = toastQueue.shift();
     const toast = ensureToast();
     toast.querySelector('strong').textContent = name;
+    const icon = toast.querySelector('.rou-trophy');
+    icon.textContent = '';
+    if (image) {
+      const picture = document.createElement('img');
+      picture.src = image;
+      picture.alt = 'Sans';
+      picture.style.cssText = 'width:48px;height:48px;object-fit:contain;image-rendering:pixelated';
+      icon.appendChild(picture);
+    } else {
+      icon.textContent = '🏆';
+    }
     toast.classList.remove('show');
     void toast.offsetWidth;
     toast.classList.add('show');
@@ -72,12 +83,12 @@
     }, 2200);
   }
 
-  function unlock(id, name) {
+  function unlock(id, name, image) {
     const achievements = getAll();
     if (achievements[id]) return false;
     achievements[id] = { unlockedAt: new Date().toISOString() };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(achievements));
-    show(name);
+    show(name, image);
     return true;
   }
 
