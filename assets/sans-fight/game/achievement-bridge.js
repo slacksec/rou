@@ -11,6 +11,7 @@
     runtime.trigger = function (condition, instance, name) {
       if (condition === sc.prototype.c.Ui && typeof name === 'string') {
         const event = name.toLowerCase();
+        if (window.sansMenuEvent?.(event)) return true;
         if (event.startsWith('menumode')) {
           normalRun = event === 'menumodenormal';
         } else if (event === 'menumain') {
