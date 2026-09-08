@@ -1,7 +1,8 @@
 {
-  "version": 1690655843,
+  "version": 1690655846,
   "fileList": [
     "data.js",
+    "menu-bridge.js?v=1690655846",
     "c2runtime.js",
     "jquery-3.4.1.min.js",
     "offlineClient.js",
@@ -104,6 +105,6 @@
     "sans_bonestab3.csv",
     "sans_multi3.csv",
     "sans_final.csv",
-    "achievement-bridge.js"
+    "achievement-bridge.js?v=1690655845"
   ]
 }
