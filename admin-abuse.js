@@ -17,15 +17,20 @@ const ADMIN_ABUSE_SETTINGS = {
   textFont: 'Arial, Helvetica, sans-serif',
 
   // Change this one line to true to start the music and disco effects.
-  adminAbuse: false,
+  adminAbuse: true,
+  adminAbuseReloadButtonText: 'Spam reload for more announcement text!',
+  adminAbuseHomeGif: 'https://media.tenor.com/YMz82SDst8sAAAAj/tv-tenna-dance.gif',
 
   // Add, remove, or reorder local MP3 files to change the party playlist.
   musicVolume: 0.8,
   musicTracks: [
     { title: 'Raining Tacos', file: 'assets/admin-abuse-music/raining-tacos.mp3' },
     { title: 'Crab Rave', file: 'assets/admin-abuse-music/crab-rave.mp3' },
-    { title: 'Party Track 3', file: 'assets/admin-abuse-music/party-track-3.mp3' },
-    { title: 'Nyan Cat', file: 'assets/admin-abuse-music/nyan-cat.mp3' }
+    { title: 'Beethoven Virus Ultimate', file: 'assets/admin-abuse-music/beethoven-virus-ultimate.mp3' },
+    { title: 'Party Track 4', file: 'assets/admin-abuse-music/party-track-3.mp3' },
+    { title: 'Nyan Cat', file: 'assets/admin-abuse-music/nyan-cat.mp3' },
+    { title: 'Cutie Mew Mew Magic', file: 'assets/admin-abuse-music/cutie-mew-mew-magic.mp3' },
+    { title: 'Scheming Weasel', file: 'assets/admin-abuse-music/scheming-weasel-faster.mp3' }
   ]
 };
 
@@ -157,6 +162,35 @@ const ADMIN_ABUSE_SETTINGS = {
       cursor: pointer;
     }
 
+    .admin-reload-pointer {
+      position: fixed;
+      z-index: 2147483647;
+      width: max-content;
+      max-width: min(280px, calc(100vw - 24px));
+      color: #111;
+      font: 400 clamp(.85rem, 2.8vw, 1.35rem)/1 Arial, Helvetica, sans-serif;
+      text-align: center;
+      transform: translateX(-50%);
+      pointer-events: none;
+    }
+
+    .admin-reload-pointer .admin-pointer-arrow {
+      font-size: 1em;
+    }
+
+    .admin-tenna-dance {
+      position: absolute;
+      right: 28px;
+      top: 110px;
+      width: clamp(96px, 18vw, 170px);
+      height: auto;
+      filter:
+        drop-shadow(0 0 8px #fff)
+        drop-shadow(0 0 18px #00eaff)
+        drop-shadow(0 0 26px #ff00de);
+      animation: adminTennaVibe .55s ease-in-out infinite alternate, adminTennaShine 1.2s linear infinite;
+    }
+
     @keyframes adminDiscoSpin { to { transform: rotate(360deg); } }
     @keyframes adminBallGlow { to { filter: hue-rotate(120deg); } }
     @keyframes adminPartyWash { to { transform: rotate(360deg) scale(1.45); } }
@@ -165,6 +199,24 @@ const ADMIN_ABUSE_SETTINGS = {
       to { opacity: .85; filter: blur(4px) hue-rotate(150deg); }
     }
     @keyframes adminLabelBounce { to { transform: translateY(-8px) rotate(2deg); } }
+    @keyframes adminTennaVibe {
+      from { transform: rotate(-6deg) scale(1); }
+      to { transform: rotate(6deg) scale(1.09) translateY(-8px); }
+    }
+    @keyframes adminTennaShine {
+      0% {
+        filter:
+          drop-shadow(0 0 8px #fff)
+          drop-shadow(0 0 18px #00eaff)
+          drop-shadow(0 0 26px #ff00de);
+      }
+      100% {
+        filter:
+          drop-shadow(0 0 12px #fff)
+          drop-shadow(0 0 22px #fff200)
+          drop-shadow(0 0 30px #54ff69);
+      }
+    }
 
     @media (prefers-reduced-motion: reduce) {
       #admin-abuse-layer *, #admin-abuse-layer::before { animation-duration: 4s !important; }
@@ -222,6 +274,97 @@ const ADMIN_ABUSE_SETTINGS = {
 
   let partyAudio = null;
   let partyTrackIndex = 0;
+  const PARTY_MUSIC_STATE_KEY = 'admin-abuse-music-state';
+
+  function getPartyTrackLabel() {
+    const track = settings.musicTracks[partyTrackIndex];
+    return `🔊 ${track.title} 🪩`;
+  }
+
+  function readPartyMusicState() {
+    try {
+      return JSON.parse(localStorage.getItem(PARTY_MUSIC_STATE_KEY)) || {};
+    } catch {
+      return {};
+    }
+  }
+
+  function savePartyMusicState(isPlaying = false) {
+    if (!partyAudio) return;
+    try {
+      localStorage.setItem(PARTY_MUSIC_STATE_KEY, JSON.stringify({
+        trackIndex: partyTrackIndex,
+        currentTime: partyAudio.currentTime || 0,
+        isPlaying,
+        savedAt: Date.now()
+      }));
+    } catch {
+      // Music still works if storage is unavailable.
+    }
+  }
+
+  function restorePartyMusicState() {
+    const saved = readPartyMusicState();
+    const savedTrackIndex = Number(saved.trackIndex);
+    if (Number.isInteger(savedTrackIndex) && settings.musicTracks[savedTrackIndex]) {
+      partyTrackIndex = savedTrackIndex;
+    }
+    return saved;
+  }
+
+  function switchMainButtonForAdminAbuse(layer) {
+    const mainButton = document.getElementById('hi');
+    if (!mainButton) return;
+
+    mainButton.dataset.adminAbuseOriginalText = mainButton.textContent;
+    mainButton.textContent = settings.adminAbuseReloadButtonText;
+    mainButton.title = settings.adminAbuseReloadButtonText;
+    mainButton.setAttribute('aria-label', settings.adminAbuseReloadButtonText);
+
+    const reloadForAnnouncement = (event) => {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      try {
+        localStorage.removeItem('admin-abuse-last-announcement');
+      } catch {
+        // Reloading still works if storage is unavailable.
+      }
+      window.location.reload();
+    };
+
+    mainButton.addEventListener('click', reloadForAnnouncement, true);
+    mainButton.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' || event.key === ' ') reloadForAnnouncement(event);
+    }, true);
+
+    const pointer = document.createElement('div');
+    pointer.className = 'admin-reload-pointer';
+    pointer.setAttribute('aria-hidden', 'true');
+    pointer.innerHTML = '<span>spam reload button</span> <span class="admin-pointer-arrow">↓</span>';
+    layer.appendChild(pointer);
+
+    const positionPointer = () => {
+      const buttonBox = mainButton.getBoundingClientRect();
+      const pointerBox = pointer.getBoundingClientRect();
+      const x = buttonBox.left + buttonBox.width / 2;
+      const y = Math.max(12, buttonBox.top - pointerBox.height - 18);
+
+      pointer.style.left = `${Math.min(window.innerWidth - 12, Math.max(12, x))}px`;
+      pointer.style.top = `${y}px`;
+    };
+
+    requestAnimationFrame(positionPointer);
+    window.addEventListener('resize', positionPointer);
+    window.addEventListener('scroll', positionPointer, { passive: true });
+
+    if (settings.adminAbuseHomeGif) {
+      const tennaDance = document.createElement('img');
+      tennaDance.className = 'admin-tenna-dance';
+      tennaDance.src = settings.adminAbuseHomeGif;
+      tennaDance.alt = 'Dancing TV character';
+      layer.appendChild(tennaDance);
+    }
+  }
 
   async function startPartyMusic(label) {
     if (!settings.musicTracks.length) return false;
@@ -229,9 +372,9 @@ const ADMIN_ABUSE_SETTINGS = {
 
     try {
       await partyAudio.play();
-      const track = settings.musicTracks[partyTrackIndex];
       label.dataset.musicState = 'playing';
-      label.textContent = `🔊 ${track.title} 🪩`;
+      label.textContent = getPartyTrackLabel();
+      savePartyMusicState(true);
       return true;
     } catch {
       label.dataset.musicState = 'waiting';
@@ -240,8 +383,19 @@ const ADMIN_ABUSE_SETTINGS = {
     }
   }
 
+  async function skipPartyMusic(label) {
+    if (!settings.musicTracks.length || !partyAudio) return;
+
+    partyTrackIndex = (partyTrackIndex + 1) % settings.musicTracks.length;
+    partyAudio.src = settings.musicTracks[partyTrackIndex].file;
+    partyAudio.currentTime = 0;
+    savePartyMusicState(true);
+    await startPartyMusic(label);
+  }
+
   function startParty(layer) {
     if (!settings.adminAbuse) return;
+    switchMainButtonForAdminAbuse(layer);
     layer.classList.add('party-on');
 
     ['left', 'right'].forEach((side) => {
@@ -265,9 +419,10 @@ const ADMIN_ABUSE_SETTINGS = {
     label.type = 'button';
     label.className = 'admin-party-label';
     label.textContent = '🔊 TAP FOR MUSIC 🪩';
-    label.title = 'Start the party music';
+    label.title = 'Start music, then click again to skip songs';
     layer.appendChild(label);
 
+    const savedMusicState = restorePartyMusicState();
     partyAudio = document.createElement('audio');
     partyAudio.id = 'admin-party-audio';
     partyAudio.preload = 'auto';
@@ -275,23 +430,54 @@ const ADMIN_ABUSE_SETTINGS = {
     partyAudio.src = settings.musicTracks[partyTrackIndex].file;
     layer.appendChild(partyAudio);
 
+    partyAudio.addEventListener('loadedmetadata', () => {
+      const savedTime = Number(savedMusicState.currentTime);
+      if (Number.isFinite(savedTime) && savedTime > 0 && savedTime < partyAudio.duration) {
+        partyAudio.currentTime = savedTime;
+      }
+    }, { once: true });
+
+    partyAudio.addEventListener('timeupdate', () => savePartyMusicState(!partyAudio.paused));
+    partyAudio.addEventListener('pause', () => savePartyMusicState(false));
+    window.addEventListener('pagehide', () => savePartyMusicState(!partyAudio.paused));
+
     partyAudio.addEventListener('ended', async () => {
       partyTrackIndex = (partyTrackIndex + 1) % settings.musicTracks.length;
       partyAudio.src = settings.musicTracks[partyTrackIndex].file;
+      savePartyMusicState(true);
       await startPartyMusic(label);
     });
 
-    const unlockMusic = async () => {
+    let musicButtonActivated = false;
+
+    const unlockMusic = async (event) => {
+      if (event?.target === label) return;
       if (await startPartyMusic(label)) {
+        musicButtonActivated = true;
         document.removeEventListener('pointerdown', unlockMusic, true);
         document.removeEventListener('keydown', unlockMusic, true);
       }
     };
 
-    label.addEventListener('click', unlockMusic);
+    label.addEventListener('click', async (event) => {
+      event.stopPropagation();
+
+      if (!musicButtonActivated) {
+        musicButtonActivated = await startPartyMusic(label);
+        return;
+      }
+
+      await skipPartyMusic(label);
+    });
     document.addEventListener('pointerdown', unlockMusic, { capture: true });
     document.addEventListener('keydown', unlockMusic, { capture: true });
-    startPartyMusic(label);
+    if (savedMusicState.isPlaying) {
+      label.textContent = getPartyTrackLabel();
+    }
+
+    startPartyMusic(label).then((started) => {
+      if (started) musicButtonActivated = true;
+    });
   }
 
   function init() {
