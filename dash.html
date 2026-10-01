@@ -28,6 +28,7 @@ const P_SIZE     = 42;
 const P_X        = 130;   // fixed screen x of player
 const ORB_R      = 22;
 const LEVEL_LEN  = 8000;  // world units per level
+const SHIELD_GRACE_FRAMES = 30; // ~0.5 seconds at 60fps
 
 // ─── Persistence ─────────────────────────────────────────────────────────────
 const sv = (k,v) => localStorage.setItem('gd2_'+k, JSON.stringify(v));
@@ -132,7 +133,7 @@ const Sp3 = (x)      => [Sp(x), Sp(x+42), Sp(x+84)];
 const Bl  = (x,s=1)  => ({ type:'block', wx:x, wy:GND-(s*42), w:42, h:s*42 });
 const Orb = (x,y,b)  => ({ type:'orb', wx:x, wy:y??GND-110, boost:b??-16 });
 const Hole = (x,w)   => ({ type:'hole', wx:x, w });
-const Por = (x,kind,v) => ({ type:'portal', wx:x, wy:GND-128, w:34, h:96, kind, value:v, used:false });
+const Por = (x,kind,v) => ({ type:'portal', wx:x, wy:GND-156, w:34, h:152, kind, value:v, used:false });
 const Pad = (x,b=-25)  => ({ type:'pad', wx:x, wy:GND-14, w:50, h:14, boost:b });
 
 function addSpikes(o, x, count=1) { for (let i=0;i<count;i++) o.push(Sp(x+i*42)); }
@@ -142,7 +143,7 @@ function buildLevel(id) {
   const o = [];
   if (id === 1) {
     // ── Stereo Madness ── simple spikes, one orb tease at the end
-    [500,800,1050,1350,1600,1900,2200,2500,2800,3100,3400,3700,4000,4300].forEach(x=>o.push(Sp(x)));
+    [800,1050,1350,1600,1900,2200,2500,2800,3100,3400,3700,4000,4300].forEach(x=>o.push(Sp(x)));
     Sp2(4600).forEach(s=>o.push(s)); Sp2(5000).forEach(s=>o.push(s));
     [5300,5600,5900,6200,6500].forEach(x=>o.push(Sp(x)));
     o.push(Bl(6800));
@@ -151,7 +152,7 @@ function buildLevel(id) {
     o.push(Sp(7950));
   } else if (id === 2) {
     // ── Back On Track ── intro orbs, platforms
-    Sp2(400).forEach(s=>o.push(s)); [700,950].forEach(x=>o.push(Sp(x)));
+    [700,950].forEach(x=>o.push(Sp(x)));
     o.push(Bl(1200)); o.push(Bl(1242)); o.push(Sp(1400));
     Sp2(1650).forEach(s=>o.push(s));
     o.push(Orb(2100,GND-130));           // first orb
@@ -165,7 +166,7 @@ function buildLevel(id) {
     o.push(Orb(6600,GND-140)); [6900,7100,7400,7700].forEach(x=>o.push(Sp(x)));
   } else if (id === 3) {
     // ── Polargeist ── orbs are the core mechanic, chain combos
-    Sp2(300).forEach(s=>o.push(s)); Sp3(600).forEach(s=>o.push(s));
+    Sp3(600).forEach(s=>o.push(s));
     o.push(Orb(1000,GND-160,-16));
     o.push(Sp(1300)); Sp2(1500).forEach(s=>o.push(s));
     o.push(Orb(1900,GND-190,-17)); o.push(Orb(2300,GND-220,-17));
@@ -180,7 +181,7 @@ function buildLevel(id) {
     o.push(Orb(7750,GND-150)); o.push(Sp(7900));
   } else if (id === 4) {
     // ── Dry Out ── fast, tricky orb chains, tall blocks
-    Sp2(200).forEach(s=>o.push(s)); o.push(Bl(500,3)); o.push(Sp(620));
+    o.push(Bl(500,3));
     Sp3(800).forEach(s=>o.push(s));
     o.push(Orb(1200,GND-210,-18));
     o.push(Bl(1500,3)); o.push(Orb(1850,GND-240,-19));
@@ -195,7 +196,6 @@ function buildLevel(id) {
     o.push(Orb(7750,GND-220,-19)); o.push(Sp(7900));
   } else if (id === 5) {
     // ── Base After Base ── relentless, high-boost orb chains
-    Sp3(100).forEach(s=>o.push(s)); Sp2(340).forEach(s=>o.push(s));
     o.push(Bl(600,3)); o.push(Bl(642,3));
     o.push(Orb(950,GND-220,-19));
     Sp3(1200).forEach(s=>o.push(s)); o.push(Sp(1390));
@@ -215,7 +215,7 @@ function buildLevel(id) {
     o.push(Sp(7900));
   } else if (id === 6) {
     // ── Portal Primer ── first real portal lesson: speed, mini, UFO, cube
-    addSpikes(o, 180, 2); o.push(Por(620,'speed',1.15)); addSpikes(o, 820, 3);
+    o.push(Por(620,'speed',1.15)); addSpikes(o, 820, 3);
     o.push(Orb(1180,GND-190,-18)); addBlocks(o, 1450, 2, 2); addSpikes(o, 1640, 2);
     o.push(Por(2050,'mini',true)); addSpikes(o, 2320, 3); o.push(Orb(2650,GND-150,-15));
     o.push(Por(3000,'ufo')); o.push(Hole(3220, 340)); addSpikes(o, 3700, 2);
@@ -225,7 +225,7 @@ function buildLevel(id) {
     o.push(Por(7480,'normal')); addSpikes(o, 7820, 3);
   } else if (id === 7) {
     // ── UFO Alley ── tap timing through pits and sudden portals
-    o.push(Por(260,'ufo')); o.push(Hole(520, 420)); addSpikes(o, 980, 2);
+    o.push(Por(260,'ufo')); o.push(Hole(700, 420)); addSpikes(o, 980, 2);
     o.push(Por(1280,'speed',1.25)); o.push(Hole(1580, 520)); o.push(Orb(1900,GND-230,-10));
     o.push(Por(2200,'gravity',-1)); addSpikes(o, 2550, 4); o.push(Por(2860,'gravity',1));
     o.push(Hole(3120, 480)); addSpikes(o, 3650, 3); o.push(Por(4000,'teleport',4400));
@@ -235,7 +235,7 @@ function buildLevel(id) {
     o.push(Por(7800,'normal')); addSpikes(o, 8120, 3);
   } else if (id === 8) {
     // ── Gravity Switchyard ── alternating ceiling and floor pressure
-    addSpikes(o, 160, 3); o.push(Orb(600,GND-220,-20)); o.push(Por(900,'gravity',-1));
+    o.push(Orb(600,GND-220,-20)); o.push(Por(900,'gravity',-1));
     addBlocks(o, 1180, 3, 3); addSpikes(o, 1580, 4); o.push(Por(1900,'speed',1.35));
     o.push(Por(2250,'gravity',1)); o.push(Hole(2500, 390)); o.push(Orb(2730,GND-80,-14));
     addSpikes(o, 3160, 4); o.push(Por(3600,'ufo')); o.push(Por(3920,'gravity',-1));
@@ -245,7 +245,7 @@ function buildLevel(id) {
     o.push(Por(7440,'mini',false)); o.push(Por(7820,'normal')); addSpikes(o, 8150, 4);
   } else if (id === 9) {
     // ── Teleport Temple ── portals skip traps and punish late reactions
-    addSpikes(o, 120, 3); o.push(Por(520,'speed',1.3)); addSpikes(o, 850, 4);
+    o.push(Por(520,'speed',1.3)); addSpikes(o, 850, 4);
     o.push(Por(1220,'teleport',1700)); addSpikes(o, 1320, 8); o.push(Orb(1820,GND-210,-20));
     addBlocks(o, 2120, 3, 2); addSpikes(o, 2460, 3); o.push(Por(2800,'ufo'));
     o.push(Hole(3000, 560)); o.push(Por(3650,'gravity',-1)); addSpikes(o, 3900, 4);
@@ -255,7 +255,7 @@ function buildLevel(id) {
     o.push(Por(7180,'speed',1.45)); addSpikes(o, 7500, 6); o.push(Orb(8040,GND-235,-22));
   } else if (id === 10) {
     // ── Mini Mayhem ── small cube windows and faster obstacle stacks
-    o.push(Por(180,'mini',true)); addSpikes(o, 440, 3); o.push(Orb(760,GND-130,-15));
+    o.push(Por(180,'mini',true)); o.push(Orb(760,GND-130,-15));
     addBlocks(o, 1000, 4, 1); addSpikes(o, 1280, 4); o.push(Por(1620,'speed',1.45));
     o.push(Pad(1920,-26)); addSpikes(o, 2200, 5); o.push(Por(2650,'ufo'));
     o.push(Hole(2860, 600)); o.push(Por(3500,'gravity',-1)); addSpikes(o, 3850, 5);
@@ -265,7 +265,7 @@ function buildLevel(id) {
     addSpikes(o, 6900, 5); o.push(Por(7400,'normal')); addSpikes(o, 7780, 5);
   } else if (id === 11) {
     // ── Starfall Circuit ── UFO spam, gravity, then a cube recovery
-    addSpikes(o, 100, 4); o.push(Por(480,'ufo')); o.push(Por(800,'speed',1.5));
+    o.push(Por(480,'ufo')); o.push(Por(800,'speed',1.5));
     o.push(Hole(980, 760)); addSpikes(o, 1830, 4); o.push(Por(2200,'gravity',-1));
     o.push(Hole(2380, 520)); addSpikes(o, 3000, 5); o.push(Por(3450,'gravity',1));
     o.push(Por(3720,'cube')); o.push(Orb(4020,GND-240,-22)); addSpikes(o, 4340, 5);
@@ -274,7 +274,7 @@ function buildLevel(id) {
     addSpikes(o, 6900, 6); o.push(Por(7420,'cube')); o.push(Por(7600,'normal')); addSpikes(o, 7960, 5);
   } else if (id === 12) {
     // ── Neon Reactor ── late speed surge and dense orb gates
-    o.push(Por(260,'speed',1.55)); addSpikes(o, 520, 5); o.push(Orb(980,GND-235,-22));
+    o.push(Por(260,'speed',1.55)); o.push(Orb(980,GND-235,-22));
     addSpikes(o, 1280, 4); o.push(Por(1700,'gravity',-1)); addBlocks(o, 2000, 4, 3);
     addSpikes(o, 2480, 5); o.push(Por(2900,'gravity',1)); o.push(Por(3180,'ufo'));
     o.push(Hole(3400, 700)); addSpikes(o, 4200, 5); o.push(Por(4680,'cube'));
@@ -283,7 +283,7 @@ function buildLevel(id) {
     o.push(Hole(7200, 430)); o.push(Por(7740,'normal')); addSpikes(o, 8050, 6);
   } else if (id === 13) {
     // ── Void Corridor ── teleport fake-outs and reversed UFO gravity
-    addSpikes(o, 100, 5); o.push(Por(560,'teleport',980)); addSpikes(o, 660, 6);
+    o.push(Por(560,'teleport',980)); addSpikes(o, 660, 6);
     o.push(Por(1200,'ufo')); o.push(Por(1500,'gravity',-1)); o.push(Hole(1650, 740));
     addSpikes(o, 2500, 6); o.push(Por(3000,'speed',1.65)); o.push(Por(3300,'gravity',1));
     o.push(Por(3580,'cube')); o.push(Orb(3860,GND-250,-24)); addBlocks(o, 4240, 4, 3);
@@ -293,7 +293,7 @@ function buildLevel(id) {
     o.push(Por(8200,'normal')); addSpikes(o, 8500, 5);
   } else if (id === 14) {
     // ── Mythic Machine ── long, fast, mixed-mode endurance
-    o.push(Por(180,'speed',1.7)); addSpikes(o, 430, 5); o.push(Orb(850,GND-245,-23));
+    o.push(Por(180,'speed',1.7)); o.push(Orb(850,GND-245,-23));
     o.push(Por(1160,'mini',true)); addSpikes(o, 1450, 6); o.push(Por(1900,'ufo'));
     o.push(Hole(2100, 820)); o.push(Por(3000,'gravity',-1)); addSpikes(o, 3300, 6);
     o.push(Por(3800,'teleport',4230)); addSpikes(o, 3950, 8); o.push(Por(4420,'gravity',1));
@@ -303,7 +303,7 @@ function buildLevel(id) {
     o.push(Pad(8620,-33)); addSpikes(o, 8950, 7); o.push(Por(9550,'normal')); addSpikes(o, 9900, 6);
   } else if (id === 15) {
     // ── Lucky Magic Star ── final chest gauntlet: every portal, tiny margins
-    o.push(Por(140,'speed',1.8)); addSpikes(o, 380, 6); o.push(Orb(850,GND-255,-24));
+    o.push(Por(140,'speed',1.8)); o.push(Orb(850,GND-255,-24));
     o.push(Por(1180,'ufo')); o.push(Hole(1400, 900)); o.push(Por(2380,'gravity',-1));
     addSpikes(o, 2700, 7); o.push(Por(3260,'teleport',3700)); addSpikes(o, 3400, 9);
     o.push(Por(3900,'gravity',1)); o.push(Por(4180,'cube')); o.push(Por(4400,'mini',true));
@@ -313,6 +313,29 @@ function buildLevel(id) {
     o.push(Por(8900,'gravity',1)); o.push(Por(9180,'cube')); o.push(Por(9400,'mini',false));
     addSpikes(o, 9700, 8); o.push(Pad(10400,-34)); o.push(Hole(10560, 520));
     addSpikes(o, 11200, 8); o.push(Por(11800,'normal')); addSpikes(o, 12150, 7);
+  } else if (id === 16) {
+    // ── Demon Foundry ── landable block steps, brutal orb checks, fast portal recovery
+    o.push(Por(120,'speed',1.85)); addBlocks(o, 760, 4, 1);
+    addSpikes(o, 990, 4); o.push(Orb(1360,GND-245,-23)); addBlocks(o, 1680, 3, 2);
+    o.push(Por(2060,'mini',true)); addSpikes(o, 2320, 7); o.push(Orb(2780,GND-150,-16));
+    o.push(Por(3180,'ufo')); o.push(Hole(3380, 860)); o.push(Por(4300,'gravity',-1));
+    addSpikes(o, 4620, 7); o.push(Por(5120,'teleport',5580)); addSpikes(o, 5260, 10);
+    o.push(Por(5800,'gravity',1)); o.push(Por(6080,'cube')); addBlocks(o, 6380, 5, 2);
+    addSpikes(o, 6800, 8); o.push(Orb(7320,GND-260,-25)); o.push(Por(7700,'speed',2.05));
+    o.push(Pad(8100,-35)); o.push(Hole(8280, 620)); addSpikes(o, 9020, 9);
+    o.push(Por(9800,'mini',false)); o.push(Por(10100,'normal')); addSpikes(o, 10420, 8);
+  } else if (id === 17) {
+    // ── Blood Moon Finale ── max-speed endurance with layered portals and long UFO gaps
+    o.push(Por(100,'speed',2.05)); o.push(Orb(900,GND-260,-25));
+    addBlocks(o, 1250, 4, 3); addSpikes(o, 1740, 8); o.push(Por(2260,'ufo'));
+    o.push(Hole(2500, 980)); o.push(Por(3600,'gravity',-1)); addSpikes(o, 3920, 8);
+    o.push(Por(4560,'teleport',5100)); addSpikes(o, 4700, 11); o.push(Por(5340,'gravity',1));
+    o.push(Por(5660,'cube')); o.push(Por(5900,'mini',true)); addSpikes(o, 6220, 9);
+    o.push(Orb(6820,GND-145,-16)); addSpikes(o, 7160, 9); o.push(Por(7700,'ufo'));
+    o.push(Por(8020,'speed',2.2)); o.push(Hole(8240, 1120)); addSpikes(o, 9520, 10);
+    o.push(Por(10100,'cube')); o.push(Por(10380,'mini',false)); o.push(Orb(10780,GND-270,-26));
+    addBlocks(o, 11140, 5, 2); addSpikes(o, 11620, 10); o.push(Pad(12300,-36));
+    o.push(Hole(12480, 560)); addSpikes(o, 13200, 10); o.push(Por(13900,'normal')); addSpikes(o, 14300, 9);
   }
   return o;
 }
@@ -333,6 +356,8 @@ const CONFIGS = [
   { id:13,name:'Void Corridor',  sub:'Portal Tricks',   clr:'#cf79ff', bg:['#090014','#220034'], gClr:'#140021', gLine:'#cf79ff', speed:13.4, manaR:1960,hasStar:true, len:9000 },
   { id:14,name:'Mythic Machine', sub:'Endurance',       clr:'#ffcc33', bg:['#120d00','#302600'], gClr:'#1c1500', gLine:'#ffcc33', speed:14.2, manaR:2320,hasStar:false, len:10400 },
   { id:15,name:'Lucky Magic Star',sub:'Final Gauntlet', clr:'#ff4fd8', bg:['#100015','#31003a'], gClr:'#19001f', gLine:'#ff4fd8', speed:15.0, manaR:2750,hasStar:true, len:12600 },
+  { id:16,name:'Demon Foundry',   sub:'Hard Block Lines',clr:'#ff5533', bg:['#160400','#3a0900'], gClr:'#210600', gLine:'#ff5533', speed:15.8, manaR:3250,hasStar:false, len:10800 },
+  { id:17,name:'Blood Moon Finale',sub:'Actually Hard',  clr:'#ff2255', bg:['#160006','#36000f'], gClr:'#210008', gLine:'#ff2255', speed:16.6, manaR:3900,hasStar:true, len:14800 },
 ];
 
 checkDashAchievements();
@@ -350,6 +375,7 @@ let bgOff  = 0;
 let stars  = [];
 let parts  = [];       // particles
 let shieldHP = 0;
+let shieldGraceFrames = 0;
 let djUsed = false;
 let orbOver = null;    // orb player is touching
 let lastEarned = 0;
@@ -378,6 +404,7 @@ function startLevel(c) {
   parts = []; orbOver = null;
   playerMode = 'cube'; gravityDir = 1; portalSpeed = 1; portalMini = false; lastChest = null;
   shieldHP = owned.includes('shield') ? 1 : 0;
+  shieldGraceFrames = 0;
   djUsed = false;
   initStars();
   state = 'playing';
@@ -404,7 +431,7 @@ function onJump() {
     djUsed = false;
     return;
   }
-  if (player.onGround) {
+  if (player.onGround || isStandingOnBlock()) {
     player.vy = JUMP_FORCE * gravityDir; player.onGround = false; djUsed = false;
   } else if (owned.includes('double_jump') && !djUsed) {
     player.vy = JUMP_FORCE * 0.85 * gravityDir; djUsed = true;
@@ -504,12 +531,50 @@ function hits(obj) {
   const m = (owned.includes('mini') || portalMini) ? 10 : 5;
   const px=player.x+m, py=player.y+m, pw=P_SIZE-m*2, ph=P_SIZE-m*2;
   const sx = wx2sx(obj);
-  if (obj.type==='portal'||obj.type==='pad') return false;
+  if (obj.type==='portal'||obj.type==='pad'||obj.type==='block') return false;
   if (obj.type==='spike') {
     const hx=sx+7, hy=obj.wy-obj.h+5, hw=obj.w-14, hh=obj.h-5;
     return px<hx+hw && px+pw>hx && py<hy+hh && py+ph>hy;
   }
   return px<sx+obj.w && px+pw>sx && py<obj.wy+obj.h && py+ph>obj.wy;
+}
+
+function resolveBlock(obj, prevY) {
+  const pad = (owned.includes('mini') || portalMini) ? 8 : 5;
+  const sx = wx2sx(obj);
+  const px = player.x + pad;
+  const pw = P_SIZE - pad * 2;
+  const py = player.y + pad;
+  const ph = P_SIZE - pad * 2;
+  const prevTop = prevY + pad;
+  const prevBottom = prevY + P_SIZE - pad;
+  const blockTop = obj.wy;
+  const blockBottom = obj.wy + obj.h;
+  const landingTolerance = Math.max(10, Math.abs(player.vy) + 2);
+  const overlapsX = px < sx + obj.w && px + pw > sx;
+  const overlapsY = py < blockBottom && py + ph > blockTop;
+
+  if (!overlapsX || !overlapsY) return 'clear';
+
+  if (gravityDir > 0 && player.vy >= 0 && prevBottom <= blockTop + landingTolerance) {
+    player.y = blockTop - P_SIZE + pad;
+    player.vy = 0;
+    player.onGround = true;
+    djUsed = false;
+    player.rot = Math.round(player.rot / 90) * 90;
+    return 'landed';
+  }
+
+  if (gravityDir < 0 && player.vy <= 0 && prevTop >= blockBottom - landingTolerance) {
+    player.y = blockBottom - pad;
+    player.vy = 0;
+    player.onGround = true;
+    djUsed = false;
+    player.rot = Math.round(player.rot / 90) * 90;
+    return 'landed';
+  }
+
+  return 'crashed';
 }
 
 function playerBox(pad=4) {
@@ -518,6 +583,33 @@ function playerBox(pad=4) {
 
 function rectHit(a,b) {
   return a.x < b.x+b.w && a.x+a.w > b.x && a.y < b.y+b.h && a.y+a.h > b.y;
+}
+
+function absorbShieldHit() {
+  if (shieldGraceFrames > 0) return true;
+  if (shieldHP <= 0) return false;
+  shieldHP--;
+  shieldGraceFrames = SHIELD_GRACE_FRAMES;
+  burstOrb(player.x+P_SIZE/2, player.y+P_SIZE/2);
+  return true;
+}
+
+function isStandingOnBlock() {
+  const pad = (owned.includes('mini') || portalMini) ? 8 : 5;
+  const px = player.x + pad;
+  const pw = P_SIZE - pad * 2;
+  const footY = player.y + P_SIZE - pad;
+  const headY = player.y + pad;
+  const tolerance = 8;
+
+  return lvlObjs.some(obj => {
+    if (obj.type !== 'block') return false;
+    const sx = wx2sx(obj);
+    const overlapsX = px < sx + obj.w && px + pw > sx;
+    if (!overlapsX) return false;
+    if (gravityDir > 0) return Math.abs(footY - obj.wy) <= tolerance;
+    return Math.abs(headY - (obj.wy + obj.h)) <= tolerance;
+  });
 }
 
 function triggerPortal(obj) {
@@ -538,6 +630,7 @@ function update() {
   if (completeLock > 0) completeLock--;
   if (state !== 'playing') return;
   frame++;
+  if (shieldGraceFrames > 0) shieldGraceFrames--;
   const spd = (cfg.speed + frame*0.0015) * portalSpeed;
   worldX += spd;
   bgOff   = (bgOff + spd*0.5) % 44;
@@ -546,6 +639,7 @@ function update() {
   stars.forEach(s => { s.x -= spd*0.2; s.t += 0.04; if (s.x<-2) { s.x=canvas.width+2; s.y=Math.random()*GND; } });
 
   // physics
+  const prevY = player.y;
   player.vy += GRAVITY * gravityDir * (playerMode === 'ufo' ? 0.72 : 1);
   player.y  += player.vy;
 
@@ -571,6 +665,17 @@ function update() {
       player.y = ceilY; player.vy=0; player.onGround=true; djUsed=false;
       player.rot = Math.round(player.rot/90)*90;
     } else { player.onGround=false; player.rot-=playerMode==='ufo'?2.2:5.5; }
+  }
+
+  for (const obj of lvlObjs) {
+    if (obj.type !== 'block') continue;
+    const sx = wx2sx(obj);
+    if (sx+120<0||sx>canvas.width+50) continue;
+    if (resolveBlock(obj, prevY) === 'crashed') {
+      if (absorbShieldHit()) continue;
+      explode(player.x+P_SIZE/2, player.y+P_SIZE/2);
+      attempts++; state='dead'; return;
+    }
   }
 
   // trail
@@ -605,11 +710,11 @@ function update() {
 
   // collision
   for (const obj of lvlObjs) {
-    if (obj.type==='orb'||obj.type==='portal'||obj.type==='pad') continue;
+    if (obj.type==='orb'||obj.type==='portal'||obj.type==='pad'||obj.type==='block') continue;
     const sx=wx2sx(obj);
     if (sx+150<0||sx>canvas.width+50) continue;
     if (hits(obj)) {
-      if (shieldHP>0) { shieldHP--; burstOrb(player.x+P_SIZE/2, player.y+P_SIZE/2); continue; }
+      if (absorbShieldHit()) continue;
       explode(player.x+P_SIZE/2, player.y+P_SIZE/2);
       attempts++; state='dead'; return;
     }
@@ -750,9 +855,11 @@ function drawPlayer() {
       ctx.beginPath(); ctx.moveTo(-sz*.3,-sz*.53); ctx.lineTo(0,-sz*.92); ctx.lineTo(sz*.3,-sz*.53); ctx.closePath(); ctx.fill(); ctx.stroke();
     }
   }
-  if (shieldHP>0) {
-    ctx.strokeStyle='#88ffff'; ctx.lineWidth=2.5;
-    ctx.beginPath();ctx.arc(0,0,sz/2+8,0,Math.PI*2);ctx.stroke();
+  if (shieldHP>0 || shieldGraceFrames>0) {
+    const gracePulse = shieldGraceFrames > 0 ? 1 + Math.sin(frame * 0.5) * 0.12 : 1;
+    ctx.strokeStyle=shieldGraceFrames>0?'#ffffff':'#88ffff';
+    ctx.lineWidth=shieldGraceFrames>0?3.5:2.5;
+    ctx.beginPath();ctx.arc(0,0,(sz/2+8)*gracePulse,0,Math.PI*2);ctx.stroke();
   }
   ctx.restore();
 }
@@ -892,7 +999,7 @@ function drawOverlay(title,tClr,gClr,line1,line2) {
 let mHover = -1;
 
 function cardRect(i) {
-  const cols=5,cw=154,ch=82,gap=12,total=cols*cw+(cols-1)*gap;
+  const cols=6,cw=136,ch=82,gap=10,total=cols*cw+(cols-1)*gap;
   return { x:(canvas.width-total)/2+(i%cols)*(cw+gap), y:128+Math.floor(i/cols)*(ch+gap), w:cw, h:ch };
 }
 function shopBtnR()  { return {x:canvas.width/2-156,y:424,w:144,h:44}; }
