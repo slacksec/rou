@@ -21,6 +21,12 @@
       outline-offset: 8px;
       border-radius: 4px;
     }
+    #hi img {
+      width: min(520px, 82vw);
+      height: auto;
+      display: block;
+      image-rendering: pixelated;
+    }
     #achievementToast {
       position: fixed;
       top: 24px;
@@ -130,6 +136,18 @@
       border: none;
       padding: 5px;
     }
+    #settingsBtn.hasUpdate {
+      filter: drop-shadow(0 0 8px #ff2d2d) drop-shadow(0 0 16px #ff2d2d);
+      animation: settingsUpdateGlow 1s ease-in-out infinite alternate;
+    }
+    @keyframes settingsUpdateGlow {
+      from {
+        transform: scale(1);
+      }
+      to {
+        transform: scale(1.12);
+      }
+    }
     /* Settings modal */
     #settingsModal {
       display: none;
@@ -177,6 +195,23 @@
     .closeSettings:hover {
       background: #d32f2f !important;
     }
+    #changelogText {
+      display: none;
+      margin: 10px 0;
+      padding: 12px;
+      border: 2px solid #ff2d2d;
+      border-radius: 8px;
+      background: #fff3f3;
+      color: #222;
+    }
+    #changelogText h3 {
+      margin: 0 0 8px;
+      color: #c62828;
+    }
+    #changelogText ul {
+      margin: 0;
+      padding-left: 20px;
+    }
     #overlay {
       display: none;
       position: fixed;
@@ -210,7 +245,15 @@
     <button id="uiSizeBtn">📏 UI Size</button>
     <button id="uselessBtn">🗑️ Useless Button</button>
     <button id="themeBtn">Extra stylish. ooh</button>
-    <button id="soundBtn">🔊 Sound</button>
+    <button id="changelogBtn">📝 Changelog</button>
+    <div id="changelogText">
+      <h3>UPDATE 1</h3>
+      <ul>
+        <li>Added Changelog</li>
+        <li>Oh and Btw here's a free code (UT&lt;DR)</li>
+        <li>+ major Dash.html update!</li>
+      </ul>
+    </div>
     <input type="password" id="ogPassword" placeholder="Enter Password">
     <button id="submitPassword">Enter</button>
     <button id="revertBtn" style="display: none; background: #FF9800;">🔄 Revert to Normal</button>
@@ -295,9 +338,31 @@
 
     // Load OG mode state
     let isOGMode = localStorage.getItem('ogMode') === 'true';
+    let isDeltaruneMode = localStorage.getItem('deltaruneMode') === 'true';
+    const CURRENT_UPDATE = 1;
+    const CHANGELOG_KEY = 'rouLastSeenUpdate';
+    const DELTARUNE_GIF = 'https://media.tenor.com/pDlPbgvTF8cAAAAM/deltarune-delta-rune.gif';
 
-    // Apply OG mode if enabled
-    if (isOGMode) {
+    function updateSettingsGlow() {
+      const lastSeenUpdate = Number(localStorage.getItem(CHANGELOG_KEY) || 0);
+      document.getElementById('settingsBtn').classList.toggle('hasUpdate', lastSeenUpdate < CURRENT_UPDATE);
+    }
+
+    updateSettingsGlow();
+
+    function setHiNormal() {
+      document.getElementById('hi').textContent = 'Hi';
+    }
+
+    function applyDeltaruneMode() {
+      document.getElementById('hi').innerHTML = `<img src="${DELTARUNE_GIF}" alt="Deltarune">`;
+    }
+
+    // Apply special modes if enabled
+    if (isDeltaruneMode) {
+      applyDeltaruneMode();
+      updateRevertButton();
+    } else if (isOGMode) {
       document.getElementById('hi').textContent = 'Welcome, OG user!';
       updateRevertButton();
     }
@@ -381,15 +446,17 @@
       alert('🎨 Theme toggled!');
     };
 
-    // Sound button
-    document.getElementById('soundBtn').onclick = () => {
-      alert('🔊 Sound effects coming soon! (Just kidding, there are none 😄)');
+    // Changelog button
+    document.getElementById('changelogBtn').onclick = () => {
+      document.getElementById('changelogText').style.display = 'block';
+      localStorage.setItem(CHANGELOG_KEY, String(CURRENT_UPDATE));
+      updateSettingsGlow();
     };
 
     // Update revert button visibility
     function updateRevertButton() {
       const revertBtn = document.getElementById('revertBtn');
-      if (isOGMode) {
+      if (isOGMode || isDeltaruneMode) {
         revertBtn.style.display = 'block';
       } else {
         revertBtn.style.display = 'none';
@@ -401,7 +468,9 @@
       const password = document.getElementById('ogPassword').value;
       if (password === 'BANANA') {
         isOGMode = true;
+        isDeltaruneMode = false;
         localStorage.setItem('ogMode', 'true');
+        localStorage.setItem('deltaruneMode', 'false');
         const secretUnlocked = unlockWithPopup('secret-identity', 'Secret Identity');
         
         // Change Hi to Welcome, OG user!
@@ -415,6 +484,19 @@
         window.setTimeout(() => {
           alert('🎉 OG Mode Activated! The text will stay as "Welcome, OG user!" every time you visit!');
         }, secretUnlocked ? 2400 : 0);
+      } else if (password === 'UT<DR') {
+        isOGMode = false;
+        isDeltaruneMode = true;
+        localStorage.setItem('ogMode', 'false');
+        localStorage.setItem('deltaruneMode', 'true');
+        applyDeltaruneMode();
+        updateRevertButton();
+        
+        // Close modal
+        document.getElementById('overlay').style.display = 'none';
+        document.getElementById('settingsModal').style.display = 'none';
+        
+        alert('✨ Code accepted!');
       } else {
         alert('❌ Wrong Password!');
       }
@@ -431,10 +513,12 @@
     // Revert button - back to "Hi"
     document.getElementById('revertBtn').onclick = () => {
       isOGMode = false;
+      isDeltaruneMode = false;
       localStorage.setItem('ogMode', 'false');
+      localStorage.setItem('deltaruneMode', 'false');
       
       // Revert text to Hi
-      document.getElementById('hi').textContent = 'Hi';
+      setHiNormal();
       updateRevertButton();
       
       // Close modal
