@@ -17,7 +17,7 @@ const ADMIN_ABUSE_SETTINGS = {
   textFont: 'Arial, Helvetica, sans-serif',
 
   // Change this one line to true to start the music and disco effects.
-  adminAbuse: true,
+  adminAbuse: false,
   adminAbuseReloadButtonText: 'Spam reload for more announcement text!',
   adminAbuseHomeGif: 'https://media.tenor.com/YMz82SDst8sAAAAj/tv-tenna-dance.gif',
 
